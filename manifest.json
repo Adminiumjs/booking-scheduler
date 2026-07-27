@@ -523,7 +523,7 @@
     {
       "key": "cancel_window_hours",
       "type": "number",
-      "label": { "key": "mft.bookings.set.cancel_window", "fallback": "Free cancellation window (hours)" },
+      "label": { "key": "mft.bookings.set.cancel_window", "fallback": "Cancellation window (hours)" },
       "min": 0,
       "max": 168,
       "step": 1,
