@@ -17,7 +17,7 @@ export interface CheckboxProps {
 export function Checkbox({ checked, className, style }: CheckboxProps) {
   return (
     <span
-      className={["sm-check", className].filter(Boolean).join(" ")}
+      className={["bk-check", className].filter(Boolean).join(" ")}
       data-on={checked ? "true" : "false"}
       style={style}
       aria-hidden="true"
@@ -52,12 +52,12 @@ export function CheckboxRow({
       aria-checked={checked}
       aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
-      className={["sm-check-row", className].filter(Boolean).join(" ")}
+      className={["bk-check-row", className].filter(Boolean).join(" ")}
       data-on={checked ? "true" : "false"}
       style={style}
     >
       <Checkbox checked={checked} />
-      <span className="sm-check-row__label">{children}</span>
+      <span className="bk-check-row__label">{children}</span>
     </button>
   );
 }

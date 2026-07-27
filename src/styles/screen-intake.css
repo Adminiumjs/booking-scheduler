@@ -2,24 +2,24 @@
  * Screen-local styles for the Digital intake form (spec §3.7, §5.12).
  */
 
-.sm-intake {
+.bk-intake {
   --page-max: 680px;
   padding-block-start: clamp(24px, 4vw, 44px);
 }
 
-.sm-intake__intro {
+.bk-intake__intro {
   margin-block-end: 22px;
 }
 
-.sm-intake__sub {
+.bk-intake__sub {
   margin-block-start: 8px;
 }
 
-.sm-intake__block {
+.bk-intake__block {
   margin-block-end: 22px;
 }
 
-.sm-intake__legend {
+.bk-intake__legend {
   display: block;
   margin-block-end: 12px;
   font-size: 14px;
@@ -27,27 +27,27 @@
   letter-spacing: -0.01em;
 }
 
-.sm-intake__label {
+.bk-intake__label {
   display: block;
   margin-block-end: 9px;
   font-size: 12.5px;
   font-weight: 600;
 }
 
-.sm-intake__concerns {
+.bk-intake__concerns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 10px;
 }
 
-.sm-intake__allergies {
+.bk-intake__allergies {
   min-block-size: 88px;
 }
 
 /* ---------------- consent gate ---------------- */
 
-/* Deliberately quieter than `.sm-check-row`: it never takes the accent fill. */
-.sm-intake .sm-intake-consent {
+/* Deliberately quieter than `.bk-check-row`: it never takes the accent fill. */
+.bk-intake .bk-intake-consent {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -60,7 +60,7 @@
   text-align: start;
 }
 
-.sm-intake-consent__text {
+.bk-intake-consent__text {
   font-size: 12.5px;
   line-height: 1.55;
   color: var(--fg-muted);
@@ -68,24 +68,24 @@
 
 /* ---------------- saved state ---------------- */
 
-.sm-intake-done {
+.bk-intake-done {
   padding-block-start: 20px;
   text-align: center;
 }
 
-.sm-intake-done .sm-success-tile {
+.bk-intake-done .bk-success-tile {
   margin-inline: auto;
   margin-block-end: 18px;
 }
 
-.sm-intake-done__h1 {
+.bk-intake-done__h1 {
   margin: 0;
   font-size: clamp(24px, 4vw, 30px);
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
-.sm-intake-done__body {
+.bk-intake-done__body {
   margin: 12px auto 24px;
   max-inline-size: 400px;
   font-size: 15px;
@@ -94,13 +94,13 @@
   text-wrap: pretty;
 }
 
-.sm-intake-done__actions {
+.bk-intake-done__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
 }
 
-.sm-intake-done__btn.sm-button--ghost {
+.bk-intake-done__btn.bk-button--ghost {
   color: var(--fg);
 }

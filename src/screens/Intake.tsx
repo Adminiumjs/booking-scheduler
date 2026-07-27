@@ -58,18 +58,18 @@ export default function Intake() {
 
   if (intakeDone) {
     return (
-      <main className="sm-screen sm-page sm-intake">
-        <div className="sm-intake-done">
+      <main className="bk-screen bk-page bk-intake">
+        <div className="bk-intake-done">
           <SuccessTile icon="clipboard-check" iconSize={36} />
-          <h1 className="sm-intake-done__h1">Intake form saved</h1>
-          <p className="sm-intake-done__body">
+          <h1 className="bk-intake-done__h1">Intake form saved</h1>
+          <p className="bk-intake-done__body">
             Thank you — your specialist will review this before your visit. This is
             a demo, so nothing is actually stored.
           </p>
-          <div className="sm-intake-done__actions">
+          <div className="bk-intake-done__actions">
             <Button
               variant="ghost"
-              className="sm-intake-done__btn"
+              className="bk-intake-done__btn"
               style={DONE_BTN}
               onClick={intakeEdit}
             >
@@ -78,7 +78,7 @@ export default function Intake() {
             <Button
               variant="primary"
               icon="home"
-              className="sm-intake-done__btn"
+              className="bk-intake-done__btn"
               style={DONE_BTN}
               onClick={() => go("home")}
             >
@@ -91,22 +91,22 @@ export default function Intake() {
   }
 
   return (
-    <main className="sm-screen sm-page sm-intake">
+    <main className="bk-screen bk-page bk-intake">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-intake__intro">
-        <h1 className="sm-h1">Digital intake form</h1>
-        <p className="sm-sub sm-intake__sub">
+      <div className="bk-intake__intro">
+        <h1 className="bk-h1">Digital intake form</h1>
+        <p className="bk-sub bk-intake__sub">
           A few quick things so your specialist can tailor the visit. Takes about a
           minute.
         </p>
       </div>
 
-      <div className="sm-intake__block">
-        <span className="sm-intake__legend" id={concernsId}>
+      <div className="bk-intake__block">
+        <span className="bk-intake__legend" id={concernsId}>
           Anything that applies to you?
         </span>
-        <div className="sm-intake__concerns" role="group" aria-labelledby={concernsId}>
+        <div className="bk-intake__concerns" role="group" aria-labelledby={concernsId}>
           {concerns.map((c) => (
             <CheckboxRow
               key={c}
@@ -120,7 +120,7 @@ export default function Intake() {
       </div>
 
       <Field
-        className="sm-intake__block"
+        className="bk-intake__block"
         label="Allergies or sensitivities"
         hint="(optional)"
       >
@@ -131,13 +131,13 @@ export default function Intake() {
             onChange={setAllergies}
             rows={3}
             placeholder="Fragrances, latex, specific products…"
-            className="sm-intake__allergies"
+            className="bk-intake__allergies"
           />
         )}
       </Field>
 
-      <div className="sm-intake__block">
-        <span className="sm-intake__label">Preferred pressure / intensity</span>
+      <div className="bk-intake__block">
+        <span className="bk-intake__label">Preferred pressure / intensity</span>
         <Segmented<IntakePressure>
           label="Preferred pressure / intensity"
           options={pressures}
@@ -150,11 +150,11 @@ export default function Intake() {
         type="button"
         role="checkbox"
         aria-checked={intake.consent}
-        className="sm-intake-consent"
+        className="bk-intake-consent"
         onClick={() => setConsent(!intake.consent)}
       >
         <Checkbox checked={intake.consent} />
-        <span className="sm-intake-consent__text">
+        <span className="bk-intake-consent__text">
           I confirm the above is accurate and consent to treatment. I understand I
           can update this any time before my visit.
         </span>

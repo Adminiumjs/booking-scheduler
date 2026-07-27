@@ -19,16 +19,16 @@ export default function Services() {
   const services = data.getServicesByCategory(sCat);
 
   return (
-    <main className="sm-screen sm-page sm-services">
-      <div className="sm-services-head">
-        <h1 className="sm-services-title">Services</h1>
-        <p className="sm-services-sub">
+    <main className="bk-screen bk-page bk-services">
+      <div className="bk-services-head">
+        <h1 className="bk-services-title">Services</h1>
+        <p className="bk-services-sub">
           Pick what you're in the mood for. Every booking is confirmed instantly — pick a
           specialist and a time next.
         </p>
       </div>
 
-      <div className="sm-services-chips" role="group" aria-label="Filter by category">
+      <div className="bk-services-chips" role="group" aria-label="Filter by category">
         <Chip
           label="All"
           active={sCat === "all"}
@@ -48,7 +48,7 @@ export default function Services() {
         ))}
       </div>
 
-      <div className="sm-services-grid">
+      <div className="bk-services-grid">
         {services.map((s) => (
           <ServiceCard key={s.id} service={s} variant="full" onBook={startBooking} />
         ))}

@@ -23,16 +23,16 @@ export function ServiceRow({
       type="button"
       role="radio"
       aria-checked={selected}
-      className={["sm-svc-row", className].filter(Boolean).join(" ")}
+      className={["bk-svc-row", className].filter(Boolean).join(" ")}
       data-selected={selected ? "true" : "false"}
       onClick={() => onSelect(s.id)}
     >
       <IconTile icon={s.icon} tint={s.tint} size={44} iconSize={20} radius={12} />
-      <span className="sm-svc-row__text">
-        <span className="sm-svc-row__name">{s.name}</span>
-        <span className="sm-svc-row__meta">
-          <span className="sm-mono sm-svc-row__dur">{durationLabel(s.dur)}</span>
-          <span className="sm-mono sm-svc-row__price">{money(s.price)}</span>
+      <span className="bk-svc-row__text">
+        <span className="bk-svc-row__name">{s.name}</span>
+        <span className="bk-svc-row__meta">
+          <span className="bk-mono bk-svc-row__dur">{durationLabel(s.dur)}</span>
+          <span className="bk-mono bk-svc-row__price">{money(s.price)}</span>
         </span>
       </span>
       <Radio selected={selected} />

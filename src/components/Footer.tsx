@@ -40,13 +40,13 @@ export function Footer() {
   const loc = data.getLocation();
 
   const renderColumn = (heading: string, links: FooterLink[]) => (
-    <nav className="sm-footer__col" aria-label={heading}>
-      <div className="sm-footer__head">{heading}</div>
+    <nav className="bk-footer__col" aria-label={heading}>
+      <div className="bk-footer__head">{heading}</div>
       {links.map((l) => (
         <button
           key={l.label}
           type="button"
-          className="sm-nav sm-footer__link"
+          className="bk-nav bk-footer__link"
           onClick={() => (l.book ? startBooking(null) : go(l.view as View))}
         >
           {l.label}
@@ -56,28 +56,28 @@ export function Footer() {
   );
 
   return (
-    <footer className="sm-footer">
-      <div className="sm-footer__inner">
-        <div className="sm-footer__brand">
-          <div className="sm-footer__brandrow">
-            <span className="sm-logo sm-logo--sm" aria-hidden="true">
+    <footer className="bk-footer">
+      <div className="bk-footer__inner">
+        <div className="bk-footer__brand">
+          <div className="bk-footer__brandrow">
+            <span className="bk-logo bk-logo--sm" aria-hidden="true">
               {loc.shortName.charAt(0)}
             </span>
-            <span className="sm-footer__name">{loc.name}</span>
+            <span className="bk-footer__name">{loc.name}</span>
           </div>
-          <p className="sm-footer__blurb">
+          <p className="bk-footer__blurb">
             Hair, spa, nails &amp; movement in one calm downtown space. Book
             online, day or night.
           </p>
         </div>
-        <div className="sm-footer__cols">
+        <div className="bk-footer__cols">
           {renderColumn("Studio", STUDIO_LINKS)}
           {renderColumn("Your account", ACCOUNT_LINKS)}
         </div>
       </div>
-      <div className="sm-footer__bar">
+      <div className="bk-footer__bar">
         <span>© 2026 {loc.name}. A demo booking site shipped with Adminium.</span>
-        <span className="sm-mono sm-footer__url">
+        <span className="bk-mono bk-footer__url">
           <Icon name="globe" size={13} />
           {loc.url}
         </span>

@@ -3,7 +3,7 @@
  * render it once, at the top of the app shell.
  *
  * Ruling R8: the 900px breakpoint is pure CSS. The desktop nav and the "Book
- * now" button carry `.sm-wide-only`, the hamburger `.sm-narrow-only`; no
+ * now" button carry `.bk-wide-only`, the hamburger `.bk-narrow-only`; no
  * viewport width is tracked in state.
  */
 
@@ -39,26 +39,26 @@ export function Header() {
   const loc = data.getLocation();
 
   return (
-    <header className="sm-header">
-      <div className="sm-header__inner">
+    <header className="bk-header">
+      <div className="bk-header__inner">
         <button
           type="button"
-          className="sm-brand"
+          className="bk-brand"
           onClick={() => go("home")}
           aria-label={`${loc.name} — home`}
         >
-          <span className="sm-logo" aria-hidden="true">
+          <span className="bk-logo" aria-hidden="true">
             {loc.shortName.charAt(0)}
           </span>
-          <span className="sm-wordmark">{loc.shortName}</span>
+          <span className="bk-wordmark">{loc.shortName}</span>
         </button>
 
-        <nav className="sm-wide-only sm-header__nav" aria-label="Main">
+        <nav className="bk-wide-only bk-header__nav" aria-label="Main">
           {NAV.map((item) => (
             <button
               key={item.label}
               type="button"
-              className="sm-nav sm-navlink"
+              className="bk-nav bk-navlink"
               data-active={item.view && item.view === view ? "true" : "false"}
               aria-current={item.view && item.view === view ? "page" : undefined}
               onClick={() =>
@@ -70,14 +70,14 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="sm-header__actions">
+        <div className="bk-header__actions">
           <IconButton
             icon={theme === "dark" ? "sun" : "moon"}
             label="Toggle theme"
             onClick={toggleTheme}
           />
           <Button
-            className="sm-wide-only"
+            className="bk-wide-only"
             icon="calendar-plus"
             onClick={() => startBooking(null)}
             style={{ padding: "10px 18px", fontSize: "14px" }}
@@ -85,7 +85,7 @@ export function Header() {
             Book now
           </Button>
           <IconButton
-            className="sm-narrow-only"
+            className="bk-narrow-only"
             icon="menu"
             iconSize={20}
             label="Open menu"

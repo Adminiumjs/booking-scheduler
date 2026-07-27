@@ -23,7 +23,7 @@ export function SlotButton({
   return (
     <button
       type="button"
-      className={["sm-slot", "sm-slot-btn", className].filter(Boolean).join(" ")}
+      className={["bk-slot", "bk-slot-btn", className].filter(Boolean).join(" ")}
       data-state={state}
       disabled={!slot.free}
       aria-pressed={selected}
@@ -45,11 +45,11 @@ export interface SlotSkeletonProps {
 export function SlotSkeleton({ count = 12, className }: SlotSkeletonProps) {
   return (
     <div
-      className={["sm-slot-grid", className].filter(Boolean).join(" ")}
+      className={["bk-slot-grid", className].filter(Boolean).join(" ")}
       aria-hidden="true"
     >
       {Array.from({ length: count }, (_, i) => (
-        <div className="sm-skel" key={i} />
+        <div className="bk-skel" key={i} />
       ))}
     </div>
   );

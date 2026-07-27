@@ -54,10 +54,10 @@ export default function Manage() {
   const booking = foundCode ? bookings[foundCode] : undefined;
 
   return (
-    <main className="sm-screen sm-page sm-manage">
-      <div className="sm-manage__head">
-        <h1 className="sm-h1">Manage booking</h1>
-        <p className="sm-sub">
+    <main className="bk-screen bk-page bk-manage">
+      <div className="bk-manage__head">
+        <h1 className="bk-h1">Manage booking</h1>
+        <p className="bk-sub">
           Reschedule or cancel an appointment with your code and email.
         </p>
       </div>
@@ -72,7 +72,7 @@ export default function Manage() {
       ) : (
         <Card radius={20} padding="clamp(20px, 3vw, 26px)">
           <form
-            className="sm-manage-find"
+            className="bk-manage-find"
             onSubmit={(e) => {
               e.preventDefault();
               findBooking();
@@ -86,7 +86,7 @@ export default function Manage() {
                   onChange={setMgCode}
                   placeholder="LMN-1039"
                   mono
-                  className="sm-manage-find__code"
+                  className="bk-manage-find__code"
                 />
               )}
             </Field>
@@ -109,12 +109,12 @@ export default function Manage() {
               type="submit"
               icon="search"
               full
-              className="sm-manage-find__cta"
+              className="bk-manage-find__cta"
             >
               Find my booking
             </Button>
 
-            <p className="sm-manage-find__tip">
+            <p className="bk-manage-find__tip">
               <Icon name="lightbulb" size={14} />
               Demo tip: the fields are pre-filled with a booking that already
               exists — just hit Find.
@@ -160,19 +160,19 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
 
   return (
     <>
-      <div className="sm-panel sm-manage-card" data-cancelled={cancelled}>
-        <div className="sm-manage-card__head">
+      <div className="bk-panel bk-manage-card" data-cancelled={cancelled}>
+        <div className="bk-manage-card__head">
           <IconTile
             icon={svc?.icon ?? "sparkles"}
             tint={svc?.tint ?? "#0d9488"}
             size={48}
             iconSize={22}
             radius={13}
-            className="sm-manage-card__tile"
+            className="bk-manage-card__tile"
           />
-          <div className="sm-manage-card__id">
-            <div className="sm-manage-card__svc">{svc?.name ?? booking.svc}</div>
-            <div className="sm-manage-card__code sm-mono">{booking.code}</div>
+          <div className="bk-manage-card__id">
+            <div className="bk-manage-card__svc">{svc?.name ?? booking.svc}</div>
+            <div className="bk-manage-card__code bk-mono">{booking.code}</div>
           </div>
           <StatusPill
             tone={cancelled ? "muted" : "pos"}
@@ -182,16 +182,16 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
           </StatusPill>
         </div>
 
-        <dl className="sm-manage-card__rows">
+        <dl className="bk-manage-card__rows">
           {rows.map((r) => (
-            <div className="sm-manage-card__row" key={r.label}>
-              <Icon name={r.icon} size={16} className="sm-manage-card__rowicon" />
-              <dt className="sm-manage-card__rowlabel">{r.label}</dt>
+            <div className="bk-manage-card__row" key={r.label}>
+              <Icon name={r.icon} size={16} className="bk-manage-card__rowicon" />
+              <dt className="bk-manage-card__rowlabel">{r.label}</dt>
               <dd
                 className={
                   r.mono
-                    ? "sm-manage-card__rowval sm-manage-card__rowval--mono sm-mono"
-                    : "sm-manage-card__rowval"
+                    ? "bk-manage-card__rowval bk-manage-card__rowval--mono bk-mono"
+                    : "bk-manage-card__rowval"
                 }
               >
                 {r.value}
@@ -201,18 +201,18 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
         </dl>
 
         {cancelled ? (
-          <p className="sm-manage-card__note">
+          <p className="bk-manage-card__note">
             <Icon name="info" size={15} />
             This appointment was cancelled. Book again any time — we’d love to
             have you.
           </p>
         ) : (
-          <div className="sm-manage-card__foot">
+          <div className="bk-manage-card__foot">
             <Button
               variant="ghost"
               icon="calendar-clock"
               onClick={onReschedule}
-              className="sm-manage-card__action"
+              className="bk-manage-card__action"
             >
               Reschedule
             </Button>
@@ -220,7 +220,7 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
               variant="ghost"
               icon="calendar-x"
               onClick={onCancel}
-              className="sm-manage-card__action sm-manage-card__action--danger"
+              className="bk-manage-card__action bk-manage-card__action--danger"
             >
               Cancel
             </Button>
@@ -228,7 +228,7 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
         )}
       </div>
 
-      <BackLink onClick={onReset} className="sm-manage__another">
+      <BackLink onClick={onReset} className="bk-manage__another">
         Find another booking
       </BackLink>
     </>

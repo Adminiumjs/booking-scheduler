@@ -29,7 +29,7 @@ export function ServiceCard({
   const staffNames = data.getStaffNames(s.id);
 
   return (
-    <div className={["sm-card", "sm-svc-card", className].filter(Boolean).join(" ")}>
+    <div className={["bk-card", "bk-svc-card", className].filter(Boolean).join(" ")}>
       <PlaceholderTile
         tint={s.tint}
         icon={s.icon}
@@ -37,21 +37,21 @@ export function ServiceCard({
         minHeight={132}
         filename={s.fname}
       />
-      <div className="sm-svc-card__body">
-        <div className="sm-svc-card__titlerow">
-          <h3 className="sm-svc-card__name">{s.name}</h3>
-          <span className="sm-badge">{cat?.name ?? s.cat}</span>
+      <div className="bk-svc-card__body">
+        <div className="bk-svc-card__titlerow">
+          <h3 className="bk-svc-card__name">{s.name}</h3>
+          <span className="bk-badge">{cat?.name ?? s.cat}</span>
         </div>
-        <p className="sm-svc-card__blurb">{s.blurb}</p>
+        <p className="bk-svc-card__blurb">{s.blurb}</p>
 
         {variant === "preview" ? (
           <>
-            <div className="sm-svc-card__meta">
-              <span className="sm-meta">
+            <div className="bk-svc-card__meta">
+              <span className="bk-meta">
                 <Icon name="clock" size={13} />
-                <span className="sm-mono">{durationLabel(s.dur)}</span>
+                <span className="bk-mono">{durationLabel(s.dur)}</span>
               </span>
-              <span className="sm-mono sm-svc-card__price">{money(s.price)}</span>
+              <span className="bk-mono bk-svc-card__price">{money(s.price)}</span>
             </div>
             <Button icon="calendar-plus" full onClick={() => onBook(s.id)}>
               Book
@@ -59,18 +59,18 @@ export function ServiceCard({
           </>
         ) : (
           <>
-            <div className="sm-svc-card__meta">
-              <span className="sm-meta">
+            <div className="bk-svc-card__meta">
+              <span className="bk-meta">
                 <Icon name="clock" size={13} />
-                <span className="sm-mono">{durationLabel(s.dur)}</span>
+                <span className="bk-mono">{durationLabel(s.dur)}</span>
               </span>
-              <span className="sm-meta">
+              <span className="bk-meta">
                 <Icon name="user" size={13} />
-                <span className="sm-mono">{staffNames}</span>
+                <span className="bk-mono">{staffNames}</span>
               </span>
             </div>
-            <div className="sm-svc-card__foot">
-              <span className="sm-mono sm-svc-card__price sm-svc-card__price--lg">
+            <div className="bk-svc-card__foot">
+              <span className="bk-mono bk-svc-card__price bk-svc-card__price--lg">
                 {money(s.price)}
               </span>
               <Button onClick={() => onBook(s.id)}>Book</Button>

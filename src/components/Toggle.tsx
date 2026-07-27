@@ -28,11 +28,11 @@ export function Toggle({
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={["sm-toggle", className].filter(Boolean).join(" ")}
+      className={["bk-toggle", className].filter(Boolean).join(" ")}
       data-on={checked ? "true" : "false"}
       style={style}
     >
-      <span className="sm-toggle__knob" />
+      <span className="bk-toggle__knob" />
     </button>
   );
 }

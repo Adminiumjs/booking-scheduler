@@ -27,19 +27,19 @@ export function WaitlistCard({
 }: WaitlistCardProps) {
   return (
     <div
-      className={["sm-waitlist", className].filter(Boolean).join(" ")}
+      className={["bk-waitlist", className].filter(Boolean).join(" ")}
       data-full={full && !joined ? "true" : "false"}
     >
-      <span className="sm-waitlist__tile">
+      <span className="bk-waitlist__tile">
         <Icon name={joined ? "check-circle-2" : "bell-plus"} size={20} />
       </span>
-      <div className="sm-waitlist__text">
-        <div className="sm-waitlist__title">{title}</div>
-        <div className="sm-waitlist__sub">{sub}</div>
+      <div className="bk-waitlist__text">
+        <div className="bk-waitlist__title">{title}</div>
+        <div className="bk-waitlist__sub">{sub}</div>
       </div>
       <button
         type="button"
-        className={joined ? "sm-waitlist__btn" : "sm-btn sm-waitlist__btn"}
+        className={joined ? "bk-waitlist__btn" : "bk-btn bk-waitlist__btn"}
         data-joined={joined ? "true" : "false"}
         disabled={joined}
         onClick={onJoin}

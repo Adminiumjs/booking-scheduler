@@ -1,6 +1,6 @@
 /*
  * The one button primitive. Every CTA, ghost action and back link in the app
- * is one of these — the comp's `.sm-btn` / `.sm-gi` behaviour classes are
+ * is one of these — the comp's `.bk-btn` / `.bk-gi` behaviour classes are
  * applied automatically per variant.
  */
 
@@ -54,11 +54,11 @@ export function Button({
   className,
   style,
 }: ButtonProps) {
-  const behaviour = variant === "ghost" || variant === "link" ? "sm-gi" : "sm-btn";
+  const behaviour = variant === "ghost" || variant === "link" ? "bk-gi" : "bk-btn";
   return (
     <button
       type={type}
-      className={[behaviour, "sm-button", `sm-button--${variant}`, className]
+      className={[behaviour, "bk-button", `bk-button--${variant}`, className]
         .filter(Boolean)
         .join(" ")}
       onClick={onClick}
@@ -104,7 +104,7 @@ export function IconButton({
   return (
     <button
       type="button"
-      className={["sm-gi", "sm-icon-btn", className].filter(Boolean).join(" ")}
+      className={["bk-gi", "bk-icon-btn", className].filter(Boolean).join(" ")}
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
@@ -134,7 +134,7 @@ export function BackLink({
   return (
     <button
       type="button"
-      className={["sm-nav", "sm-backlink", className].filter(Boolean).join(" ")}
+      className={["bk-nav", "bk-backlink", className].filter(Boolean).join(" ")}
       onClick={onClick}
     >
       <Icon name={icon} size={15} />

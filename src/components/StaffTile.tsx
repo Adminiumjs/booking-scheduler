@@ -14,13 +14,13 @@ export function StaffTile({ staff, onClick, className }: StaffTileProps) {
   return (
     <button
       type="button"
-      className={["sm-card", "sm-staff-tile", className].filter(Boolean).join(" ")}
+      className={["bk-card", "bk-staff-tile", className].filter(Boolean).join(" ")}
       onClick={() => onClick(staff)}
     >
       <Avatar initials={staff.initials} tint={staff.tint} size={60} fontSize={20} />
-      <div className="sm-staff-tile__name">{staff.name}</div>
-      <div className="sm-staff-tile__role">{staff.role}</div>
-      <p className="sm-staff-tile__bio">{staff.bio}</p>
+      <div className="bk-staff-tile__name">{staff.name}</div>
+      <div className="bk-staff-tile__role">{staff.role}</div>
+      <p className="bk-staff-tile__bio">{staff.bio}</p>
     </button>
   );
 }

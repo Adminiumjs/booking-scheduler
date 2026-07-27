@@ -1,42 +1,42 @@
 /*
- * Booking screen (spec §3.3). Everything here is scoped under `.sm-booking`
+ * Booking screen (spec §3.3). Everything here is scoped under `.bk-booking`
  * so it can never leak into another screen. Logical properties throughout —
  * the port stays RTL-ready by construction.
  */
 
-.sm-booking {
+.bk-booking {
   --page-max: 920px;
   padding-block: clamp(20px, 3vw, 34px) clamp(28px, 4vw, 52px);
 }
 
-.sm-booking .sm-backlink {
+.bk-booking .bk-backlink {
   margin-block-end: 14px;
 }
 
-.sm-booking .sm-stepper {
+.bk-booking .bk-stepper {
   margin-block-end: 26px;
 }
 
-.sm-booking__step {
+.bk-booking__step {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.sm-booking__head {
+.bk-booking__head {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
 
-.sm-booking__svcname {
+.bk-booking__svcname {
   color: var(--fg);
   font-weight: 700;
 }
 
 /* ---------------- step 0 — service ---------------- */
 
-.sm-booking__promo {
+.bk-booking__promo {
   display: flex;
   align-items: center;
   gap: 13px;
@@ -53,12 +53,12 @@
     background 0.14s ease;
 }
 
-.sm-booking__promo:hover {
+.bk-booking__promo:hover {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
 
-.sm-booking__promo-tile {
+.bk-booking__promo-tile {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,7 +70,7 @@
   color: var(--accent);
 }
 
-.sm-booking__promo-text {
+.bk-booking__promo-text {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -78,24 +78,24 @@
   min-inline-size: 0;
 }
 
-.sm-booking__promo-title {
+.bk-booking__promo-title {
   font-size: 14px;
   font-weight: 800;
 }
 
-.sm-booking__promo-sub {
+.bk-booking__promo-sub {
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--fg-muted);
 }
 
-.sm-booking__chips {
+.bk-booking__chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.sm-booking__svcgrid {
+.bk-booking__svcgrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 12px;
@@ -103,7 +103,7 @@
 
 /* ---------------- step 1 — staff ---------------- */
 
-.sm-booking__staffrows {
+.bk-booking__staffrows {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -111,19 +111,19 @@
 
 /* ---------------- step 2 — date & time ---------------- */
 
-.sm-booking__groups {
+.bk-booking__groups {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.sm-booking__group {
+.bk-booking__group {
   display: flex;
   flex-direction: column;
   gap: 11px;
 }
 
-.sm-booking__bar {
+.bk-booking__bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -134,19 +134,19 @@
   border-block-start: 1px solid var(--border);
 }
 
-.sm-booking__pick {
+.bk-booking__pick {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-inline-size: 0;
 }
 
-.sm-booking__pick-none {
+.bk-booking__pick-none {
   font-size: 13px;
   color: var(--fg-muted);
 }
 
-.sm-booking__pick-cap {
+.bk-booking__pick-cap {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -154,7 +154,7 @@
   color: var(--fg-subtle);
 }
 
-.sm-booking__pick-label {
+.bk-booking__pick-label {
   font-size: 14px;
   font-weight: 600;
   color: var(--fg);
@@ -162,40 +162,40 @@
 
 /* ---------------- step 3 — your details ---------------- */
 
-.sm-booking__details {
+.bk-booking__details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   align-items: start;
   gap: 24px;
 }
 
-.sm-booking__form {
+.bk-booking__form {
   display: flex;
   flex-direction: column;
   gap: 16px;
   min-inline-size: 0;
 }
 
-.sm-booking__note {
+.bk-booking__note {
   min-block-size: 92px;
   resize: none;
   line-height: 1.6;
 }
 
-.sm-booking__card {
+.bk-booking__card {
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 16px 18px;
 }
 
-.sm-booking__cardhead {
+.bk-booking__cardhead {
   display: flex;
   align-items: center;
   gap: 11px;
 }
 
-.sm-booking__cardhead-icon {
+.bk-booking__cardhead-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,7 +207,7 @@
   color: var(--accent);
 }
 
-.sm-booking__cardhead-text {
+.bk-booking__cardhead-text {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -215,18 +215,18 @@
   min-inline-size: 0;
 }
 
-.sm-booking__cardhead-title {
+.bk-booking__cardhead-title {
   font-size: 14.5px;
   font-weight: 800;
 }
 
-.sm-booking__cardhead-sub {
+.bk-booking__cardhead-sub {
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--fg-muted);
 }
 
-.sm-booking__togglerow {
+.bk-booking__togglerow {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -236,7 +236,7 @@
   background: var(--surface-2);
 }
 
-.sm-booking__togglerow-icon {
+.bk-booking__togglerow-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -249,7 +249,7 @@
   color: var(--fg-muted);
 }
 
-.sm-booking__togglerow-text {
+.bk-booking__togglerow-text {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -257,37 +257,37 @@
   min-inline-size: 0;
 }
 
-.sm-booking__togglerow-title {
+.bk-booking__togglerow-title {
   font-size: 13.5px;
   font-weight: 700;
 }
 
-.sm-booking__togglerow-sub {
+.bk-booking__togglerow-sub {
   font-size: 12px;
   line-height: 1.45;
   color: var(--fg-muted);
 }
 
-.sm-booking__sendrow {
+.bk-booking__sendrow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
 }
 
-.sm-booking__sendlabel {
+.bk-booking__sendlabel {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--fg-muted);
 }
 
-.sm-booking__recur {
+.bk-booking__recur {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.sm-booking__countrow {
+.bk-booking__countrow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -295,13 +295,13 @@
   gap: 10px;
 }
 
-.sm-booking__countlabel {
+.bk-booking__countlabel {
   font-size: 13px;
   font-weight: 600;
   color: var(--fg-muted);
 }
 
-.sm-booking__recursum {
+.bk-booking__recursum {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -313,56 +313,56 @@
 
 /* ---- sticky summary ---- */
 
-.sm-booking__summary {
+.bk-booking__summary {
   position: sticky;
   inset-block-start: var(--sticky-top, 82px);
   min-inline-size: 0;
 }
 
-.sm-booking__summary-body {
+.bk-booking__summary-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 18px 20px 20px;
 }
 
-.sm-booking__summary-svc {
+.bk-booking__summary-svc {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.sm-booking__summary-svctext {
+.bk-booking__summary-svctext {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-inline-size: 0;
 }
 
-.sm-booking__summary-svcname {
+.bk-booking__summary-svcname {
   font-size: 15px;
   font-weight: 800;
 }
 
-.sm-booking__summary-svcmeta {
+.bk-booking__summary-svcmeta {
   font-size: 12px;
   color: var(--fg-muted);
 }
 
-.sm-booking__srows {
+.bk-booking__srows {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.sm-booking__srow {
+.bk-booking__srow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.sm-booking__srow-key {
+.bk-booking__srow-key {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -370,13 +370,13 @@
   color: var(--fg-muted);
 }
 
-.sm-booking__srow-val {
+.bk-booking__srow-val {
   font-size: 13px;
   font-weight: 700;
   text-align: end;
 }
 
-.sm-booking__total {
+.bk-booking__total {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -385,24 +385,24 @@
   border-block-start: 1px solid var(--border);
 }
 
-.sm-booking__total-key {
+.bk-booking__total-key {
   font-size: 13px;
   font-weight: 700;
   color: var(--fg-muted);
 }
 
-.sm-booking__total-val {
+.bk-booking__total-val {
   font-size: 19px;
   font-weight: 700;
 }
 
-.sm-booking__cta {
+.bk-booking__cta {
   padding: 14px 20px;
   border-radius: 13px;
   font-size: 14.5px;
 }
 
-.sm-booking__fine {
+.bk-booking__fine {
   display: flex;
   align-items: flex-start;
   gap: 7px;
@@ -412,14 +412,14 @@
   color: var(--fg-subtle);
 }
 
-.sm-booking__fine svg {
+.bk-booking__fine svg {
   flex: 0 0 auto;
   margin-block-start: 1px;
 }
 
 /* The summary un-sticks once it stacks under the form (ruling R8). */
 @media (max-width: 899.98px) {
-  .sm-booking__summary {
+  .bk-booking__summary {
     position: static;
   }
 }

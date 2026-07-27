@@ -39,29 +39,29 @@ export function MobileSheet() {
 
   return (
     <div
-      className="sm-sheet-scrim"
+      className="bk-sheet-scrim"
       onClick={close}
       role="presentation"
     >
       <div
         ref={ref}
-        className="sm-sheet"
+        className="bk-sheet"
         role="dialog"
         aria-modal="true"
         aria-label="Menu"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sm-sheet__head">
-          <span className="sm-sheet__title">Menu</span>
+        <div className="bk-sheet__head">
+          <span className="bk-sheet__title">Menu</span>
           <IconButton icon="x" label="Close menu" size={36} onClick={close} />
         </div>
-        <nav className="sm-sheet__nav" aria-label="Mobile">
+        <nav className="bk-sheet__nav" aria-label="Mobile">
           {ITEMS.map((item) => (
             <button
               key={item.label}
               type="button"
-              className="sm-gi sm-sheet__item"
+              className="bk-gi bk-sheet__item"
               onClick={() =>
                 item.anchor ? goHomeScroll(item.anchor) : go(item.view as View)
               }

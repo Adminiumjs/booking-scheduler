@@ -50,31 +50,31 @@ export default function Policy() {
   const go = useStore((s) => s.go);
 
   return (
-    <main className="sm-screen sm-page sm-policy">
+    <main className="bk-screen bk-page bk-policy">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-policy__head">
-        <h1 className="sm-h1">Cancellation policy</h1>
-        <p className="sm-sub">
+      <div className="bk-policy__head">
+        <h1 className="bk-h1">Cancellation policy</h1>
+        <p className="bk-sub">
           Plans change — we get it. Here’s how ours works, in plain language.
         </p>
       </div>
 
-      <div className="sm-policy__list">
+      <div className="bk-policy__list">
         {POLICY_CARDS.map((card) => (
-          <section className="sm-panel sm-policy-card" key={card.title}>
-            <span className="sm-policy-card__tile" data-tone={card.tone}>
+          <section className="bk-panel bk-policy-card" key={card.title}>
+            <span className="bk-policy-card__tile" data-tone={card.tone}>
               <Icon name={card.icon} size={20} />
             </span>
             <div>
-              <h2 className="sm-policy-card__title">{card.title}</h2>
-              <p className="sm-policy-card__body">{card.body}</p>
+              <h2 className="bk-policy-card__title">{card.title}</h2>
+              <p className="bk-policy-card__body">{card.body}</p>
             </div>
           </section>
         ))}
       </div>
 
-      <Banner tone="info" className="sm-policy__banner">
+      <Banner tone="info" className="bk-policy__banner">
         This is a demo policy for illustration — no fees are ever actually
         charged.
       </Banner>

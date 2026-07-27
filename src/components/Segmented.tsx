@@ -30,7 +30,7 @@ export function Segmented<T extends string>({
 }: SegmentedProps<T>) {
   return (
     <div
-      className={["sm-seg", className].filter(Boolean).join(" ")}
+      className={["bk-seg", className].filter(Boolean).join(" ")}
       role="radiogroup"
       aria-label={label}
       style={style}
@@ -41,7 +41,7 @@ export function Segmented<T extends string>({
           type="button"
           role="radio"
           aria-checked={o.value === value}
-          className="sm-seg__chip"
+          className="bk-seg__chip"
           data-active={o.value === value ? "true" : "false"}
           onClick={() => onChange(o.value)}
         >

@@ -32,7 +32,7 @@ export function Chip({
   return (
     <button
       type="button"
-      className={["sm-chip", "sm-chip-btn", className].filter(Boolean).join(" ")}
+      className={["bk-chip", "bk-chip-btn", className].filter(Boolean).join(" ")}
       data-active={active ? "true" : "false"}
       aria-pressed={active}
       disabled={disabled}
@@ -42,7 +42,7 @@ export function Chip({
       {icon ? <Icon name={icon} size={iconSize} /> : null}
       {label}
       {count !== undefined ? (
-        <span className="sm-chip-btn__count">{count}</span>
+        <span className="bk-chip-btn__count">{count}</span>
       ) : null}
     </button>
   );

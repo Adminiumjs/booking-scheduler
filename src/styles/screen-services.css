@@ -1,17 +1,17 @@
 /*
- * Services screen (spec §3.2). The page cap and gutters come from `.sm-page`;
+ * Services screen (spec §3.2). The page cap and gutters come from `.bk-page`;
  * only the heading block, the chip row and the card grid are local.
  */
 
-.sm-services {
+.bk-services {
   --page-max: 1180px;
 }
 
-.sm-services-head {
+.bk-services-head {
   margin-block-end: 22px;
 }
 
-.sm-services-title {
+.bk-services-title {
   margin: 0;
   font-size: clamp(26px, 4vw, 38px);
   font-weight: 800;
@@ -20,7 +20,7 @@
   text-wrap: balance;
 }
 
-.sm-services-sub {
+.bk-services-sub {
   margin: 8px 0 0;
   max-width: 520px;
   font-size: 15px;
@@ -29,14 +29,14 @@
   text-wrap: pretty;
 }
 
-.sm-services-chips {
+.bk-services-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
   margin-block-end: 24px;
 }
 
-.sm-services-grid {
+.bk-services-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   gap: 16px;

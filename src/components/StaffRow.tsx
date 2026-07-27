@@ -49,20 +49,20 @@ export function StaffRow({
       aria-checked={selected}
       disabled={disabled}
       onClick={onSelect}
-      className={["sm-staff-row", className].filter(Boolean).join(" ")}
+      className={["bk-staff-row", className].filter(Boolean).join(" ")}
       data-selected={selected ? "true" : "false"}
     >
       {staff && !icon ? (
         <Avatar initials={staff.initials} tint={staff.tint} size={52} fontSize={17} />
       ) : (
-        <span className="sm-staff-row__glyph">
+        <span className="bk-staff-row__glyph">
           <Icon name={icon ?? "zap"} size={22} />
         </span>
       )}
-      <span className="sm-staff-row__text">
-        <span className="sm-staff-row__name">{name}</span>
-        {roleText ? <span className="sm-staff-row__role">{roleText}</span> : null}
-        {noteText ? <span className="sm-staff-row__note">{noteText}</span> : null}
+      <span className="bk-staff-row__text">
+        <span className="bk-staff-row__name">{name}</span>
+        {roleText ? <span className="bk-staff-row__role">{roleText}</span> : null}
+        {noteText ? <span className="bk-staff-row__note">{noteText}</span> : null}
       </span>
       <Radio selected={selected} />
     </button>

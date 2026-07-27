@@ -2,22 +2,22 @@
  * Screen-local styles for the Loyalty history view (spec §3.7, §5.10).
  */
 
-.sm-lhistory {
+.bk-lhistory {
   --page-max: 680px;
   padding-block-start: clamp(24px, 4vw, 44px);
 }
 
-.sm-lhistory__intro {
+.bk-lhistory__intro {
   margin-block-end: 20px;
 }
 
-.sm-lhistory__sub {
+.bk-lhistory__sub {
   margin-block-start: 8px;
 }
 
 /* ---------------- balance card ---------------- */
 
-.sm-lhistory-balance {
+.bk-lhistory-balance {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -31,39 +31,39 @@
   box-shadow: var(--shadow);
 }
 
-.sm-lhistory-balance__label {
+.bk-lhistory-balance__label {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--fg-muted);
 }
 
-.sm-lhistory-balance__figure {
+.bk-lhistory-balance__figure {
   display: flex;
   align-items: baseline;
   gap: 6px;
   margin-block-start: 4px;
 }
 
-.sm-lhistory-balance__value {
+.bk-lhistory-balance__value {
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 
-.sm-lhistory-balance__unit {
+.bk-lhistory-balance__unit {
   font-size: 14px;
   font-weight: 700;
   color: var(--fg-muted);
 }
 
-.sm-lhistory-balance__cta {
+.bk-lhistory-balance__cta {
   color: var(--fg);
 }
 
 /* ---------------- ledger ---------------- */
 
-.sm-lhistory-ledger {
+.bk-lhistory-ledger {
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
@@ -71,7 +71,7 @@
   overflow: hidden;
 }
 
-.sm-lhistory-row {
+.bk-lhistory-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -79,40 +79,40 @@
   border-block-end: 1px solid var(--border);
 }
 
-.sm-lhistory-row__text {
+.bk-lhistory-row__text {
   flex: 1;
   min-inline-size: 0;
 }
 
-.sm-lhistory-row__label {
+.bk-lhistory-row__label {
   font-size: 13.5px;
   font-weight: 700;
 }
 
-.sm-lhistory-row__date {
+.bk-lhistory-row__date {
   margin-block-start: 2px;
   font-size: 11.5px;
   color: var(--fg-subtle);
 }
 
-.sm-lhistory-row__end {
+.bk-lhistory-row__end {
   text-align: end;
 }
 
-.sm-lhistory-row__delta {
+.bk-lhistory-row__delta {
   font-size: 14px;
   font-weight: 700;
 }
 
-.sm-lhistory-row__delta[data-sign="pos"] {
+.bk-lhistory-row__delta[data-sign="pos"] {
   color: var(--pos);
 }
 
-.sm-lhistory-row__delta[data-sign="neg"] {
+.bk-lhistory-row__delta[data-sign="neg"] {
   color: var(--fg-subtle);
 }
 
-.sm-lhistory-row__balance {
+.bk-lhistory-row__balance {
   margin-block-start: 2px;
   font-size: 11px;
   color: var(--fg-subtle);

@@ -28,13 +28,13 @@ export default function MyGifts() {
   };
 
   return (
-    <main className="sm-screen sm-page sm-mygifts-page">
+    <main className="bk-screen bk-page bk-mygifts-page">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-mygifts-head">
+      <div className="bk-mygifts-head">
         <div>
-          <h1 className="sm-h1">Purchased gift cards</h1>
-          <p className="sm-sub">Gift cards you&apos;ve bought and sent.</p>
+          <h1 className="bk-h1">Purchased gift cards</h1>
+          <p className="bk-sub">Gift cards you&apos;ve bought and sent.</p>
         </div>
         <Button icon="gift" onClick={buy}>
           Buy a gift card
@@ -49,20 +49,20 @@ export default function MyGifts() {
         />
       ) : null}
 
-      <div className="sm-mygifts-list">
+      <div className="bk-mygifts-list">
         {gifts.map((g) => (
-          <div className="sm-card sm-mygift" key={g.code}>
-            <div className="sm-mygift__tile">
+          <div className="bk-card bk-mygift" key={g.code}>
+            <div className="bk-mygift__tile">
               <Icon name="gift" size={24} />
             </div>
-            <div className="sm-mygift__text">
-              <div className="sm-mygift__top">
-                <span className="sm-mono sm-mygift__amount">
+            <div className="bk-mygift__text">
+              <div className="bk-mygift__top">
+                <span className="bk-mono bk-mygift__amount">
                   {money(g.amount)}
                 </span>
-                <span className="sm-mono sm-mygift__code">{g.code}</span>
+                <span className="bk-mono bk-mygift__code">{g.code}</span>
               </div>
-              <div className="sm-mygift__meta">
+              <div className="bk-mygift__meta">
                 To {g.to} · {g.date}
               </div>
             </div>

@@ -93,7 +93,7 @@ export default function App() {
   }, [escape]);
 
   return (
-    <div className="sm-app">
+    <div className="bk-app">
       <Header />
       <MobileSheet />
       <CurrentScreen />

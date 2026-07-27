@@ -17,16 +17,16 @@ export function DayChip({ day, active, onSelect, className }: DayChipProps) {
   return (
     <button
       type="button"
-      className={["sm-day-chip", className].filter(Boolean).join(" ")}
+      className={["bk-day-chip", className].filter(Boolean).join(" ")}
       data-active={active ? "true" : "false"}
       disabled={day.disabled}
       aria-pressed={active}
       aria-label={`${day.dow} ${day.dayNum}${day.subLabel ? `, ${day.subLabel}` : ""}`}
       onClick={() => onSelect(day.index)}
     >
-      <span className="sm-day-chip__dow">{day.dow}</span>
-      <span className="sm-mono sm-day-chip__num">{day.dayNum}</span>
-      <span className="sm-day-chip__sub">{day.subLabel || " "}</span>
+      <span className="bk-day-chip__dow">{day.dow}</span>
+      <span className="bk-mono bk-day-chip__num">{day.dayNum}</span>
+      <span className="bk-day-chip__sub">{day.subLabel || " "}</span>
     </button>
   );
 }
@@ -50,7 +50,7 @@ export function WeekStrip({
 }: WeekStripProps) {
   return (
     <div
-      className={["sm-scroll", "sm-weekstrip", className].filter(Boolean).join(" ")}
+      className={["bk-scroll", "bk-weekstrip", className].filter(Boolean).join(" ")}
       role="group"
       aria-label={label}
     >

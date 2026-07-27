@@ -28,12 +28,12 @@ export default function WaitlistStatus() {
   );
 
   return (
-    <main className="sm-screen sm-page sm-wstatus">
+    <main className="bk-screen bk-page bk-wstatus">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-wstatus__head">
-        <h1 className="sm-h1">Waitlist status</h1>
-        <p className="sm-sub">
+      <div className="bk-wstatus__head">
+        <h1 className="bk-h1">Waitlist status</h1>
+        <p className="bk-sub">
           Days you’re waiting on — we’ll text you the moment a spot opens.
         </p>
       </div>
@@ -45,7 +45,7 @@ export default function WaitlistStatus() {
           body="If a day is fully booked, join its waitlist from the date & time step and it’ll appear here."
         />
       ) : (
-        <div className="sm-wstatus__list">
+        <div className="bk-wstatus__list">
           {entries.map((entry) => (
             <WaitlistRow
               key={entry.key}
@@ -74,7 +74,7 @@ function WaitlistRow({ entry, onLeave }: WaitlistRowProps) {
   const tint = svc?.tint ?? "#0d9488";
 
   return (
-    <div className="sm-card sm-panel sm-wstatus-row">
+    <div className="bk-card bk-panel bk-wstatus-row">
       <IconTile
         icon={svc?.icon ?? "bell"}
         tint={tint}
@@ -82,13 +82,13 @@ function WaitlistRow({ entry, onLeave }: WaitlistRowProps) {
         iconSize={19}
         radius={12}
       />
-      <div className="sm-wstatus-row__text">
-        <div className="sm-wstatus-row__svc">{svc?.name ?? "Any service"}</div>
-        <div className="sm-wstatus-row__when">
+      <div className="bk-wstatus-row__text">
+        <div className="bk-wstatus-row__svc">{svc?.name ?? "Any service"}</div>
+        <div className="bk-wstatus-row__when">
           {entry.iso ? formatLongISO(entry.iso) : "Flexible"} ·{" "}
           {staff ? staff.name : "First available"}
         </div>
-        <span className="sm-wstatus-row__pill">
+        <span className="bk-wstatus-row__pill">
           <Icon name="clock" size={12} />
           Waiting for an opening
         </span>
@@ -97,7 +97,7 @@ function WaitlistRow({ entry, onLeave }: WaitlistRowProps) {
         variant="ghost"
         size="sm"
         onClick={onLeave}
-        className="sm-wstatus-row__leave"
+        className="bk-wstatus-row__leave"
       >
         Leave
       </Button>

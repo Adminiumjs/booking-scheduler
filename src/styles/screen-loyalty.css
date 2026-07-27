@@ -3,17 +3,17 @@
  * Logical properties throughout — the port stays RTL-ready by construction.
  */
 
-.sm-loyalty {
+.bk-loyalty {
   --page-max: 960px;
   padding-block-start: clamp(24px, 4vw, 44px);
 }
 
-.sm-loyalty__intro {
+.bk-loyalty__intro {
   margin-block-end: 24px;
 }
 
 /* The eyebrow here is a soft accent pill, not the uppercase section label. */
-.sm-loyalty__eyebrow {
+.bk-loyalty__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -26,14 +26,14 @@
   font-weight: 700;
 }
 
-.sm-loyalty__h1 {
+.bk-loyalty__h1 {
   margin: 0;
   font-size: clamp(26px, 4vw, 38px);
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
-.sm-loyalty__sub {
+.bk-loyalty__sub {
   margin: 8px 0 0;
   max-inline-size: 520px;
   font-size: 15px;
@@ -41,18 +41,18 @@
   text-wrap: pretty;
 }
 
-.sm-loyalty__h2 {
+.bk-loyalty__h2 {
   margin: 0 0 14px;
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
-.sm-loyalty__h2 + .sm-loyalty__h2sub {
+.bk-loyalty__h2 + .bk-loyalty__h2sub {
   margin-block-start: -8px;
 }
 
-.sm-loyalty__h2sub {
+.bk-loyalty__h2sub {
   margin: 0 0 18px;
   font-size: 13.5px;
   color: var(--fg-muted);
@@ -60,14 +60,14 @@
 
 /* ---------------- points + how it works ---------------- */
 
-.sm-loyalty__cards {
+.bk-loyalty__cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 16px;
   margin-block-end: 30px;
 }
 
-.sm-loyalty-points {
+.bk-loyalty-points {
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -75,20 +75,20 @@
   box-shadow: var(--shadow);
 }
 
-.sm-loyalty-points__head {
+.bk-loyalty-points__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.sm-loyalty-points__label {
+.bk-loyalty-points__label {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--fg-muted);
 }
 
-.sm-loyalty-points__member {
+.bk-loyalty-points__member {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -100,46 +100,46 @@
   font-weight: 700;
 }
 
-.sm-loyalty-points__figure {
+.bk-loyalty-points__figure {
   display: flex;
   align-items: baseline;
   gap: 8px;
   margin-block: 8px 16px;
 }
 
-.sm-loyalty-points__value {
+.bk-loyalty-points__value {
   font-size: 44px;
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;
 }
 
-.sm-loyalty-points__unit {
+.bk-loyalty-points__unit {
   font-size: 15px;
   font-weight: 700;
   color: var(--fg-muted);
 }
 
-.sm-loyalty-points__track {
+.bk-loyalty-points__track {
   block-size: 10px;
   border-radius: 999px;
   background: var(--surface-3);
   overflow: hidden;
 }
 
-.sm-loyalty-points__fill {
+.bk-loyalty-points__fill {
   block-size: 100%;
   border-radius: 999px;
   background: var(--accent);
 }
 
-.sm-loyalty-points__togo {
+.bk-loyalty-points__togo {
   margin-block-start: 10px;
   font-size: 12.5px;
   color: var(--fg-muted);
 }
 
-.sm-loyalty-how {
+.bk-loyalty-how {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -149,19 +149,19 @@
   background: var(--surface-2);
 }
 
-.sm-loyalty-how__label {
+.bk-loyalty-how__label {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--fg-muted);
 }
 
-.sm-loyalty-how__row {
+.bk-loyalty-how__row {
   display: flex;
   align-items: center;
   gap: 11px;
 }
 
-.sm-loyalty-how__glyph {
+.bk-loyalty-how__glyph {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,7 +173,7 @@
   color: var(--accent);
 }
 
-.sm-loyalty-how__text {
+.bk-loyalty-how__text {
   font-size: 13px;
   line-height: 1.4;
   color: var(--fg);
@@ -181,14 +181,14 @@
 
 /* ---------------- rewards ---------------- */
 
-.sm-loyalty__rewards {
+.bk-loyalty__rewards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
   gap: 14px;
   margin-block-end: 34px;
 }
 
-.sm-loyalty-reward {
+.bk-loyalty-reward {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -199,18 +199,18 @@
   box-shadow: var(--shadow);
 }
 
-.sm-loyalty-reward__body {
+.bk-loyalty-reward__body {
   flex: 1;
 }
 
-.sm-loyalty-reward__name {
+.bk-loyalty-reward__name {
   font-size: 14.5px;
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
 
-.sm-loyalty-reward__cost {
+.bk-loyalty-reward__cost {
   margin-block-start: 4px;
   font-size: 12.5px;
   color: var(--fg-subtle);
@@ -218,13 +218,13 @@
 
 /* ---------------- membership plans ---------------- */
 
-.sm-loyalty__plans {
+.bk-loyalty__plans {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 16px;
 }
 
-.sm-loyalty-plan {
+.bk-loyalty-plan {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -236,11 +236,11 @@
   box-shadow: var(--shadow);
 }
 
-.sm-loyalty-plan[data-featured="true"] {
+.bk-loyalty-plan[data-featured="true"] {
   border-color: var(--accent);
 }
 
-.sm-loyalty-plan__ribbon {
+.bk-loyalty-plan__ribbon {
   position: absolute;
   inset-block-start: -11px;
   inset-inline-start: 24px;
@@ -254,38 +254,38 @@
   text-transform: uppercase;
 }
 
-.sm-loyalty-plan__name {
+.bk-loyalty-plan__name {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
-.sm-loyalty-plan__pricerow {
+.bk-loyalty-plan__pricerow {
   display: flex;
   align-items: baseline;
   gap: 3px;
   margin-block-start: 6px;
 }
 
-.sm-loyalty-plan__price {
+.bk-loyalty-plan__price {
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
-.sm-loyalty-plan__cadence {
+.bk-loyalty-plan__cadence {
   font-size: 13px;
   font-weight: 600;
   color: var(--fg-muted);
 }
 
-.sm-loyalty-plan__perks {
+.bk-loyalty-plan__perks {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.sm-loyalty-plan__perk {
+.bk-loyalty-plan__perk {
   display: flex;
   align-items: flex-start;
   gap: 9px;
@@ -294,12 +294,12 @@
   color: var(--fg);
 }
 
-.sm-loyalty-plan__tick {
+.bk-loyalty-plan__tick {
   flex-shrink: 0;
   margin-block-start: 2px;
   color: var(--accent);
 }
 
-.sm-loyalty-plan[data-featured="false"] .sm-loyalty-plan__join {
+.bk-loyalty-plan[data-featured="false"] .bk-loyalty-plan__join {
   color: var(--fg);
 }

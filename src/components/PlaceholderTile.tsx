@@ -81,7 +81,7 @@ export function PlaceholderTile({
   const dark = useIsDark();
   return (
     <div
-      className={["sm-ph", className].filter(Boolean).join(" ")}
+      className={["bk-ph", className].filter(Boolean).join(" ")}
       style={{
         minHeight: `${minHeight}px`,
         background: placeholderBackground(tint, angle, dark),
@@ -95,7 +95,7 @@ export function PlaceholderTile({
         <Icon name={icon} size={iconSize} color={placeholderInk(tint, dark)} />
       ) : null}
       {children}
-      {filename ? <span className="sm-ph-chip">{filename}</span> : null}
+      {filename ? <span className="bk-ph-chip">{filename}</span> : null}
     </div>
   );
 }
@@ -125,7 +125,7 @@ export function Avatar({
   const dark = useIsDark();
   return (
     <div
-      className={["sm-avatar", className].filter(Boolean).join(" ")}
+      className={["bk-avatar", className].filter(Boolean).join(" ")}
       aria-hidden="true"
       style={{
         width: `${size}px`,
@@ -165,7 +165,7 @@ export function IconTile({
   const dark = useIsDark();
   return (
     <div
-      className={["sm-avatar", className].filter(Boolean).join(" ")}
+      className={["bk-avatar", className].filter(Boolean).join(" ")}
       style={{
         width: `${size}px`,
         height: `${size}px`,

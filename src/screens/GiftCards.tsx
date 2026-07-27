@@ -63,18 +63,18 @@ function GiftPreview({ tint, amount, to, className }: GiftPreviewProps) {
   const dark = useIsDark();
   return (
     <div
-      className={["sm-gift-preview", className].filter(Boolean).join(" ")}
+      className={["bk-gift-preview", className].filter(Boolean).join(" ")}
       style={{ background: placeholderBackground(tint, "145deg", dark) }}
     >
-      <div className="sm-gift-preview__top">
-        <span className="sm-gift-preview__brand">Lumen</span>
+      <div className="bk-gift-preview__top">
+        <span className="bk-gift-preview__brand">Lumen</span>
         <Icon name="gift" size={20} />
       </div>
       <div>
-        <div className="sm-mono sm-gift-preview__amount">{money(amount)}</div>
-        <div className="sm-gift-preview__caption">Studio gift card</div>
+        <div className="bk-mono bk-gift-preview__amount">{money(amount)}</div>
+        <div className="bk-gift-preview__caption">Studio gift card</div>
       </div>
-      <div className="sm-gift-preview__to">
+      <div className="bk-gift-preview__to">
         {to ? `To ${to}` : "To someone lovely"}
       </div>
     </div>
@@ -129,27 +129,27 @@ export default function GiftCards() {
         : "Delivered to their inbox the moment you’re done.";
 
     return (
-      <main className="sm-screen sm-page sm-gift-page">
-        <div className="sm-gift-done">
+      <main className="bk-screen bk-page bk-gift-page">
+        <div className="bk-gift-done">
           <SuccessTile icon="gift" iconSize={36} />
-          <h1 className="sm-h1">Your gift is on its way!</h1>
-          <p className="sm-gift-done__sub">{doneSub}</p>
+          <h1 className="bk-h1">Your gift is on its way!</h1>
+          <p className="bk-gift-done__sub">{doneSub}</p>
           <CodePill label="Gift code" code={gcCode ?? ""} codeSize={20} />
           <GiftPreview
-            className="sm-gift-preview--done"
+            className="bk-gift-preview--done"
             tint={theme.tint}
             amount={amount}
             to={gcTo}
           />
-          <Banner tone="info" className="sm-gift-done__banner">
+          <Banner tone="info" className="bk-gift-done__banner">
             This is a demo — no card was charged and nothing was emailed.
           </Banner>
-          <div className="sm-gift-done__actions">
+          <div className="bk-gift-done__actions">
             <Button
               variant="ghost"
               size="lg"
               icon="gift"
-              className="sm-gift-done__btn"
+              className="bk-gift-done__btn"
               onClick={gcReset}
             >
               Buy another
@@ -157,7 +157,7 @@ export default function GiftCards() {
             <Button
               size="lg"
               icon="home"
-              className="sm-gift-done__btn"
+              className="bk-gift-done__btn"
               onClick={() => go("home")}
             >
               Back home
@@ -173,14 +173,14 @@ export default function GiftCards() {
   const ctaLabel = gcStep === "pay" ? `Pay ${money(amount)}` : "Continue";
 
   return (
-    <main className="sm-screen sm-page sm-gift-page">
+    <main className="bk-screen bk-page bk-gift-page">
       <BackLink onClick={gcBack}>
         {gcStep === "design" ? "Back home" : "Back"}
       </BackLink>
 
-      <div className="sm-gift-head">
-        <h1 className="sm-h1">Gift a little calm.</h1>
-        <p className="sm-sub">
+      <div className="bk-gift-head">
+        <h1 className="bk-h1">Gift a little calm.</h1>
+        <p className="bk-sub">
           A Lumen gift card never expires and works on any service.
         </p>
       </div>
@@ -188,19 +188,19 @@ export default function GiftCards() {
       <GiftStepper
         steps={GC_STEPS}
         current={STEP_INDEX[gcStep] ?? 0}
-        className="sm-gift-steps"
+        className="bk-gift-steps"
       />
 
-      <div className="sm-gift-cols">
-        <div className="sm-gift-form">
+      <div className="bk-gift-cols">
+        <div className="bk-gift-form">
           {gcStep === "design" ? (
             <>
-              <div className="sm-gift-block">
-                <span className="sm-label sm-label--strong" id={amountLabelId}>
+              <div className="bk-gift-block">
+                <span className="bk-label bk-label--strong" id={amountLabelId}>
                   Amount
                 </span>
                 <div
-                  className="sm-gift-chips"
+                  className="bk-gift-chips"
                   role="group"
                   aria-labelledby={amountLabelId}
                 >
@@ -219,10 +219,10 @@ export default function GiftCards() {
                   />
                 </div>
                 {gcAmount === "custom" ? (
-                  <div className="sm-gift-custom">
-                    <span className="sm-mono sm-gift-custom__prefix">$</span>
+                  <div className="bk-gift-custom">
+                    <span className="bk-mono bk-gift-custom__prefix">$</span>
                     <TextInput
-                      className="sm-gift-custom__input"
+                      className="bk-gift-custom__input"
                       value={gcCustom}
                       onChange={setGiftCustom}
                       placeholder="120"
@@ -234,12 +234,12 @@ export default function GiftCards() {
                 ) : null}
               </div>
 
-              <div className="sm-gift-block">
-                <span className="sm-label sm-label--strong" id={themeLabelId}>
+              <div className="bk-gift-block">
+                <span className="bk-label bk-label--strong" id={themeLabelId}>
                   Card design
                 </span>
                 <div
-                  className="sm-gift-swatches"
+                  className="bk-gift-swatches"
                   role="group"
                   aria-labelledby={themeLabelId}
                 >
@@ -302,8 +302,8 @@ export default function GiftCards() {
                   />
                 )}
               </Field>
-              <div className="sm-gift-block">
-                <span className="sm-label">Delivery</span>
+              <div className="bk-gift-block">
+                <span className="bk-label">Delivery</span>
                 <Segmented
                   label="Delivery"
                   value={gcSend}
@@ -312,7 +312,7 @@ export default function GiftCards() {
                 />
                 {gcSend === "schedule" ? (
                   <TextInput
-                    className="sm-gift-date"
+                    className="bk-gift-date"
                     type="date"
                     value={gcDate}
                     onChange={(v) => setGift({ gcDate: v })}
@@ -337,7 +337,7 @@ export default function GiftCards() {
                   />
                 )}
               </Field>
-              <div className="sm-gift-pair">
+              <div className="bk-gift-pair">
                 <Field label="Expiry">
                   {(c) => (
                     <TextInput
@@ -381,16 +381,16 @@ export default function GiftCards() {
             size="lg"
             full
             icon="arrow-right"
-            className="sm-gift-cta"
+            className="bk-gift-cta"
             onClick={gcStep === "pay" ? gcPay : gcNext}
           >
             {ctaLabel}
           </Button>
         </div>
 
-        <div className="sm-gift-aside">
+        <div className="bk-gift-aside">
           <GiftPreview tint={theme.tint} amount={amount} to={gcTo} />
-          <div className="sm-gift-aside__caption">
+          <div className="bk-gift-aside__caption">
             Preview · updates as you choose
           </div>
         </div>
@@ -415,16 +415,16 @@ function ThemeSwatch({ name, tint, active, onSelect }: ThemeSwatchProps) {
   return (
     <button
       type="button"
-      className="sm-gift-swatch"
+      className="bk-gift-swatch"
       data-active={active ? "true" : "false"}
       aria-pressed={active}
       onClick={onSelect}
     >
       <span
-        className="sm-gift-swatch__tile"
+        className="bk-gift-swatch__tile"
         style={{ background: placeholderBackground(tint, "158deg", dark) }}
       />
-      <span className="sm-gift-swatch__label">{name}</span>
+      <span className="bk-gift-swatch__label">{name}</span>
     </button>
   );
 }

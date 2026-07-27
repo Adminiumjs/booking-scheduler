@@ -2,26 +2,26 @@
  * Cancellation policy (spec §3.7).
  */
 
-.sm-policy {
+.bk-policy {
   --page-max: 680px;
   padding-block: clamp(24px, 4vw, 44px) clamp(28px, 4vw, 52px);
 }
 
-.sm-policy__head {
+.bk-policy__head {
   margin-block-end: 22px;
 }
 
-.sm-policy__head .sm-sub {
+.bk-policy__head .bk-sub {
   margin-block-start: 8px;
 }
 
-.sm-policy__list {
+.bk-policy__list {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.sm-policy-card {
+.bk-policy-card {
   display: flex;
   gap: 14px;
   padding: 18px 20px;
@@ -29,7 +29,7 @@
   box-shadow: var(--shadow);
 }
 
-.sm-policy-card__tile {
+.bk-policy-card__tile {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,25 +41,25 @@
   color: var(--accent);
 }
 
-.sm-policy-card__tile[data-tone="warn"] {
+.bk-policy-card__tile[data-tone="warn"] {
   background: var(--warn-soft);
   color: var(--warn);
 }
 
-.sm-policy-card__title {
+.bk-policy-card__title {
   margin: 0;
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
-.sm-policy-card__body {
+.bk-policy-card__body {
   margin: 6px 0 0;
   font-size: 13px;
   line-height: 1.6;
   color: var(--fg-muted);
 }
 
-.sm-policy__banner {
+.bk-policy__banner {
   margin-block-start: 16px;
 }

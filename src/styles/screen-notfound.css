@@ -2,13 +2,13 @@
  * Screen-local styles for the 404 fallback (spec §3.7).
  */
 
-.sm-notfound {
+.bk-notfound {
   --page-max: 520px;
   padding-block: clamp(40px, 8vw, 90px);
   text-align: center;
 }
 
-.sm-notfound__numeral {
+.bk-notfound__numeral {
   font-size: clamp(64px, 12vw, 104px);
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -16,14 +16,14 @@
   color: var(--accent);
 }
 
-.sm-notfound__h1 {
+.bk-notfound__h1 {
   margin: 16px 0 0;
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
-.sm-notfound__body {
+.bk-notfound__body {
   margin: 12px auto 24px;
   max-inline-size: 360px;
   font-size: 14.5px;

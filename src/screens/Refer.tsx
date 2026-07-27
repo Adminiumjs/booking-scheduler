@@ -30,56 +30,56 @@ export default function Refer() {
   };
 
   return (
-    <main className="sm-screen sm-page sm-refer-page">
+    <main className="bk-screen bk-page bk-refer-page">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-refer-head">
-        <h1 className="sm-h1">Refer a friend</h1>
-        <p className="sm-sub">Give $15, get $15. Everyone leaves glowing.</p>
+      <div className="bk-refer-head">
+        <h1 className="bk-h1">Refer a friend</h1>
+        <p className="bk-sub">Give $15, get $15. Everyone leaves glowing.</p>
       </div>
 
-      <div className="sm-refer-code">
-        <div className="sm-refer-code__text">
-          <div className="sm-refer-code__label">Your invite code</div>
-          <div className="sm-mono sm-refer-code__value">{referral.code}</div>
+      <div className="bk-refer-code">
+        <div className="bk-refer-code__text">
+          <div className="bk-refer-code__label">Your invite code</div>
+          <div className="bk-mono bk-refer-code__value">{referral.code}</div>
         </div>
-        <Button size="lg" className="sm-refer-share" onClick={copyLink}>
+        <Button size="lg" className="bk-refer-share" onClick={copyLink}>
           <Icon name="share-2" size={16} />
           Copy invite link
         </Button>
       </div>
 
-      <section className="sm-refer-section">
-        <span className="sm-refer-title">How it works</span>
-        <div className="sm-refer-list">
+      <section className="bk-refer-section">
+        <span className="bk-refer-title">How it works</span>
+        <div className="bk-refer-list">
           {referral.steps.map((s) => (
-            <div className="sm-refer-step" key={s.label}>
-              <span className="sm-refer-step__glyph">
+            <div className="bk-refer-step" key={s.label}>
+              <span className="bk-refer-step__glyph">
                 <Icon name={s.icon} size={17} />
               </span>
-              <span className="sm-refer-step__label">{s.label}</span>
+              <span className="bk-refer-step__label">{s.label}</span>
             </div>
           ))}
         </div>
       </section>
 
       <section>
-        <span className="sm-refer-title">Your invites</span>
-        <div className="sm-refer-list">
+        <span className="bk-refer-title">Your invites</span>
+        <div className="bk-refer-list">
           {referral.invites.map((r) => (
-            <div className="sm-refer-invite" key={r.name}>
-              <span className="sm-refer-invite__avatar" aria-hidden="true">
+            <div className="bk-refer-invite" key={r.name}>
+              <span className="bk-refer-invite__avatar" aria-hidden="true">
                 {r.initials}
               </span>
-              <div className="sm-refer-invite__text">
-                <div className="sm-refer-invite__name">{r.name}</div>
-                <div className="sm-refer-invite__status">{r.status}</div>
+              <div className="bk-refer-invite__text">
+                <div className="bk-refer-invite__name">{r.name}</div>
+                <div className="bk-refer-invite__status">{r.status}</div>
               </div>
               {r.done ? (
                 <Icon
                   name="check-circle-2"
                   size={20}
-                  className="sm-refer-invite__done"
+                  className="bk-refer-invite__done"
                 />
               ) : null}
             </div>

@@ -18,7 +18,7 @@ export interface RadioProps {
 export function Radio({ selected, size = 24, className, style }: RadioProps) {
   return (
     <span
-      className={["sm-radio", className].filter(Boolean).join(" ")}
+      className={["bk-radio", className].filter(Boolean).join(" ")}
       data-on={selected ? "true" : "false"}
       aria-hidden="true"
       style={{ width: `${size}px`, height: `${size}px`, ...style }}

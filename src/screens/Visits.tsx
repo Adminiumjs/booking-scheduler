@@ -38,12 +38,12 @@ export default function Visits() {
   );
 
   return (
-    <main className="sm-screen sm-page sm-visits">
+    <main className="bk-screen bk-page bk-visits">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-visits__head">
-        <h1 className="sm-h1">My upcoming visits</h1>
-        <p className="sm-sub">Everything you’ve got booked with us.</p>
+      <div className="bk-visits__head">
+        <h1 className="bk-h1">My upcoming visits</h1>
+        <p className="bk-sub">Everything you’ve got booked with us.</p>
       </div>
 
       {visits.length === 0 ? (
@@ -54,14 +54,14 @@ export default function Visits() {
           action={
             <Button
               onClick={() => startBooking(null)}
-              className="sm-visits__empty-cta"
+              className="bk-visits__empty-cta"
             >
               Book a visit
             </Button>
           }
         />
       ) : (
-        <div className="sm-visits__list">
+        <div className="bk-visits__list">
           {visits.map((b) => (
             <VisitCard
               key={b.code}
@@ -89,8 +89,8 @@ function VisitCard({ booking, onManage }: VisitCardProps) {
   const staff = data.getStaffMember(booking.staff);
 
   return (
-    <article className="sm-card sm-panel sm-visits-card">
-      <div className="sm-visits-card__head">
+    <article className="bk-card bk-panel bk-visits-card">
+      <div className="bk-visits-card__head">
         <IconTile
           icon={svc?.icon ?? "sparkles"}
           tint={svc?.tint ?? "#0d9488"}
@@ -98,50 +98,50 @@ function VisitCard({ booking, onManage }: VisitCardProps) {
           iconSize={20}
           radius={12}
         />
-        <div className="sm-visits-card__id">
-          <h2 className="sm-visits-card__svc">{svc?.name ?? "Appointment"}</h2>
-          <div className="sm-visits-card__code sm-mono">{booking.code}</div>
+        <div className="bk-visits-card__id">
+          <h2 className="bk-visits-card__svc">{svc?.name ?? "Appointment"}</h2>
+          <div className="bk-visits-card__code bk-mono">{booking.code}</div>
         </div>
-        <span className="sm-visits-card__price sm-mono">{money(booking.price)}</span>
+        <span className="bk-visits-card__price bk-mono">{money(booking.price)}</span>
       </div>
 
-      <div className="sm-visits-card__body">
-        <dl className="sm-visits-card__rows">
-          <div className="sm-visits-card__row">
-            <Icon name="calendar" size={15} className="sm-visits-card__rowicon" />
-            <dt className="sm-visits-card__rowlabel">When</dt>
-            <dd className="sm-visits-card__rowval">{formatLongISO(booking.dateISO)}</dd>
+      <div className="bk-visits-card__body">
+        <dl className="bk-visits-card__rows">
+          <div className="bk-visits-card__row">
+            <Icon name="calendar" size={15} className="bk-visits-card__rowicon" />
+            <dt className="bk-visits-card__rowlabel">When</dt>
+            <dd className="bk-visits-card__rowval">{formatLongISO(booking.dateISO)}</dd>
           </div>
-          <div className="sm-visits-card__row">
-            <Icon name="clock" size={15} className="sm-visits-card__rowicon" />
-            <dt className="sm-visits-card__rowlabel">Time</dt>
-            <dd className="sm-visits-card__rowval sm-visits-card__rowval--mono sm-mono">
+          <div className="bk-visits-card__row">
+            <Icon name="clock" size={15} className="bk-visits-card__rowicon" />
+            <dt className="bk-visits-card__rowlabel">Time</dt>
+            <dd className="bk-visits-card__rowval bk-visits-card__rowval--mono bk-mono">
               {minutesToTime(booking.time)} · {durationLabel(booking.dur)}
             </dd>
           </div>
-          <div className="sm-visits-card__row">
-            <Icon name="user" size={15} className="sm-visits-card__rowicon" />
-            <dt className="sm-visits-card__rowlabel">With</dt>
-            <dd className="sm-visits-card__rowval">{staff?.name ?? "First available"}</dd>
+          <div className="bk-visits-card__row">
+            <Icon name="user" size={15} className="bk-visits-card__rowicon" />
+            <dt className="bk-visits-card__rowlabel">With</dt>
+            <dd className="bk-visits-card__rowval">{staff?.name ?? "First available"}</dd>
           </div>
         </dl>
 
         {booking.recurOn ? (
-          <span className="sm-visits-card__recur">
+          <span className="bk-visits-card__recur">
             <Icon name="repeat" size={12} />
             Repeats {recurLabel(booking.recurFreq)} · {booking.recurCount} visits
           </span>
         ) : null}
       </div>
 
-      <div className="sm-visits-card__foot">
+      <div className="bk-visits-card__foot">
         <Button
           variant="ghost"
           icon="settings-2"
           iconSize={15}
           size="sm"
           onClick={onManage}
-          className="sm-visits-card__manage"
+          className="bk-visits-card__manage"
         >
           Reschedule or cancel
         </Button>

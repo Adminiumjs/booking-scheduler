@@ -25,40 +25,40 @@ export function CancelModal() {
   const svc = data.getService(booking.svc);
 
   return (
-    <div className="sm-modal-scrim" role="presentation" onClick={closeCancel}>
+    <div className="bk-modal-scrim" role="presentation" onClick={closeCancel}>
       <div
         ref={ref}
-        className="sm-modal"
+        className="bk-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="sm-cancel-title"
+        aria-labelledby="bk-cancel-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sm-modal__body">
-          <span className="sm-modal__tile">
+        <div className="bk-modal__body">
+          <span className="bk-modal__tile">
             <Icon name="calendar-x" size={23} />
           </span>
-          <h2 className="sm-modal__title" id="sm-cancel-title">
+          <h2 className="bk-modal__title" id="bk-cancel-title">
             Cancel this appointment?
           </h2>
-          <p className="sm-modal__text">
+          <p className="bk-modal__text">
             You&apos;re cancelling <strong>{svc?.name ?? booking.svc}</strong> on{" "}
             {formatShortISO(booking.dateISO)} at {minutesToTime(booking.time)}. Our
             cancellation window is 24 hours — inside that we may charge a small
             fee. This is a demo, so nothing is really charged.
           </p>
-          <div className="sm-modal__actions">
+          <div className="bk-modal__actions">
             <button
               type="button"
-              className="sm-gi sm-modal__btn sm-modal__btn--ghost"
+              className="bk-gi bk-modal__btn bk-modal__btn--ghost"
               onClick={closeCancel}
             >
               Keep it
             </button>
             <button
               type="button"
-              className="sm-btn sm-modal__btn sm-modal__btn--danger"
+              className="bk-btn bk-modal__btn bk-modal__btn--danger"
               onClick={confirmCancel}
             >
               Cancel appointment

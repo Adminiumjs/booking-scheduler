@@ -1,20 +1,20 @@
 /* Refer a friend (spec §3.7). Logical properties throughout. */
 
-.sm-refer-page {
+.bk-refer-page {
   --page-max: 680px;
 }
 
-.sm-refer-head {
+.bk-refer-head {
   margin-block-end: 22px;
 }
 
-.sm-refer-head .sm-sub {
+.bk-refer-head .bk-sub {
   margin-block-start: 8px;
 }
 
 /* ---------------- invite code panel ---------------- */
 
-.sm-refer-code {
+.bk-refer-code {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -26,25 +26,25 @@
   margin-block-end: 24px;
 }
 
-.sm-refer-code__text {
+.bk-refer-code__text {
   flex: 1;
   min-inline-size: 180px;
 }
 
-.sm-refer-code__label {
+.bk-refer-code__label {
   font-size: 12px;
   font-weight: 700;
   color: var(--accent);
 }
 
-.sm-refer-code__value {
+.bk-refer-code__value {
   margin-block-start: 4px;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 
-.sm-refer-share {
+.bk-refer-share {
   padding: 13px 20px;
   border-radius: 12px;
   font-size: 14px;
@@ -52,11 +52,11 @@
 
 /* ---------------- sections ---------------- */
 
-.sm-refer-section {
+.bk-refer-section {
   margin-block-end: 24px;
 }
 
-.sm-refer-title {
+.bk-refer-title {
   display: block;
   margin-block-end: 12px;
   font-size: 15px;
@@ -64,14 +64,14 @@
   letter-spacing: -0.01em;
 }
 
-.sm-refer-list {
+.bk-refer-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.sm-refer-step,
-.sm-refer-invite {
+.bk-refer-step,
+.bk-refer-invite {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -81,7 +81,7 @@
   background: var(--surface);
 }
 
-.sm-refer-step__glyph {
+.bk-refer-step__glyph {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,13 +93,13 @@
   flex-shrink: 0;
 }
 
-.sm-refer-step__label {
+.bk-refer-step__label {
   font-size: 13.5px;
   line-height: 1.45;
   color: var(--fg);
 }
 
-.sm-refer-invite__avatar {
+.bk-refer-invite__avatar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -113,22 +113,22 @@
   flex-shrink: 0;
 }
 
-.sm-refer-invite__text {
+.bk-refer-invite__text {
   flex: 1;
   min-inline-size: 0;
 }
 
-.sm-refer-invite__name {
+.bk-refer-invite__name {
   font-size: 13.5px;
   font-weight: 700;
 }
 
-.sm-refer-invite__status {
+.bk-refer-invite__status {
   margin-block-start: 2px;
   font-size: 12px;
   color: var(--fg-muted);
 }
 
-.sm-refer-invite__done {
+.bk-refer-invite__done {
   color: var(--pos);
 }

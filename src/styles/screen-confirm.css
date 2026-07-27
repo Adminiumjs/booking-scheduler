@@ -1,9 +1,9 @@
 /*
- * Confirmation screen (spec §3.4). Scoped under `.sm-confirm`; logical
+ * Confirmation screen (spec §3.4). Scoped under `.bk-confirm`; logical
  * properties throughout so the mock email/SMS previews mirror correctly in RTL.
  */
 
-.sm-confirm {
+.bk-confirm {
   --page-max: 620px;
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@
 
 /* ---------------- header ---------------- */
 
-.sm-confirm__head {
+.bk-confirm__head {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -21,26 +21,26 @@
   text-align: center;
 }
 
-.sm-confirm__lede {
+.bk-confirm__lede {
   max-inline-size: 46ch;
 }
 
 /* ---------------- appointment card ---------------- */
 
-.sm-confirm__appt {
+.bk-confirm__appt {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 20px;
 }
 
-.sm-confirm__appt-head {
+.bk-confirm__appt-head {
   display: flex;
   align-items: center;
   gap: 13px;
 }
 
-.sm-confirm__appt-text {
+.bk-confirm__appt-text {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -48,23 +48,23 @@
   min-inline-size: 0;
 }
 
-.sm-confirm__appt-name {
+.bk-confirm__appt-name {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
-.sm-confirm__appt-meta {
+.bk-confirm__appt-meta {
   font-size: 12.5px;
   color: var(--fg-muted);
 }
 
-.sm-confirm__appt-price {
+.bk-confirm__appt-price {
   font-size: 18px;
   font-weight: 700;
 }
 
-.sm-confirm__rows {
+.bk-confirm__rows {
   display: flex;
   flex-direction: column;
   gap: 11px;
@@ -72,14 +72,14 @@
   border-block-start: 1px solid var(--border);
 }
 
-.sm-confirm__row {
+.bk-confirm__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.sm-confirm__row-key {
+.bk-confirm__row-key {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -87,7 +87,7 @@
   color: var(--fg-muted);
 }
 
-.sm-confirm__row-val {
+.bk-confirm__row-val {
   font-size: 13.5px;
   font-weight: 700;
   text-align: end;
@@ -95,14 +95,14 @@
 
 /* ---------------- recurring series ---------------- */
 
-.sm-confirm__recur {
+.bk-confirm__recur {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 18px 20px;
 }
 
-.sm-confirm__recur-head {
+.bk-confirm__recur-head {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -111,11 +111,11 @@
   color: var(--fg);
 }
 
-.sm-confirm__recur-head svg {
+.bk-confirm__recur-head svg {
   color: var(--accent);
 }
 
-.sm-confirm__series {
+.bk-confirm__series {
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -124,13 +124,13 @@
   list-style: none;
 }
 
-.sm-confirm__series-row {
+.bk-confirm__series-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.sm-confirm__dot {
+.bk-confirm__dot {
   flex: 0 0 auto;
   inline-size: 7px;
   block-size: 7px;
@@ -138,31 +138,31 @@
   background: var(--accent);
 }
 
-.sm-confirm__series-date {
+.bk-confirm__series-date {
   flex: 1;
   font-size: 13px;
   color: var(--fg-muted);
   min-inline-size: 0;
 }
 
-.sm-confirm__series-time {
+.bk-confirm__series-time {
   font-size: 12.5px;
   font-weight: 600;
 }
 
 /* ---------------- "here's what we'll send" ---------------- */
 
-.sm-confirm__send {
+.bk-confirm__send {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.sm-confirm__mail {
+.bk-confirm__mail {
   padding: 0;
 }
 
-.sm-confirm__mail-head {
+.bk-confirm__mail-head {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -172,7 +172,7 @@
   color: var(--fg-subtle);
 }
 
-.sm-confirm__mail-logo {
+.bk-confirm__mail-logo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,7 +186,7 @@
   font-weight: 800;
 }
 
-.sm-confirm__mail-who {
+.bk-confirm__mail-who {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -194,45 +194,45 @@
   min-inline-size: 0;
 }
 
-.sm-confirm__mail-name {
+.bk-confirm__mail-name {
   font-size: 13.5px;
   font-weight: 800;
   color: var(--fg);
 }
 
-.sm-confirm__mail-from {
+.bk-confirm__mail-from {
   font-size: 11px;
   color: var(--fg-subtle);
   overflow-wrap: anywhere;
 }
 
-.sm-confirm__mail-body {
+.bk-confirm__mail-body {
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 16px;
 }
 
-.sm-confirm__mail-subject {
+.bk-confirm__mail-subject {
   font-size: 13.5px;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
 
-.sm-confirm__mail-text {
+.bk-confirm__mail-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
   color: var(--fg-muted);
 }
 
-.sm-confirm__sms {
+.bk-confirm__sms {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
 
-.sm-confirm__sms-avatar {
+.bk-confirm__sms-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,7 +244,7 @@
   color: var(--fg-muted);
 }
 
-.sm-confirm__sms-col {
+.bk-confirm__sms-col {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -252,7 +252,7 @@
   min-inline-size: 0;
 }
 
-.sm-confirm__sms-bubble {
+.bk-confirm__sms-bubble {
   max-inline-size: 80%;
   padding: 12px 14px;
   border-radius: 16px;
@@ -263,24 +263,24 @@
   line-height: 1.55;
 }
 
-.sm-confirm__sms-cap {
+.bk-confirm__sms-cap {
   font-size: 10px;
   color: var(--fg-subtle);
 }
 
 /* ---------------- banner + actions ---------------- */
 
-.sm-confirm__banner {
+.bk-confirm__banner {
   border: 1px solid color-mix(in srgb, var(--info) 22%, transparent);
 }
 
-.sm-confirm__actions {
+.bk-confirm__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
 }
 
-.sm-confirm__actions > * {
+.bk-confirm__actions > * {
   flex: 1;
   min-inline-size: 180px;
 }

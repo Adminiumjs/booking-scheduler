@@ -36,7 +36,7 @@ export function Card({
   return (
     <div
       id={id}
-      className={["sm-panel", className].filter(Boolean).join(" ")}
+      className={["bk-panel", className].filter(Boolean).join(" ")}
       style={{
         borderRadius: `${radius}px`,
         padding: typeof padding === "number" ? `${padding}px` : padding,
@@ -61,7 +61,7 @@ export interface EyebrowProps {
 export function Eyebrow({ children, icon, className, style }: EyebrowProps) {
   return (
     <div
-      className={["sm-eyebrow", className].filter(Boolean).join(" ")}
+      className={["bk-eyebrow", className].filter(Boolean).join(" ")}
       style={style}
     >
       {icon ? <Icon name={icon} size={14} /> : null}
@@ -80,7 +80,7 @@ export interface PanelHeaderProps {
 export function PanelHeader({ children, className, style }: PanelHeaderProps) {
   return (
     <div
-      className={["sm-panel-head", className].filter(Boolean).join(" ")}
+      className={["bk-panel-head", className].filter(Boolean).join(" ")}
       style={style}
     >
       {children}
@@ -110,7 +110,7 @@ const BANNER_ICON: Record<BannerTone, string> = {
 export function Banner({ children, tone = "info", icon, className, style }: BannerProps) {
   return (
     <div
-      className={["sm-banner", `sm-banner--${tone}`, className]
+      className={["bk-banner", `bk-banner--${tone}`, className]
         .filter(Boolean)
         .join(" ")}
       role={tone === "danger" ? "alert" : undefined}
@@ -143,14 +143,14 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={["sm-empty", className].filter(Boolean).join(" ")}
+      className={["bk-empty", className].filter(Boolean).join(" ")}
       style={style}
     >
-      <div className="sm-empty-tile">
+      <div className="bk-empty-tile">
         <Icon name={icon} size={25} />
       </div>
-      <div className="sm-empty-title">{title}</div>
-      {body ? <p className="sm-empty-body">{body}</p> : null}
+      <div className="bk-empty-title">{title}</div>
+      {body ? <p className="bk-empty-body">{body}</p> : null}
       {action}
     </div>
   );
@@ -172,7 +172,7 @@ export function SuccessTile({
 }: SuccessTileProps) {
   return (
     <div
-      className={["sm-success-tile", className].filter(Boolean).join(" ")}
+      className={["bk-success-tile", className].filter(Boolean).join(" ")}
       style={{ width: `${size}px`, height: `${size}px` }}
     >
       <Icon name={icon} size={iconSize} />
@@ -192,9 +192,9 @@ export interface CodePillProps {
 
 export function CodePill({ label, code, codeSize = 22, className }: CodePillProps) {
   return (
-    <div className={["sm-code-pill", className].filter(Boolean).join(" ")}>
-      <span className="sm-code-pill__label">{label}</span>
-      <span className="sm-code-pill__code" style={{ fontSize: `${codeSize}px` }}>
+    <div className={["bk-code-pill", className].filter(Boolean).join(" ")}>
+      <span className="bk-code-pill__label">{label}</span>
+      <span className="bk-code-pill__code" style={{ fontSize: `${codeSize}px` }}>
         {code}
       </span>
     </div>
@@ -218,7 +218,7 @@ export function StatusPill({
 }: StatusPillProps) {
   return (
     <span
-      className={["sm-status", `sm-status--${tone}`, className]
+      className={["bk-status", `bk-status--${tone}`, className]
         .filter(Boolean)
         .join(" ")}
     >

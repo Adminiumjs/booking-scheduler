@@ -69,30 +69,30 @@ export default function Group() {
   if (grpCode) {
     const day = week[grpDateIdx] ?? week[0];
     return (
-      <main className="sm-screen sm-page sm-group-page">
-        <div className="sm-group-done">
+      <main className="bk-screen bk-page bk-group-page">
+        <div className="bk-group-done">
           <SuccessTile icon="users" iconSize={34} />
-          <h1 className="sm-h1">Your group request is in!</h1>
-          <p className="sm-group-done__sub">
+          <h1 className="bk-h1">Your group request is in!</h1>
+          <p className="bk-group-done__sub">
             We&apos;ll text you within a few hours to lock in exact times for{" "}
             {formatLongDate(day)}.
           </p>
           <CodePill label="Request code" code={grpCode} codeSize={20} />
 
-          <Card radius={20} clip className="sm-group-summary">
+          <Card radius={20} clip className="bk-group-summary">
             <PanelHeader>Your party</PanelHeader>
-            <div className="sm-group-summary__body">
+            <div className="bk-group-summary__body">
               {guests.map((g, i) => {
                 const svc = data.getService(g.svc);
                 return (
-                  <div className="sm-group-summary__row" key={`${g.svc}-${i}`}>
-                    <span className="sm-group-summary__name">
+                  <div className="bk-group-summary__row" key={`${g.svc}-${i}`}>
+                    <span className="bk-group-summary__name">
                       {g.name || "Guest"}
                     </span>
-                    <span className="sm-group-summary__svc">
+                    <span className="bk-group-summary__svc">
                       {svc?.name ?? ""}
                     </span>
-                    <span className="sm-mono sm-group-summary__price">
+                    <span className="bk-mono bk-group-summary__price">
                       {money(svc?.price ?? 0)}
                     </span>
                   </div>
@@ -101,17 +101,17 @@ export default function Group() {
             </div>
           </Card>
 
-          <Banner tone="info" className="sm-group-done__banner">
+          <Banner tone="info" className="bk-group-done__banner">
             This is a demo — no real request is sent and no times are actually
             held.
           </Banner>
 
-          <div className="sm-group-done__actions">
+          <div className="bk-group-done__actions">
             <Button
               variant="ghost"
               size="lg"
               icon="users"
-              className="sm-group-done__btn"
+              className="bk-group-done__btn"
               onClick={grpReset}
             >
               New request
@@ -119,7 +119,7 @@ export default function Group() {
             <Button
               size="lg"
               icon="home"
-              className="sm-group-done__btn"
+              className="bk-group-done__btn"
               onClick={() => go("home")}
             >
               Back home
@@ -133,36 +133,36 @@ export default function Group() {
   /* ---------------- form ---------------- */
 
   return (
-    <main className="sm-screen sm-page sm-group-page">
+    <main className="bk-screen bk-page bk-group-page">
       <BackLink onClick={() => go("home")}>Back home</BackLink>
 
-      <div className="sm-group-head">
-        <h1 className="sm-h1">Group booking</h1>
-        <p className="sm-sub">
+      <div className="bk-group-head">
+        <h1 className="bk-h1">Group booking</h1>
+        <p className="bk-sub">
           Bridal party, birthday, or a spa day with friends — tell us
           who&apos;s coming and we&apos;ll line up the timing.
         </p>
       </div>
 
-      <section className="sm-group-section">
-        <div className="sm-group-partyhead">
-          <span className="sm-group-title">Your party</span>
-          <span className="sm-mono sm-group-count">{partyLabel}</span>
+      <section className="bk-group-section">
+        <div className="bk-group-partyhead">
+          <span className="bk-group-title">Your party</span>
+          <span className="bk-mono bk-group-count">{partyLabel}</span>
         </div>
 
-        <div className="sm-group-guests">
+        <div className="bk-group-guests">
           {guests.map((g, i) => (
-            <div className="sm-group-guest" key={i}>
-              <span className="sm-mono sm-group-guest__num">{i + 1}</span>
+            <div className="bk-group-guest" key={i}>
+              <span className="bk-mono bk-group-guest__num">{i + 1}</span>
               <TextInput
-                className="sm-group-guest__name"
+                className="bk-group-guest__name"
                 value={g.name}
                 onChange={(v) => setGroupGuest(i, { name: v })}
                 placeholder="Guest name"
                 ariaLabel={`Guest ${i + 1} name`}
               />
               <Select
-                className="sm-group-guest__svc"
+                className="bk-group-guest__svc"
                 value={g.svc}
                 onChange={(v) => setGroupGuest(i, { svc: v })}
                 options={options}
@@ -174,7 +174,7 @@ export default function Group() {
                   label={`Remove guest ${i + 1}`}
                   size={38}
                   iconSize={16}
-                  className="sm-group-guest__remove"
+                  className="bk-group-guest__remove"
                   onClick={() => removeGuest(i)}
                 />
               ) : null}
@@ -186,7 +186,7 @@ export default function Group() {
           <Button
             variant="ghost"
             icon="plus"
-            className="sm-group-add"
+            className="bk-group-add"
             onClick={addGuest}
           >
             Add guest
@@ -194,8 +194,8 @@ export default function Group() {
         ) : null}
       </section>
 
-      <section className="sm-group-section">
-        <span className="sm-group-title sm-group-title--block">
+      <section className="bk-group-section">
+        <span className="bk-group-title bk-group-title--block">
           Preferred date
         </span>
         <WeekStrip
@@ -206,11 +206,11 @@ export default function Group() {
         />
       </section>
 
-      <section className="sm-group-section sm-group-section--tight">
-        <span className="sm-group-title sm-group-title--block">
+      <section className="bk-group-section bk-group-section--tight">
+        <span className="bk-group-title bk-group-title--block">
           Who should we confirm with?
         </span>
-        <div className="sm-group-fields">
+        <div className="bk-group-fields">
           <Field label="Your name">
             {(c) => (
               <TextInput
@@ -221,7 +221,7 @@ export default function Group() {
               />
             )}
           </Field>
-          <div className="sm-group-pair">
+          <div className="bk-group-pair">
             <Field label="Email">
               {(c) => (
                 <TextInput
@@ -251,34 +251,34 @@ export default function Group() {
       </section>
 
       {grpErr ? (
-        <Banner tone="danger" className="sm-group-err">
+        <Banner tone="danger" className="bk-group-err">
           {grpErr}
         </Banner>
       ) : null}
 
-      <div className="sm-group-bar">
-        <div className="sm-group-bar__stats">
+      <div className="bk-group-bar">
+        <div className="bk-group-bar__stats">
           <div>
-            <div className="sm-group-stat__label">Party</div>
-            <div className="sm-group-stat__value">{partyLabel}</div>
+            <div className="bk-group-stat__label">Party</div>
+            <div className="bk-group-stat__value">{partyLabel}</div>
           </div>
           <div>
-            <div className="sm-group-stat__label">Est. time</div>
-            <div className="sm-mono sm-group-stat__value">
+            <div className="bk-group-stat__label">Est. time</div>
+            <div className="bk-mono bk-group-stat__value">
               {spanLabel(duration)}
             </div>
           </div>
           <div>
-            <div className="sm-group-stat__label">Est. total</div>
-            <div className="sm-mono sm-group-stat__value">{money(total)}</div>
+            <div className="bk-group-stat__label">Est. total</div>
+            <div className="bk-mono bk-group-stat__value">{money(total)}</div>
           </div>
         </div>
-        <Button size="lg" icon="send" className="sm-group-cta" onClick={grpSubmit}>
+        <Button size="lg" icon="send" className="bk-group-cta" onClick={grpSubmit}>
           Request booking
         </Button>
       </div>
 
-      <p className="sm-group-note">
+      <p className="bk-group-note">
         <Icon name="info" size={14} />
         For parties of two or more we confirm exact times by text, so everyone
         flows through smoothly.

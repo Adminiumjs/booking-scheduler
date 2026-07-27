@@ -87,13 +87,13 @@ interface CardHeadProps {
 /** Icon + title (+ optional sub) band at the top of a step-3 card. */
 function CardHead({ icon, title, sub, aside }: CardHeadProps) {
   return (
-    <div className="sm-booking__cardhead">
-      <span className="sm-booking__cardhead-icon">
+    <div className="bk-booking__cardhead">
+      <span className="bk-booking__cardhead-icon">
         <Icon name={icon} size={16} />
       </span>
-      <span className="sm-booking__cardhead-text">
-        <span className="sm-booking__cardhead-title">{title}</span>
-        {sub ? <span className="sm-booking__cardhead-sub">{sub}</span> : null}
+      <span className="bk-booking__cardhead-text">
+        <span className="bk-booking__cardhead-title">{title}</span>
+        {sub ? <span className="bk-booking__cardhead-sub">{sub}</span> : null}
       </span>
       {aside}
     </div>
@@ -110,13 +110,13 @@ interface ToggleRowProps {
 
 function ToggleRow({ icon, title, sub, checked, onChange }: ToggleRowProps) {
   return (
-    <div className="sm-booking__togglerow">
-      <span className="sm-booking__togglerow-icon">
+    <div className="bk-booking__togglerow">
+      <span className="bk-booking__togglerow-icon">
         <Icon name={icon} size={16} />
       </span>
-      <span className="sm-booking__togglerow-text">
-        <span className="sm-booking__togglerow-title">{title}</span>
-        <span className="sm-booking__togglerow-sub">{sub}</span>
+      <span className="bk-booking__togglerow-text">
+        <span className="bk-booking__togglerow-title">{title}</span>
+        <span className="bk-booking__togglerow-sub">{sub}</span>
       </span>
       <Toggle checked={checked} onChange={onChange} label={title} />
     </div>
@@ -132,12 +132,12 @@ interface SummaryRowProps {
 
 function SummaryRow({ icon, label, value, mono = false }: SummaryRowProps) {
   return (
-    <div className="sm-booking__srow">
-      <span className="sm-booking__srow-key">
+    <div className="bk-booking__srow">
+      <span className="bk-booking__srow-key">
         <Icon name={icon} size={15} />
         {label}
       </span>
-      <span className={mono ? "sm-mono sm-booking__srow-val" : "sm-booking__srow-val"}>
+      <span className={mono ? "bk-mono bk-booking__srow-val" : "bk-booking__srow-val"}>
         {value}
       </span>
     </div>
@@ -159,26 +159,26 @@ function StepService() {
   const services = data.getServicesByCategory(bCat);
 
   return (
-    <section className="sm-booking__step">
-      <header className="sm-booking__head">
-        <h2 className="sm-h2">What can we do for you?</h2>
-        <p className="sm-sub">Choose a service to get started.</p>
+    <section className="bk-booking__step">
+      <header className="bk-booking__head">
+        <h2 className="bk-h2">What can we do for you?</h2>
+        <p className="bk-sub">Choose a service to get started.</p>
       </header>
 
-      <button type="button" className="sm-booking__promo" onClick={() => go("group")}>
-        <span className="sm-booking__promo-tile">
+      <button type="button" className="bk-booking__promo" onClick={() => go("group")}>
+        <span className="bk-booking__promo-tile">
           <Icon name="users" size={18} />
         </span>
-        <span className="sm-booking__promo-text">
-          <span className="sm-booking__promo-title">Booking for a group?</span>
-          <span className="sm-booking__promo-sub">
+        <span className="bk-booking__promo-text">
+          <span className="bk-booking__promo-title">Booking for a group?</span>
+          <span className="bk-booking__promo-sub">
             Set up a party of 2–8 and we’ll coordinate the timing.
           </span>
         </span>
         <Icon name="arrow-right" size={16} />
       </button>
 
-      <div className="sm-booking__chips">
+      <div className="bk-booking__chips">
         <Chip
           label="All"
           active={bCat === "all"}
@@ -197,7 +197,7 @@ function StepService() {
         ))}
       </div>
 
-      <div className="sm-booking__svcgrid" role="radiogroup" aria-label="Service">
+      <div className="bk-booking__svcgrid" role="radiogroup" aria-label="Service">
         {services.map((s) => (
           <ServiceRow
             key={s.id}
@@ -225,16 +225,16 @@ function StepStaff() {
   if (!svc) return null;
 
   return (
-    <section className="sm-booking__step">
-      <header className="sm-booking__head">
-        <h2 className="sm-h2">Who would you like to see?</h2>
-        <p className="sm-sub">
-          For <span className="sm-booking__svcname">{svc.name}</span>. Greyed-out
+    <section className="bk-booking__step">
+      <header className="bk-booking__head">
+        <h2 className="bk-h2">Who would you like to see?</h2>
+        <p className="bk-sub">
+          For <span className="bk-booking__svcname">{svc.name}</span>. Greyed-out
           specialists don’t offer this one.
         </p>
       </header>
 
-      <div className="sm-booking__staffrows" role="radiogroup" aria-label="Specialist">
+      <div className="bk-booking__staffrows" role="radiogroup" aria-label="Specialist">
         <StaffRow
           icon="zap"
           title="First available"
@@ -317,10 +317,10 @@ function StepDateTime() {
   }
 
   return (
-    <section className="sm-booking__step">
-      <header className="sm-booking__head">
-        <h2 className="sm-h2">Pick a date &amp; time</h2>
-        <p className="sm-sub">
+    <section className="bk-booking__step">
+      <header className="bk-booking__head">
+        <h2 className="bk-h2">Pick a date &amp; time</h2>
+        <p className="bk-sub">
           {svc.name} · {svc.dur} min with {staffLabel}
         </p>
       </header>
@@ -340,11 +340,11 @@ function StepDateTime() {
           }
         />
       ) : (
-        <div className="sm-booking__groups">
+        <div className="bk-booking__groups">
           {groups.map((g) => (
-            <div className="sm-booking__group" key={g.key}>
+            <div className="bk-booking__group" key={g.key}>
               <Eyebrow icon={g.icon}>{g.label}</Eyebrow>
-              <div className="sm-slot-grid">
+              <div className="bk-slot-grid">
                 {g.slots.map((sl) => (
                   <SlotButton
                     key={sl.min}
@@ -369,14 +369,14 @@ function StepDateTime() {
         />
       ) : null}
 
-      <div className="sm-booking__bar">
-        <div className="sm-booking__pick">
+      <div className="bk-booking__bar">
+        <div className="bk-booking__pick">
           {time === null ? (
-            <span className="sm-booking__pick-none">Choose a time to continue.</span>
+            <span className="bk-booking__pick-none">Choose a time to continue.</span>
           ) : (
             <>
-              <span className="sm-booking__pick-cap">Selected</span>
-              <span className="sm-mono sm-booking__pick-label">{pickLabel}</span>
+              <span className="bk-booking__pick-cap">Selected</span>
+              <span className="bk-mono bk-booking__pick-label">{pickLabel}</span>
             </>
           )}
         </div>
@@ -444,11 +444,11 @@ function StepDetails() {
       : `Repeats ${recurLabel(recurFreq)} · through ${formatShortISO(lastISO)}`;
 
   return (
-    <section className="sm-booking__details">
-      <div className="sm-booking__form">
-        <header className="sm-booking__head">
-          <h2 className="sm-h2">Your details</h2>
-          <p className="sm-sub">So we know who to expect.</p>
+    <section className="bk-booking__details">
+      <div className="bk-booking__form">
+        <header className="bk-booking__head">
+          <h2 className="bk-h2">Your details</h2>
+          <p className="bk-sub">So we know who to expect.</p>
         </header>
 
         <Field label="Full name" error={errs.name}>
@@ -492,7 +492,7 @@ function StepDetails() {
           label="Anything we should know?"
           hint="(optional)"
           aside={
-            <span className="sm-mono">
+            <span className="bk-mono">
               {form.note.length} / {NOTE_MAX}
             </span>
           }
@@ -505,12 +505,12 @@ function StepDetails() {
               rows={3}
               maxLength={NOTE_MAX}
               placeholder="Allergies, parking, or if it’s your first visit — anything helps."
-              className="sm-booking__note"
+              className="bk-booking__note"
             />
           )}
         </Field>
 
-        <Card radius={16} className="sm-booking__card">
+        <Card radius={16} className="bk-booking__card">
           <CardHead icon="bell" title="Appointment reminders" />
           <ToggleRow
             icon="mail"
@@ -527,8 +527,8 @@ function StepDetails() {
             onChange={setRemSms}
           />
           {remEmail || remSms ? (
-            <div className="sm-booking__sendrow">
-              <span className="sm-booking__sendlabel">Send</span>
+            <div className="bk-booking__sendrow">
+              <span className="bk-booking__sendlabel">Send</span>
               <Segmented
                 label="Reminder timing"
                 value={remWhen}
@@ -539,7 +539,7 @@ function StepDetails() {
           ) : null}
         </Card>
 
-        <Card radius={16} className="sm-booking__card">
+        <Card radius={16} className="bk-booking__card">
           <CardHead
             icon="repeat"
             title="Make it recurring"
@@ -553,15 +553,15 @@ function StepDetails() {
             }
           />
           {recurOn ? (
-            <div className="sm-booking__recur">
+            <div className="bk-booking__recur">
               <Segmented
                 label="How often"
                 value={recurFreq}
                 onChange={setRecurFreq}
                 options={RECUR_OPTIONS}
               />
-              <div className="sm-booking__countrow">
-                <span className="sm-booking__countlabel">How many visits</span>
+              <div className="bk-booking__countrow">
+                <span className="bk-booking__countlabel">How many visits</span>
                 <NumberStepper
                   value={recurCount}
                   onChange={setRecurCount}
@@ -571,7 +571,7 @@ function StepDetails() {
                   format={(v) => `${v} visits`}
                 />
               </div>
-              <div className="sm-booking__recursum">
+              <div className="bk-booking__recursum">
                 <Icon name="calendar-check" size={15} />
                 {recurSummary}
               </div>
@@ -580,23 +580,23 @@ function StepDetails() {
         </Card>
       </div>
 
-      <aside className="sm-booking__summary">
-        <Card radius={18} clip className="sm-booking__summary-card">
+      <aside className="bk-booking__summary">
+        <Card radius={18} clip className="bk-booking__summary-card">
           <PanelHeader>
             <Eyebrow>Your appointment</Eyebrow>
           </PanelHeader>
-          <div className="sm-booking__summary-body">
-            <div className="sm-booking__summary-svc">
+          <div className="bk-booking__summary-body">
+            <div className="bk-booking__summary-svc">
               <IconTile icon={svc.icon} tint={svc.tint} size={44} iconSize={20} />
-              <span className="sm-booking__summary-svctext">
-                <span className="sm-booking__summary-svcname">{svc.name}</span>
-                <span className="sm-booking__summary-svcmeta">
+              <span className="bk-booking__summary-svctext">
+                <span className="bk-booking__summary-svcname">{svc.name}</span>
+                <span className="bk-booking__summary-svcmeta">
                   {svc.dur} min · {category}
                 </span>
               </span>
             </div>
 
-            <div className="sm-booking__srows">
+            <div className="bk-booking__srows">
               <SummaryRow icon="user" label="With" value={withValue} />
               <SummaryRow icon="calendar" label="Date" value={formatShortDate(date)} />
               <SummaryRow
@@ -614,21 +614,21 @@ function StepDetails() {
               ) : null}
             </div>
 
-            <div className="sm-booking__total">
-              <span className="sm-booking__total-key">Total</span>
-              <span className="sm-mono sm-booking__total-val">{money(svc.price)}</span>
+            <div className="bk-booking__total">
+              <span className="bk-booking__total-key">Total</span>
+              <span className="bk-mono bk-booking__total-val">{money(svc.price)}</span>
             </div>
 
             <Button
               full
               icon="check-circle-2"
               onClick={confirmBooking}
-              className="sm-booking__cta"
+              className="bk-booking__cta"
             >
               Confirm booking
             </Button>
 
-            <p className="sm-booking__fine">
+            <p className="bk-booking__fine">
               <Icon name="shield-check" size={14} />
               No card needed to hold your spot. This is a demo — nothing is really
               booked.
@@ -660,7 +660,7 @@ export default function Booking() {
       : "Back to services";
 
   return (
-    <main className="sm-screen sm-page sm-booking">
+    <main className="bk-screen bk-page bk-booking">
       <BackLink onClick={bookBack}>{backLabel}</BackLink>
 
       <Stepper

@@ -34,16 +34,16 @@ export function StarBar({
   const pct = Math.max(0, Math.min(1, value / max)) * 100;
   return (
     <span
-      className={["sm-stars", className].filter(Boolean).join(" ")}
+      className={["bk-stars", className].filter(Boolean).join(" ")}
       role="img"
       aria-label={label ?? `${value} out of ${max}`}
       style={{ fontSize: `${size}px`, letterSpacing: `${gap}px`, ...style }}
     >
-      <span className="sm-stars__back" aria-hidden="true">
+      <span className="bk-stars__back" aria-hidden="true">
         {RUN}
       </span>
       <span
-        className="sm-stars__front"
+        className="bk-stars__front"
         aria-hidden="true"
         style={{ width: `${pct}%` }}
       >

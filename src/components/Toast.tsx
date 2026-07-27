@@ -11,9 +11,9 @@ export function ToastLayer() {
   const toast = useStore((s) => s.toast);
 
   return (
-    <div className="sm-toast-layer" aria-live="polite" aria-atomic="true">
+    <div className="bk-toast-layer" aria-live="polite" aria-atomic="true">
       {toast ? (
-        <div className="sm-toast" key={toast.id} data-kind={toast.kind}>
+        <div className="bk-toast" key={toast.id} data-kind={toast.kind}>
           <Icon
             name={toast.kind === "warn" ? "alert-triangle" : "check-circle-2"}
             size={16}

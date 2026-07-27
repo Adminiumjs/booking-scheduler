@@ -56,27 +56,27 @@ export default function Home() {
   const loc = data.getLocation();
 
   return (
-    <main className="sm-screen sm-home">
+    <main className="bk-screen bk-home">
       {/* ---------------- A. Hero ---------------- */}
-      <section className="sm-home-section sm-home-hero">
-        <div className="sm-home-hero__grid">
-          <div className="sm-home-hero__copy">
-            <span className="sm-home-eyebrow">
+      <section className="bk-home-section bk-home-hero">
+        <div className="bk-home-hero__grid">
+          <div className="bk-home-hero__copy">
+            <span className="bk-home-eyebrow">
               <Icon name="sparkles" size={14} />
               Boutique beauty &amp; wellness
             </span>
-            <h1 className="sm-home-hero__title">
+            <h1 className="bk-home-hero__title">
               Feel like the
               <br />
               best version of you.
             </h1>
-            <p className="sm-home-hero__lede">
+            <p className="bk-home-hero__lede">
               Hair, spa, nails, and movement under one calm roof. Book a chair or a
               treatment room in a few taps — no phone tag, no account needed.
             </p>
-            <div className="sm-home-hero__actions">
+            <div className="bk-home-hero__actions">
               <Button
-                className="sm-home-cta"
+                className="bk-home-cta"
                 icon="calendar-plus"
                 iconSize={17}
                 onClick={() => startBooking(null)}
@@ -84,7 +84,7 @@ export default function Home() {
                 Book now
               </Button>
               <Button
-                className="sm-home-cta sm-home-cta--ghost"
+                className="bk-home-cta bk-home-cta--ghost"
                 variant="ghost"
                 iconEnd="arrow-right"
                 onClick={() => go("services")}
@@ -92,16 +92,16 @@ export default function Home() {
                 View services
               </Button>
             </div>
-            <div className="sm-home-trust">
-              <span className="sm-home-trust__item">
+            <div className="bk-home-trust">
+              <span className="bk-home-trust__item">
                 <Icon name="clock" size={15} color="var(--accent)" />
                 Same-week openings
               </span>
-              <span className="sm-home-trust__item">
+              <span className="bk-home-trust__item">
                 <Icon name="map-pin" size={15} color="var(--accent)" />
                 Downtown studio
               </span>
-              <span className="sm-home-trust__item">
+              <span className="bk-home-trust__item">
                 <Icon name="heart-handshake" size={15} color="var(--accent)" />
                 Walk-ins welcome
               </span>
@@ -109,7 +109,7 @@ export default function Home() {
           </div>
 
           <PlaceholderTile
-            className="sm-home-hero__tile"
+            className="bk-home-hero__tile"
             tint="#0d9488"
             icon="sparkles"
             iconSize={72}
@@ -124,24 +124,24 @@ export default function Home() {
       </section>
 
       {/* ---------------- B. Popular services ---------------- */}
-      <section className="sm-home-section">
-        <div className="sm-home-head">
+      <section className="bk-home-section">
+        <div className="bk-home-head">
           <div>
-            <h2 className="sm-h2">Popular services</h2>
-            <p className="sm-home-sub">
+            <h2 className="bk-h2">Popular services</h2>
+            <p className="bk-home-sub">
               A little something from every corner of the studio.
             </p>
           </div>
           <button
             type="button"
-            className="sm-nav sm-home-seeall"
+            className="bk-nav bk-home-seeall"
             onClick={() => go("services")}
           >
             See all
             <Icon name="arrow-right" size={15} />
           </button>
         </div>
-        <div className="sm-home-grid sm-home-grid--services">
+        <div className="bk-home-grid bk-home-grid--services">
           {popular.map((s) => (
             <ServiceCard key={s.id} service={s} variant="preview" onBook={startBooking} />
           ))}
@@ -150,19 +150,19 @@ export default function Home() {
 
       {/* ---------------- C. Meet the team ---------------- */}
       <section
-        className="sm-home-section"
+        className="bk-home-section"
         ref={teamRef}
-        aria-labelledby="sm-home-team-title"
+        aria-labelledby="bk-home-team-title"
       >
-        <div className="sm-home-head sm-home-head--stack">
+        <div className="bk-home-head bk-home-head--stack">
           <div>
-            <h2 className="sm-h2" id="sm-home-team-title">
+            <h2 className="bk-h2" id="bk-home-team-title">
               Meet the team
             </h2>
-            <p className="sm-home-sub">Four specialists, one very tidy calendar.</p>
+            <p className="bk-home-sub">Four specialists, one very tidy calendar.</p>
           </div>
         </div>
-        <div className="sm-home-grid sm-home-grid--team">
+        <div className="bk-home-grid bk-home-grid--team">
           {team.map((m) => (
             <StaffTile
               key={m.id}
@@ -177,16 +177,16 @@ export default function Home() {
       </section>
 
       {/* ---------------- D. Loved by regulars ---------------- */}
-      <section className="sm-home-section">
-        <div className="sm-home-head sm-home-head--wrap">
+      <section className="bk-home-section">
+        <div className="bk-home-head bk-home-head--wrap">
           <div>
-            <h2 className="sm-h2">Loved by regulars</h2>
-            <p className="sm-home-sub">
+            <h2 className="bk-h2">Loved by regulars</h2>
+            <p className="bk-home-sub">
               What guests say once they're back in the real world.
             </p>
           </div>
-          <div className="sm-home-rating">
-            <span className="sm-mono sm-home-rating__avg">{summary.averageLabel}</span>
+          <div className="bk-home-rating">
+            <span className="bk-mono bk-home-rating__avg">{summary.averageLabel}</span>
             <div>
               <StarBar
                 value={summary.average}
@@ -194,11 +194,11 @@ export default function Home() {
                 gap={2}
                 label={`${summary.averageLabel} out of 5`}
               />
-              <div className="sm-home-rating__caption">from {summary.countLabel}</div>
+              <div className="bk-home-rating__caption">from {summary.countLabel}</div>
             </div>
           </div>
         </div>
-        <div className="sm-home-grid sm-home-grid--reviews">
+        <div className="bk-home-grid bk-home-grid--reviews">
           {reviews.map((r) => (
             <ReviewCard key={r.name} review={r} />
           ))}
@@ -207,35 +207,35 @@ export default function Home() {
 
       {/* ---------------- E. Visit us ---------------- */}
       <section
-        className="sm-home-section sm-home-visit"
+        className="bk-home-section bk-home-visit"
         ref={visitRef}
-        aria-labelledby="sm-home-hours-title"
+        aria-labelledby="bk-home-hours-title"
       >
-        <div className="sm-home-visit__grid">
+        <div className="bk-home-visit__grid">
           <Card radius={20} padding="clamp(20px,3vw,28px)">
-            <div className="sm-home-cardhead">
+            <div className="bk-home-cardhead">
               <Icon name="clock" size={19} color="var(--accent)" />
-              <h2 className="sm-home-cardtitle" id="sm-home-hours-title">
+              <h2 className="bk-home-cardtitle" id="bk-home-hours-title">
                 Weekly hours
               </h2>
             </div>
-            <div className="sm-home-hours">
+            <div className="bk-home-hours">
               {hours.map((h, i) => {
                 const isToday = i === todayIdx;
                 return (
                   <div
                     key={h.day}
-                    className="sm-home-hours-row"
+                    className="bk-home-hours-row"
                     data-today={isToday ? "true" : "false"}
                   >
-                    <span className="sm-home-hours-day">
+                    <span className="bk-home-hours-day">
                       {h.day}
                       {isToday ? (
-                        <span className="sm-home-today-pill">Today</span>
+                        <span className="bk-home-today-pill">Today</span>
                       ) : null}
                     </span>
                     <span
-                      className="sm-mono sm-home-hours-val"
+                      className="bk-mono bk-home-hours-val"
                       data-today={isToday ? "true" : "false"}
                       data-closed={h.closed ? "true" : "false"}
                     >
@@ -245,14 +245,14 @@ export default function Home() {
                 );
               })}
             </div>
-            <p className="sm-home-hours-note">
+            <p className="bk-home-hours-note">
               <Icon name="info" size={14} />
               Individual specialists keep their own hours — you'll see live openings when
               you book.
             </p>
           </Card>
 
-          <Card radius={20} clip className="sm-home-map">
+          <Card radius={20} clip className="bk-home-map">
             <PlaceholderTile
               tint="#6f8bb0"
               icon="map-pin"
@@ -261,19 +261,19 @@ export default function Home() {
               angle="120deg"
               filename="studio_map.jpg"
             />
-            <div className="sm-home-map__body">
-              <div className="sm-home-map__name">{loc.name}</div>
-              <p className="sm-home-map__addr">
+            <div className="bk-home-map__body">
+              <div className="bk-home-map__name">{loc.name}</div>
+              <p className="bk-home-map__addr">
                 {loc.addressLine1}
                 <br />
                 {loc.addressLine2}
               </p>
-              <div className="sm-home-map__contacts">
-                <span className="sm-home-trust__item">
+              <div className="bk-home-map__contacts">
+                <span className="bk-home-trust__item">
                   <Icon name="phone" size={14} color="var(--accent)" />
-                  <span className="sm-mono">{loc.phone}</span>
+                  <span className="bk-mono">{loc.phone}</span>
                 </span>
-                <span className="sm-home-trust__item">
+                <span className="bk-home-trust__item">
                   <Icon name="train-front" size={14} color="var(--accent)" />
                   {loc.transit}
                 </span>

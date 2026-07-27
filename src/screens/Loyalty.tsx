@@ -54,70 +54,70 @@ export default function Loyalty() {
       : `${Math.max(0, threshold - points)} pts until your next free service`;
 
   return (
-    <main className="sm-screen sm-page sm-loyalty">
-      <div className="sm-loyalty__intro">
-        <span className="sm-loyalty__eyebrow">
+    <main className="bk-screen bk-page bk-loyalty">
+      <div className="bk-loyalty__intro">
+        <span className="bk-loyalty__eyebrow">
           <Icon name="gem" size={14} />
           Studio Circle
         </span>
-        <h1 className="sm-loyalty__h1">A little glow with every visit.</h1>
-        <p className="sm-loyalty__sub">
+        <h1 className="bk-loyalty__h1">A little glow with every visit.</h1>
+        <p className="bk-loyalty__sub">
           Earn a point for every dollar, redeem for services you love, and unlock
           more as a member. It's free to join.
         </p>
       </div>
 
-      <div className="sm-loyalty__cards">
-        <div className="sm-loyalty-points">
-          <div className="sm-loyalty-points__head">
-            <span className="sm-loyalty-points__label">Your points</span>
+      <div className="bk-loyalty__cards">
+        <div className="bk-loyalty-points">
+          <div className="bk-loyalty-points__head">
+            <span className="bk-loyalty-points__label">Your points</span>
             {member ? (
-              <span className="sm-loyalty-points__member">
+              <span className="bk-loyalty-points__member">
                 <Icon name="gem" size={12} />
                 Member
               </span>
             ) : null}
           </div>
-          <div className="sm-loyalty-points__figure">
-            <span className="sm-mono sm-loyalty-points__value">{points}</span>
-            <span className="sm-loyalty-points__unit">pts</span>
+          <div className="bk-loyalty-points__figure">
+            <span className="bk-mono bk-loyalty-points__value">{points}</span>
+            <span className="bk-loyalty-points__unit">pts</span>
           </div>
           <div
-            className="sm-loyalty-points__track"
+            className="bk-loyalty-points__track"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={threshold}
             aria-valuenow={Math.min(points, threshold)}
             aria-label="Progress to your next free service"
           >
-            <div className="sm-loyalty-points__fill" style={{ inlineSize: `${pct}%` }} />
+            <div className="bk-loyalty-points__fill" style={{ inlineSize: `${pct}%` }} />
           </div>
-          <div className="sm-loyalty-points__togo">{toGo}</div>
+          <div className="bk-loyalty-points__togo">{toGo}</div>
         </div>
 
-        <div className="sm-loyalty-how">
-          <span className="sm-loyalty-how__label">How it works</span>
+        <div className="bk-loyalty-how">
+          <span className="bk-loyalty-how__label">How it works</span>
           {howItWorks.map((line, i) => (
-            <div className="sm-loyalty-how__row" key={line}>
-              <span className="sm-loyalty-how__glyph">
+            <div className="bk-loyalty-how__row" key={line}>
+              <span className="bk-loyalty-how__glyph">
                 <Icon name={HOW_ICONS[i] ?? "sparkles"} size={16} />
               </span>
-              <span className="sm-loyalty-how__text">{line}</span>
+              <span className="bk-loyalty-how__text">{line}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <h2 className="sm-loyalty__h2">Redeem your points</h2>
-      <div className="sm-loyalty__rewards">
+      <h2 className="bk-loyalty__h2">Redeem your points</h2>
+      <div className="bk-loyalty__rewards">
         {rewards.map((r) => {
           const locked = points < r.cost;
           return (
-            <div className="sm-card sm-loyalty-reward" key={r.label}>
+            <div className="bk-card bk-loyalty-reward" key={r.label}>
               <IconTile icon={r.icon} tint={r.tint} size={44} iconSize={20} radius={12} />
-              <div className="sm-loyalty-reward__body">
-                <div className="sm-loyalty-reward__name">{r.label}</div>
-                <div className="sm-mono sm-loyalty-reward__cost">{r.cost} pts</div>
+              <div className="bk-loyalty-reward__body">
+                <div className="bk-loyalty-reward__name">{r.label}</div>
+                <div className="bk-mono bk-loyalty-reward__cost">{r.cost} pts</div>
               </div>
               <Button
                 variant="primary"
@@ -133,31 +133,31 @@ export default function Loyalty() {
         })}
       </div>
 
-      <h2 className="sm-loyalty__h2">Become a member</h2>
-      <p className="sm-loyalty__h2sub">
+      <h2 className="bk-loyalty__h2">Become a member</h2>
+      <p className="bk-loyalty__h2sub">
         Go further with Studio Circle membership — cancel anytime.
       </p>
-      <div className="sm-loyalty__plans">
+      <div className="bk-loyalty__plans">
         {plans.map((p) => (
           <div
-            className="sm-loyalty-plan"
+            className="bk-loyalty-plan"
             data-featured={p.featured ? "true" : "false"}
             key={p.name}
           >
             {p.featured ? (
-              <span className="sm-loyalty-plan__ribbon">Most loved</span>
+              <span className="bk-loyalty-plan__ribbon">Most loved</span>
             ) : null}
             <div>
-              <div className="sm-loyalty-plan__name">{p.name}</div>
-              <div className="sm-loyalty-plan__pricerow">
-                <span className="sm-mono sm-loyalty-plan__price">{p.price}</span>
-                <span className="sm-loyalty-plan__cadence">{p.cadence}</span>
+              <div className="bk-loyalty-plan__name">{p.name}</div>
+              <div className="bk-loyalty-plan__pricerow">
+                <span className="bk-mono bk-loyalty-plan__price">{p.price}</span>
+                <span className="bk-loyalty-plan__cadence">{p.cadence}</span>
               </div>
             </div>
-            <div className="sm-loyalty-plan__perks">
+            <div className="bk-loyalty-plan__perks">
               {p.perks.map((perk) => (
-                <div className="sm-loyalty-plan__perk" key={perk}>
-                  <Icon name="check" size={15} className="sm-loyalty-plan__tick" />
+                <div className="bk-loyalty-plan__perk" key={perk}>
+                  <Icon name="check" size={15} className="bk-loyalty-plan__tick" />
                   {perk}
                 </div>
               ))}
@@ -166,7 +166,7 @@ export default function Loyalty() {
               variant={p.featured ? "primary" : "ghost"}
               icon="gem"
               full
-              className="sm-loyalty-plan__join"
+              className="bk-loyalty-plan__join"
               style={JOIN_BTN}
               onClick={loyaltyJoin}
             >

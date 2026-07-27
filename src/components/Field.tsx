@@ -1,6 +1,6 @@
 /*
  * Form primitives (spec §4.14): label + control + inline error, in one place
- * so every screen's fields line up and share the `.sm-fld` focus ring.
+ * so every screen's fields line up and share the `.bk-fld` focus ring.
  */
 
 import { useId } from "react";
@@ -51,20 +51,20 @@ export function Field({
     "aria-describedby": error ? errorId : undefined,
   };
   return (
-    <div className={["sm-field", className].filter(Boolean).join(" ")} style={style}>
-      <div className="sm-field__labelrow">
+    <div className={["bk-field", className].filter(Boolean).join(" ")} style={style}>
+      <div className="bk-field__labelrow">
         <label
           htmlFor={id}
-          className={strong ? "sm-label sm-label--strong" : "sm-label"}
+          className={strong ? "bk-label bk-label--strong" : "bk-label"}
         >
           {label}
-          {hint ? <span className="sm-label__hint">{hint}</span> : null}
+          {hint ? <span className="bk-label__hint">{hint}</span> : null}
         </label>
-        {aside ? <span className="sm-field__aside">{aside}</span> : null}
+        {aside ? <span className="bk-field__aside">{aside}</span> : null}
       </div>
       {typeof children === "function" ? children(control) : children}
       {error ? (
-        <div className="sm-field__error" id={errorId}>
+        <div className="bk-field__error" id={errorId}>
           <Icon name="alert-circle" size={13} />
           {error}
         </div>
@@ -88,7 +88,7 @@ export interface TextInputProps extends Partial<ControlProps> {
   ariaLabel?: string;
 }
 
-/** The standard `.sm-fld` input. */
+/** The standard `.bk-fld` input. */
 export function TextInput({
   value,
   onChange,
@@ -106,7 +106,7 @@ export function TextInput({
   return (
     <input
       {...control}
-      className={["sm-fld", "sm-input", mono ? "sm-mono" : "", className]
+      className={["bk-fld", "bk-input", mono ? "bk-mono" : "", className]
         .filter(Boolean)
         .join(" ")}
       type={type}
@@ -147,7 +147,7 @@ export function TextArea({
   return (
     <textarea
       {...control}
-      className={["sm-fld", "sm-input", "sm-textarea", className]
+      className={["bk-fld", "bk-input", "bk-textarea", className]
         .filter(Boolean)
         .join(" ")}
       value={value}
@@ -184,7 +184,7 @@ export function Select({
   return (
     <select
       {...control}
-      className={["sm-fld", "sm-input", "sm-select", className]
+      className={["bk-fld", "bk-input", "bk-select", className]
         .filter(Boolean)
         .join(" ")}
       value={value}

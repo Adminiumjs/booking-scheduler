@@ -32,24 +32,24 @@ export function NumberStepper({
   const clamp = (n: number) => Math.min(max, Math.max(min, n));
   return (
     <div
-      className={["sm-stepper-num", className].filter(Boolean).join(" ")}
+      className={["bk-stepper-num", className].filter(Boolean).join(" ")}
       style={style}
     >
       <button
         type="button"
-        className="sm-gi sm-stepper-num__btn"
+        className="bk-gi bk-stepper-num__btn"
         onClick={() => onChange(clamp(value - step))}
         disabled={value <= min}
         aria-label={`Decrease ${label}`}
       >
         <Icon name="minus" size={15} />
       </button>
-      <span className="sm-stepper-num__value" aria-live="polite">
+      <span className="bk-stepper-num__value" aria-live="polite">
         {format(value)}
       </span>
       <button
         type="button"
-        className="sm-gi sm-stepper-num__btn"
+        className="bk-gi bk-stepper-num__btn"
         onClick={() => onChange(clamp(value + step))}
         disabled={value >= max}
         aria-label={`Increase ${label}`}
