@@ -2,8 +2,8 @@
  * Booking / group / gift code generation (port spec §6.5, §6.9; ruling R7).
  *
  * - Booking + group codes share one monotonic counter that starts at 1043,
- *   so the first in-session booking is SLM-1043 (the seeds are SLM-1039 and
- *   SLM-1041).
+ *   so the first in-session booking is LMN-1043 (the seeds are LMN-1039 and
+ *   LMN-1041).
  * - Gift codes keep the comp's hash flavour but are made collision-free: the
  *   hash picks a starting point in GIFT-1000..GIFT-9999 and we linearly probe
  *   until we find one that is not already taken (the seeded GIFT-4821
@@ -25,7 +25,7 @@ export const BOOKING_PREFIX = "SLM";
 export const GROUP_PREFIX = "GRP";
 export const GIFT_PREFIX = "GIFT";
 
-/** `1043` → `'SLM-1043'`. */
+/** `1043` → `'LMN-1043'`. */
 export function bookingCode(n: number): string {
   return `${BOOKING_PREFIX}-${n}`;
 }

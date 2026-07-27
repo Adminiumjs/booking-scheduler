@@ -76,7 +76,7 @@ export interface DataSource {
   getStaffMember(id: string | null | undefined): StaffMember | undefined;
   /** Staff who perform a service, in the service's declared order. */
   getStaffForService(serviceId: string): StaffMember[];
-  /** `'Selma / Noor'` — the meta line on a full service card. */
+  /** `'Elin / Noor'` — the meta line on a full service card. */
   getStaffNames(serviceId: string): string;
 
   /* social proof */

@@ -67,7 +67,7 @@ function GiftPreview({ tint, amount, to, className }: GiftPreviewProps) {
       style={{ background: placeholderBackground(tint, "145deg", dark) }}
     >
       <div className="sm-gift-preview__top">
-        <span className="sm-gift-preview__brand">Selma&apos;s</span>
+        <span className="sm-gift-preview__brand">Lumen</span>
         <Icon name="gift" size={20} />
       </div>
       <div>
@@ -181,7 +181,7 @@ export default function GiftCards() {
       <div className="sm-gift-head">
         <h1 className="sm-h1">Gift a little calm.</h1>
         <p className="sm-sub">
-          A Selma&apos;s gift card never expires and works on any service.
+          A Lumen gift card never expires and works on any service.
         </p>
       </div>
 

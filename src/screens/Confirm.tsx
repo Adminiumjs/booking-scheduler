@@ -184,7 +184,7 @@ export default function Confirm() {
               </span>
               <div className="sm-confirm__sms-col">
                 <div className="sm-confirm__sms-bubble">
-                  Selma’s: Reminder — {svc.name} with {staffName}{" "}
+                  Lumen: Reminder — {svc.name} with {staffName}{" "}
                   {formatShortISO(booking.dateISO)} at {timeLabel}. Reply R to
                   reschedule, C to cancel.
                 </div>

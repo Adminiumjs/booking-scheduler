@@ -3,7 +3,7 @@
 -- Mirrors the frontend demo business in src/data/ exactly: the same 4 menu
 -- sections, the same 12 services (name, duration, price, blurb, icon, tint),
 -- the same 4 specialists with the same weekly hours, the same two seeded
--- bookings (SLM-1039, SLM-1041), the same waitlist entry and the same gift
+-- bookings (LMN-1039, LMN-1041), the same waitlist entry and the same gift
 -- card (GIFT-4821). The booking site and the auto-generated Adminium dashboard
 -- MUST show one studio, so this file and the frontend demo data have to stay in
 -- sync — change one, change the other.
@@ -51,7 +51,7 @@ INSERT INTO services (id, slug, name, category_id, description, duration_min, pr
 -- Specialists ----------------------------------------------------------------
 
 INSERT INTO staff (id, slug, name, role, bio, initials, tint, category_id, sort_order) VALUES
-  (1, 'selma', 'Selma', 'Color specialist', 'Balayage & lived-in color, ten years in the chair.', 'SE', '#b07d9a', 1, 1),
+  (1, 'elin', 'Elin', 'Color specialist', 'Balayage & lived-in color, ten years in the chair.', 'EL', '#b07d9a', 1, 1),
   (2, 'noor',  'Noor',  'Spa therapist',    'Facials & massage — mornings only, always calm.',    'NO', '#6f8bb0', 2, 2),
   (3, 'ivy',   'Ivy',   'Nail artist',      'Gel sets & detailed nail art. Off Sundays & Mondays.', 'IV', '#b0836a', 3, 3),
   (4, 'marco', 'Marco', 'Movement coach',   'Pilates, yoga & bodywork. Takes Mondays off.',       'MA', '#7d9166', 4, 4);
@@ -59,14 +59,14 @@ INSERT INTO staff (id, slug, name, role, bio, initials, tint, category_id, sort_
 -- Who offers what ------------------------------------------------------------
 
 INSERT INTO staff_services (staff_id, service_id) VALUES
-  (1, 1), (1, 2), (1, 3), (1, 4),           -- Selma  — all four hair services
+  (1, 1), (1, 2), (1, 3), (1, 4),           -- Elin  — all four hair services
   (2, 5), (2, 6), (2, 7),                   -- Noor   — the spa menu
   (3, 8), (3, 9), (3, 10),                  -- Ivy    — the nail menu
   (4, 6), (4, 11), (4, 12);                 -- Marco  — movement + deep tissue
 
 -- Weekly working windows -----------------------------------------------------
 --
--- Selma  Mon 10–14 · Tue–Fri 09–13 + 14–18 · Sat 09–13
+-- Elin  Mon 10–14 · Tue–Fri 09–13 + 14–18 · Sat 09–13
 -- Noor   Mon–Sat 09–13 (mornings only)
 -- Ivy    Tue–Fri 10–14 + 15–19 · Sat 10–14 (off Sun & Mon)
 -- Marco  Tue–Fri 08–12 + 16–20 · Sat 08–12 (off Sun & Mon)
@@ -119,34 +119,34 @@ INSERT INTO customers (id, name, email, phone) VALUES
 
 -- Appointments ---------------------------------------------------------------
 --
--- SLM-1039 and SLM-1041 are the two bookings the frontend seeds for Ava — the
+-- LMN-1039 and LMN-1041 are the two bookings the frontend seeds for Ava — the
 -- ones "Manage booking" pre-fills and "My upcoming visits" lists. Codes stay
--- below SLM-1043, which is where the site's booking counter starts, so a demo
+-- below LMN-1043, which is where the site's booking counter starts, so a demo
 -- booking can never collide with a seeded one. Every row sits inside its
 -- specialist's weekly window and no specialist is ever double-booked.
 
 INSERT INTO appointments (id, code, customer_id, service_id, staff_id, starts_at, ends_at, price, status, notes) VALUES
-  (1,  'SLM-1012', 1, 9,  3, '2026-06-02 10:30:00-07:00', '2026-06-02 11:30:00-07:00',  58.00, 'completed', NULL),
-  (2,  'SLM-1021', 1, 5,  2, '2026-06-30 09:00:00-07:00', '2026-06-30 10:00:00-07:00', 110.00, 'completed', NULL),
-  (3,  'SLM-1029', 1, 3,  1, '2026-07-14 10:00:00-07:00', '2026-07-14 11:30:00-07:00', 190.00, 'completed', NULL),
-  (4,  'SLM-1030', 6, 7,  2, '2026-07-16 09:30:00-07:00', '2026-07-16 11:00:00-07:00', 155.00, 'cancelled', 'Cancelled the day before — rebooking in August.'),
-  (5,  'SLM-1031', 5, 2,  1, '2026-07-18 09:30:00-07:00', '2026-07-18 11:00:00-07:00', 135.00, 'no_show',   NULL),
-  (6,  'SLM-1033', 2, 6,  4, '2026-07-21 08:30:00-07:00', '2026-07-21 09:30:00-07:00', 115.00, 'completed', 'Focus on the left shoulder.'),
-  (7,  'SLM-1034', 4, 8,  3, '2026-07-23 15:30:00-07:00', '2026-07-23 16:15:00-07:00',  45.00, 'completed', NULL),
-  (8,  'SLM-1035', 3, 12, 4, '2026-07-24 16:30:00-07:00', '2026-07-24 17:30:00-07:00',  70.00, 'completed', NULL),
-  (9,  'SLM-1036', 7, 10, 3, '2026-07-25 11:00:00-07:00', '2026-07-25 12:00:00-07:00',  70.00, 'completed', NULL),
-  (10, 'SLM-1042', 4, 5,  2, '2026-07-28 09:30:00-07:00', '2026-07-28 10:30:00-07:00', 110.00, 'booked',    NULL),
-  (11, 'SLM-1040', 2, 1,  1, '2026-07-28 10:00:00-07:00', '2026-07-28 11:00:00-07:00',  78.00, 'booked',    'Keep the length, tidy the fringe.'),
-  (12, 'SLM-1039', 1, 4,  1, '2026-07-29 14:00:00-07:00', '2026-07-29 14:45:00-07:00',  60.00, 'booked',    'Running a few minutes late, sorry!'),
-  (13, 'SLM-1041', 1, 11, 4, '2026-07-29 17:00:00-07:00', '2026-07-29 17:45:00-07:00',  40.00, 'booked',    NULL),
-  (14, 'SLM-1038', 3, 9,  3, '2026-07-30 10:30:00-07:00', '2026-07-30 11:30:00-07:00',  58.00, 'booked',    NULL),
-  (15, 'SLM-1037', 5, 6,  2, '2026-07-31 10:00:00-07:00', '2026-07-31 11:00:00-07:00', 115.00, 'booked',    'First deep-tissue visit.');
+  (1,  'LMN-1012', 1, 9,  3, '2026-06-02 10:30:00-07:00', '2026-06-02 11:30:00-07:00',  58.00, 'completed', NULL),
+  (2,  'LMN-1021', 1, 5,  2, '2026-06-30 09:00:00-07:00', '2026-06-30 10:00:00-07:00', 110.00, 'completed', NULL),
+  (3,  'LMN-1029', 1, 3,  1, '2026-07-14 10:00:00-07:00', '2026-07-14 11:30:00-07:00', 190.00, 'completed', NULL),
+  (4,  'LMN-1030', 6, 7,  2, '2026-07-16 09:30:00-07:00', '2026-07-16 11:00:00-07:00', 155.00, 'cancelled', 'Cancelled the day before — rebooking in August.'),
+  (5,  'LMN-1031', 5, 2,  1, '2026-07-18 09:30:00-07:00', '2026-07-18 11:00:00-07:00', 135.00, 'no_show',   NULL),
+  (6,  'LMN-1033', 2, 6,  4, '2026-07-21 08:30:00-07:00', '2026-07-21 09:30:00-07:00', 115.00, 'completed', 'Focus on the left shoulder.'),
+  (7,  'LMN-1034', 4, 8,  3, '2026-07-23 15:30:00-07:00', '2026-07-23 16:15:00-07:00',  45.00, 'completed', NULL),
+  (8,  'LMN-1035', 3, 12, 4, '2026-07-24 16:30:00-07:00', '2026-07-24 17:30:00-07:00',  70.00, 'completed', NULL),
+  (9,  'LMN-1036', 7, 10, 3, '2026-07-25 11:00:00-07:00', '2026-07-25 12:00:00-07:00',  70.00, 'completed', NULL),
+  (10, 'LMN-1042', 4, 5,  2, '2026-07-28 09:30:00-07:00', '2026-07-28 10:30:00-07:00', 110.00, 'booked',    NULL),
+  (11, 'LMN-1040', 2, 1,  1, '2026-07-28 10:00:00-07:00', '2026-07-28 11:00:00-07:00',  78.00, 'booked',    'Keep the length, tidy the fringe.'),
+  (12, 'LMN-1039', 1, 4,  1, '2026-07-29 14:00:00-07:00', '2026-07-29 14:45:00-07:00',  60.00, 'booked',    'Running a few minutes late, sorry!'),
+  (13, 'LMN-1041', 1, 11, 4, '2026-07-29 17:00:00-07:00', '2026-07-29 17:45:00-07:00',  40.00, 'booked',    NULL),
+  (14, 'LMN-1038', 3, 9,  3, '2026-07-30 10:30:00-07:00', '2026-07-30 11:30:00-07:00',  58.00, 'booked',    NULL),
+  (15, 'LMN-1037', 5, 6,  2, '2026-07-31 10:00:00-07:00', '2026-07-31 11:00:00-07:00', 115.00, 'booked',    'First deep-tissue visit.');
 
 -- Reminder preferences on the two frontend-seeded bookings; every other row
 -- keeps the column defaults (email + SMS, 24 hours before).
 
-UPDATE appointments SET remind_email = true, remind_sms = false, remind_when = '24h' WHERE code = 'SLM-1039';
-UPDATE appointments SET remind_email = true, remind_sms = true,  remind_when = '24h' WHERE code = 'SLM-1041';
+UPDATE appointments SET remind_email = true, remind_sms = false, remind_when = '24h' WHERE code = 'LMN-1039';
+UPDATE appointments SET remind_email = true, remind_sms = true,  remind_when = '24h' WHERE code = 'LMN-1041';
 
 -- Waitlist -------------------------------------------------------------------
 -- The first row is the entry the frontend seeds: Ava, Gel Manicure with Ivy on
@@ -174,7 +174,7 @@ INSERT INTO loyalty_ledger (customer_id, appointment_id, label, kind, delta_poin
   (1, 1,    'Gel Manicure with Ivy',          'earn',     58, '2026-06-02'),
   (1, NULL, 'Redeemed — $10 off any service', 'redeem', -200, '2026-06-18'),
   (1, 2,    'Signature Facial with Noor',     'earn',    110, '2026-06-30'),
-  (1, 3,    'Balayage with Selma',            'earn',    190, '2026-07-14');
+  (1, 3,    'Balayage with Elin',            'earn',    190, '2026-07-14');
 
 -- Advance serial sequences past the explicit ids above ------------------------
 

@@ -183,7 +183,7 @@ export function SuccessTile({
 export interface CodePillProps {
   /** e.g. `'Booking code'`. */
   label: string;
-  /** e.g. `'SLM-1043'`. */
+  /** e.g. `'LMN-1043'`. */
   code: string;
   /** Mono code font size (20 or 22). */
   codeSize?: number;

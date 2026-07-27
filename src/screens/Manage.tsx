@@ -2,7 +2,7 @@
  * MANAGE BOOKING (view: 'manage') — port spec §3.5, §6.6–6.8.
  *
  * Two modes driven by `store.foundCode`:
- *   find mode — code + email lookup (pre-filled with the seeded SLM-1039)
+ *   find mode — code + email lookup (pre-filled with the seeded LMN-1039)
  *   card mode — the booking, with Reschedule / Cancel, or the cancelled note.
  *
  * Ruling R3: "Reschedule" only calls `startReschedule()`. The store never
@@ -84,7 +84,7 @@ export default function Manage() {
                   {...c}
                   value={mgCode}
                   onChange={setMgCode}
-                  placeholder="SLM-1039"
+                  placeholder="LMN-1039"
                   mono
                   className="sm-manage-find__code"
                 />

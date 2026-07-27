@@ -394,7 +394,7 @@ export const useStore = create<Store>()((set, get) => {
     nextNum: data.getFirstCodeNumber(),
     lastCode: null,
 
-    mgCode: "SLM-1039",
+    mgCode: "LMN-1039",
     mgEmail: "ava@example.com",
     mgErr: "",
     foundCode: null,

@@ -2,7 +2,7 @@
  * The seeded demo dataset (port spec §5), transcribed verbatim except where
  * an orchestrator ruling says otherwise:
  *
- *   R4 — SLM-1041 is seeded into the appointment list as well as the booking
+ *   R4 — LMN-1041 is seeded into the appointment list as well as the booking
  *        list, so the slot grid and the displayed booking agree.
  *   R5 — the *published* weekly hours are widened to cover the staff windows
  *        as authored (Marco 08:00–20:00, Ivy to 19:00); staff availability is
@@ -56,7 +56,7 @@ export const SERVICES: readonly Service[] = [
     cat: "hair",
     dur: 60,
     price: 78,
-    staff: ["selma"],
+    staff: ["elin"],
     icon: "scissors",
     tint: "#b07d9a",
     blurb: "A precision cut and a finish you can actually redo at home.",
@@ -68,7 +68,7 @@ export const SERVICES: readonly Service[] = [
     cat: "hair",
     dur: 90,
     price: 135,
-    staff: ["selma"],
+    staff: ["elin"],
     icon: "paintbrush",
     tint: "#a06f96",
     blurb: "Seamless root coverage matched right to your tone.",
@@ -80,7 +80,7 @@ export const SERVICES: readonly Service[] = [
     cat: "hair",
     dur: 90,
     price: 190,
-    staff: ["selma"],
+    staff: ["elin"],
     icon: "palette",
     tint: "#b58a6a",
     blurb: "Hand-painted, sun-kissed dimension that grows out soft.",
@@ -92,7 +92,7 @@ export const SERVICES: readonly Service[] = [
     cat: "hair",
     dur: 45,
     price: 60,
-    staff: ["selma"],
+    staff: ["elin"],
     icon: "droplet",
     tint: "#9a7fb0",
     blurb: "A quick shine-and-tone refresh between color visits.",
@@ -210,11 +210,11 @@ export const POPULAR_SERVICE_IDS: readonly string[] = [
 
 export const STAFF: readonly StaffMember[] = [
   {
-    id: "selma",
-    name: "Selma",
+    id: "elin",
+    name: "Elin",
     role: "Color specialist",
     cat: "hair",
-    initials: "SE",
+    initials: "EL",
     tint: "#b07d9a",
     bio: "Balayage & lived-in color, ten years in the chair.",
     hours: {
@@ -318,7 +318,7 @@ export const STAFF: readonly StaffMember[] = [
  *
  * R5: the published hours are widened to cover the staff windows as authored
  * (Marco starts at 08:00 and finishes at 20:00 Tue–Fri; Ivy runs to 19:00;
- * Noor and Selma open at 09:00 on Mondays). Staff windows are untouched.
+ * Noor and Elin open at 09:00 on Mondays). Staff windows are untouched.
  * ------------------------------------------------------------------ */
 
 export const STUDIO_HOURS: readonly StudioHoursRow[] = [
@@ -332,13 +332,13 @@ export const STUDIO_HOURS: readonly StudioHoursRow[] = [
 ];
 
 export const STUDIO_LOCATION: StudioLocation = {
-  name: "Selma's Studio",
-  shortName: "Selma's",
+  name: "Lumen Studio",
+  shortName: "Lumen",
   addressLine1: "148 Alder Lane, Suite 2",
   addressLine2: "Riverside, Downtown",
   phone: "(415) 555-0148",
   transit: "2 min from Alder stop",
-  email: "hello@selmasstudio.demo",
+  email: "hello@lumenstudio.demo",
   /* The real demo path — the repo, the README and `build:demo` all say
      `booking-scheduler`, so the footer badge has to as well. */
   url: "adminium.dev/demo/booking-scheduler",
@@ -357,7 +357,7 @@ export const REVIEWS: readonly Review[] = [
     svc: "Balayage",
     date: "2 weeks ago",
     quote:
-      "Selma read exactly what I wanted from one blurry screenshot. Best color I’ve ever had, full stop.",
+      "Elin read exactly what I wanted from one blurry screenshot. Best color I’ve ever had, full stop.",
   },
   {
     name: "Marcus L.",
@@ -450,7 +450,7 @@ export const PLANS: readonly MembershipPlan[] = [
  * ------------------------------------------------------------------ */
 
 export const LOYALTY_HISTORY: readonly LoyaltyHistoryRow[] = [
-  { label: "Balayage with Selma", date: "Jul 14, 2026", delta: 190 },
+  { label: "Balayage with Elin", date: "Jul 14, 2026", delta: 190 },
   { label: "Signature Facial with Noor", date: "Jun 30, 2026", delta: 110 },
   { label: "Redeemed — $10 off any service", date: "Jun 18, 2026", delta: -200 },
   { label: "Gel Manicure with Ivy", date: "Jun 2, 2026", delta: 58 },
@@ -462,7 +462,7 @@ export const LOYALTY_HISTORY: readonly LoyaltyHistoryRow[] = [
  * ------------------------------------------------------------------ */
 
 export const REFERRAL: ReferralData = {
-  code: "AVA-SELMA",
+  code: "AVA-LUMEN",
   steps: [
     { icon: "share-2", label: "Share your code with a friend who hasn’t visited yet." },
     { icon: "calendar-check", label: "They book & complete their first appointment." },
@@ -559,9 +559,9 @@ export function buildSeedBookings(week: readonly Date[]): Booking[] {
   const biso = seedDateISO(week);
   return [
     {
-      code: "SLM-1039",
+      code: "LMN-1039",
       svc: "gloss",
-      staff: "selma",
+      staff: "elin",
       dateISO: biso,
       time: 840,
       dur: 45,
@@ -580,7 +580,7 @@ export function buildSeedBookings(week: readonly Date[]): Booking[] {
       series: [biso],
     },
     {
-      code: "SLM-1041",
+      code: "LMN-1041",
       svc: "reformer",
       staff: "marco",
       dateISO: biso,
@@ -616,14 +616,14 @@ export function buildSeedWaitlist(week: readonly Date[]): WaitlistEntry[] {
  * marked point becomes a 30-minute appointment; ruling R2's interval-overlap
  * engine reads them as real intervals. The two seeded bookings are pushed
  * first so their real durations win over any fill that would collide with them
- * (ruling R4 — SLM-1041 is included, which the comp forgot).
+ * (ruling R4 — LMN-1041 is included, which the comp forgot).
  *
  * The de-duplication is by INTERVAL, not by start minute. Keying on the start
- * alone is not enough once durations are real: SLM-1039 runs [840, 885) and the
+ * alone is not enough once durations are real: LMN-1039 runs [840, 885) and the
  * fill would otherwise drop a separate 30-minute block at [870, 900) on the same
  * calendar. Two overlapping appointments for one staff member are impossible in
  * reality, and that particular pair also breaks ruling R3 — the overlapping fill
- * is not the booking being moved, so excluding SLM-1039 would still not let it
+ * is not the booking being moved, so excluding LMN-1039 would still not let it
  * be rescheduled onto its own current slot. Skipping any fill that intersects
  * something already placed keeps the seed internally consistent.
  * ------------------------------------------------------------------ */
