@@ -1,0 +1,555 @@
+{
+  "manifestVersion": 1,
+  "key": "bookings",
+  "name": "Booking Scheduler",
+  "version": "1.0.0",
+  "publisher": {
+    "id": "adminium",
+    "name": "Adminium",
+    "url": "https://adminium.dev"
+  },
+  "license": "AGPL-3.0-only",
+  "description": {
+    "key": "mft.bookings.desc",
+    "fallback": "An appointment-booking site with an admin dashboard for services, staff availability, calendar, and guests — backed by your own database."
+  },
+  "categories": ["hospitality"],
+
+  "compatibility": {
+    "minAdminiumVersion": "1.0.0",
+    "engines": ["postgres", "mysql", "sqlite"],
+    "requires": ["realtime"]
+  },
+
+  "requiredSchema": {
+    "tables": [
+      {
+        "ref": "service_categories",
+        "table": "service_categories",
+        "label": { "key": "mft.bookings.tbl.service_categories", "fallback": "Service categories" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "name", "type": "text", "required": true, "display": "title" },
+          { "name": "slug", "type": "text", "required": true, "unique": true },
+          { "name": "icon", "type": "text" },
+          { "name": "sort_order", "type": "int", "default": 0 }
+        ]
+      },
+      {
+        "ref": "services",
+        "table": "services",
+        "label": { "key": "mft.bookings.tbl.services", "fallback": "Services" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "slug", "type": "text", "required": true, "unique": true },
+          { "name": "name", "type": "name", "required": true, "display": "title" },
+          { "name": "category_id", "type": "ref", "ref": "service_categories", "onDelete": "restrict", "required": true },
+          { "name": "description", "type": "text" },
+          { "name": "duration_min", "type": "int", "required": true },
+          { "name": "price", "type": "money", "required": true },
+          { "name": "image_url", "type": "image" },
+          { "name": "icon", "type": "text" },
+          { "name": "tint", "type": "text" },
+          { "name": "active", "type": "bool", "default": true },
+          { "name": "sort_order", "type": "int", "default": 0 },
+          { "name": "created_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      },
+      {
+        "ref": "staff",
+        "table": "staff",
+        "label": { "key": "mft.bookings.tbl.staff", "fallback": "Staff" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "slug", "type": "text", "required": true, "unique": true },
+          { "name": "name", "type": "name", "required": true, "display": "title" },
+          { "name": "role", "type": "text", "required": true },
+          { "name": "bio", "type": "text" },
+          { "name": "initials", "type": "text" },
+          { "name": "avatar_url", "type": "avatar" },
+          { "name": "tint", "type": "text" },
+          { "name": "category_id", "type": "ref", "ref": "service_categories", "onDelete": "set-null" },
+          { "name": "active", "type": "bool", "default": true },
+          { "name": "sort_order", "type": "int", "default": 0 },
+          { "name": "created_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      },
+      {
+        "ref": "staff_services",
+        "table": "staff_services",
+        "label": { "key": "mft.bookings.tbl.staff_services", "fallback": "Staff services" },
+        "primaryKey": ["staff_id", "service_id"],
+        "join": true,
+        "columns": [
+          { "name": "staff_id", "type": "ref", "ref": "staff", "onDelete": "cascade" },
+          { "name": "service_id", "type": "ref", "ref": "services", "onDelete": "cascade" }
+        ]
+      },
+      {
+        "ref": "availability_rules",
+        "table": "availability_rules",
+        "label": { "key": "mft.bookings.tbl.availability_rules", "fallback": "Availability" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "staff_id", "type": "ref", "ref": "staff", "onDelete": "cascade", "required": true },
+          {
+            "name": "weekday",
+            "type": "enum",
+            "required": true,
+            "values": [
+              { "value": "mon", "label": "Monday" },
+              { "value": "tue", "label": "Tuesday" },
+              { "value": "wed", "label": "Wednesday" },
+              { "value": "thu", "label": "Thursday" },
+              { "value": "fri", "label": "Friday" },
+              { "value": "sat", "label": "Saturday" },
+              { "value": "sun", "label": "Sunday" }
+            ]
+          },
+          { "name": "opens", "type": "text", "required": true },
+          { "name": "closes", "type": "text", "required": true }
+        ]
+      },
+      {
+        "ref": "time_off",
+        "table": "time_off",
+        "label": { "key": "mft.bookings.tbl.time_off", "fallback": "Time off" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "staff_id", "type": "ref", "ref": "staff", "onDelete": "cascade", "required": true },
+          { "name": "starts_at", "type": "timestamp", "required": true },
+          { "name": "ends_at", "type": "timestamp", "required": true },
+          { "name": "reason", "type": "text", "display": "title" }
+        ]
+      },
+      {
+        "ref": "customers",
+        "table": "customers",
+        "label": { "key": "mft.bookings.tbl.customers", "fallback": "Guests" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "name", "type": "name", "required": true, "display": "title" },
+          { "name": "email", "type": "email", "required": true, "unique": true },
+          { "name": "phone", "type": "text" },
+          { "name": "created_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      },
+      {
+        "ref": "appointments",
+        "table": "appointments",
+        "label": { "key": "mft.bookings.tbl.appointments", "fallback": "Appointments" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "code", "type": "text", "required": true, "unique": true, "display": "title" },
+          { "name": "service_id", "type": "ref", "ref": "services", "onDelete": "restrict", "required": true },
+          { "name": "staff_id", "type": "ref", "ref": "staff", "onDelete": "set-null" },
+          { "name": "customer_id", "type": "ref", "ref": "customers", "onDelete": "restrict", "required": true },
+          { "name": "starts_at", "type": "timestamp", "required": true, "role": "start" },
+          { "name": "ends_at", "type": "timestamp", "required": true, "role": "end" },
+          { "name": "price", "type": "money", "required": true },
+          {
+            "name": "status",
+            "type": "enum",
+            "default": "booked",
+            "values": [
+              { "value": "booked", "label": "Booked", "tone": "info" },
+              { "value": "completed", "label": "Completed", "tone": "success" },
+              { "value": "cancelled", "label": "Cancelled", "tone": "muted" },
+              { "value": "no_show", "label": "No show", "tone": "danger" }
+            ]
+          },
+          { "name": "notes", "type": "text" },
+          { "name": "remind_email", "type": "bool", "default": true },
+          { "name": "remind_sms", "type": "bool", "default": true },
+          {
+            "name": "remind_when",
+            "type": "enum",
+            "default": "24h",
+            "values": [
+              { "value": "24h", "label": "24 hours before" },
+              { "value": "2h", "label": "2 hours before" },
+              { "value": "both", "label": "24 hours & 2 hours before" }
+            ]
+          },
+          { "name": "created_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      },
+      {
+        "ref": "gift_cards",
+        "table": "gift_cards",
+        "label": { "key": "mft.bookings.tbl.gift_cards", "fallback": "Gift cards" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "code", "type": "text", "required": true, "unique": true, "display": "title" },
+          { "name": "amount", "type": "money", "required": true },
+          { "name": "balance", "type": "money", "required": true },
+          { "name": "purchaser_id", "type": "ref", "ref": "customers", "onDelete": "set-null" },
+          { "name": "recipient_name", "type": "name", "required": true },
+          { "name": "recipient_email", "type": "email", "required": true },
+          { "name": "sender_name", "type": "name" },
+          { "name": "message", "type": "text" },
+          {
+            "name": "theme",
+            "type": "enum",
+            "default": "bloom",
+            "values": [
+              { "value": "bloom", "label": "Bloom" },
+              { "value": "sea", "label": "Sea" },
+              { "value": "sage", "label": "Sage" },
+              { "value": "amber", "label": "Amber" }
+            ]
+          },
+          {
+            "name": "status",
+            "type": "enum",
+            "default": "sent",
+            "values": [
+              { "value": "scheduled", "label": "Scheduled", "tone": "warning" },
+              { "value": "sent", "label": "Sent", "tone": "success" },
+              { "value": "redeemed", "label": "Redeemed", "tone": "info" },
+              { "value": "expired", "label": "Expired", "tone": "muted" }
+            ]
+          },
+          { "name": "scheduled_for", "type": "timestamp" },
+          { "name": "issued_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      },
+      {
+        "ref": "waitlist_entries",
+        "table": "waitlist_entries",
+        "label": { "key": "mft.bookings.tbl.waitlist_entries", "fallback": "Waitlist" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "customer_id", "type": "ref", "ref": "customers", "onDelete": "cascade", "required": true },
+          { "name": "service_id", "type": "ref", "ref": "services", "onDelete": "cascade", "required": true },
+          { "name": "staff_id", "type": "ref", "ref": "staff", "onDelete": "set-null" },
+          { "name": "requested_date", "type": "timestamp", "required": true },
+          {
+            "name": "status",
+            "type": "enum",
+            "default": "waiting",
+            "values": [
+              { "value": "waiting", "label": "Waiting", "tone": "warning" },
+              { "value": "notified", "label": "Notified", "tone": "info" },
+              { "value": "converted", "label": "Converted", "tone": "success" },
+              { "value": "released", "label": "Released", "tone": "muted" }
+            ]
+          },
+          { "name": "created_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      },
+      {
+        "ref": "loyalty_ledger",
+        "table": "loyalty_ledger",
+        "label": { "key": "mft.bookings.tbl.loyalty_ledger", "fallback": "Loyalty ledger" },
+        "primaryKey": ["id"],
+        "columns": [
+          { "name": "id", "type": "int", "role": "pk" },
+          { "name": "customer_id", "type": "ref", "ref": "customers", "onDelete": "cascade", "required": true },
+          { "name": "appointment_id", "type": "ref", "ref": "appointments", "onDelete": "set-null" },
+          { "name": "label", "type": "text", "required": true, "display": "title" },
+          {
+            "name": "kind",
+            "type": "enum",
+            "default": "earn",
+            "values": [
+              { "value": "earn", "label": "Earned", "tone": "success" },
+              { "value": "redeem", "label": "Redeemed", "tone": "info" },
+              { "value": "bonus", "label": "Bonus", "tone": "success" },
+              { "value": "adjustment", "label": "Adjustment", "tone": "muted" }
+            ]
+          },
+          { "name": "delta_points", "type": "int", "required": true },
+          { "name": "occurred_on", "type": "timestamp", "required": true },
+          { "name": "created_at", "type": "timestamp", "default": "now", "role": "created" }
+        ]
+      }
+    ]
+  },
+
+  "pages": [
+    {
+      "key": "bookings-dashboard",
+      "title": { "key": "mft.bookings.page.dashboard", "fallback": "Dashboard" },
+      "path": "/",
+      "type": "page-dashboard",
+      "icon": "layout-dashboard",
+      "nav": { "group": "manifest:bookings", "order": 1 },
+      "blocks": [
+        {
+          "kind": "kpi",
+          "key": "today-appointments",
+          "label": { "key": "mft.bookings.kpi.today", "fallback": "Today's appointments" },
+          "source": "appointments",
+          "metric": "count",
+          "format": "number",
+          "filter": { "status": ["booked"], "starts_at": "today" }
+        },
+        {
+          "kind": "kpi",
+          "key": "booked-revenue",
+          "label": { "key": "mft.bookings.kpi.revenue", "fallback": "Booked revenue" },
+          "source": "appointments",
+          "metric": "sum",
+          "field": "price",
+          "format": "money",
+          "filter": { "status": ["booked", "completed"] }
+        },
+        {
+          "kind": "chart",
+          "key": "week-occupancy",
+          "label": { "key": "mft.bookings.chart.occupancy", "fallback": "Week occupancy" },
+          "source": "appointments",
+          "chart": "line",
+          "x": { "field": "starts_at", "bucket": "day" },
+          "y": { "agg": "count" }
+        },
+        {
+          "kind": "upcoming-events",
+          "key": "upcoming-appointments",
+          "label": { "key": "mft.bookings.block.upcoming", "fallback": "Upcoming appointments" },
+          "source": "appointments",
+          "limit": 8,
+          "orderBy": { "field": "starts_at", "dir": "asc" },
+          "filter": { "status": ["booked"] },
+          "columns": ["starts_at", "service_id", "staff_id", "customer_id", "status"]
+        }
+      ]
+    },
+    {
+      "key": "bookings-calendar",
+      "title": { "key": "mft.bookings.page.calendar", "fallback": "Calendar" },
+      "path": "/calendar",
+      "type": "page-calendar",
+      "icon": "calendar-days",
+      "source": "appointments",
+      "nav": { "group": "manifest:bookings", "order": 2 },
+      "calendar": {
+        "views": ["calendar-month", "day-agenda"],
+        "default": "calendar-month",
+        "start": "starts_at",
+        "end": "ends_at",
+        "title": "service_id",
+        "subtitle": "customer_id",
+        "resource": "staff_id",
+        "badge": "status"
+      },
+      "filters": ["staff_id", "status"]
+    },
+    {
+      "key": "bookings-appointments",
+      "title": { "key": "mft.bookings.page.appointments", "fallback": "Appointments" },
+      "path": "/appointments",
+      "type": "page-queue-inbox",
+      "icon": "calendar-check",
+      "source": "appointments",
+      "nav": { "group": "manifest:bookings", "order": 3 },
+      "tabs": {
+        "field": "status",
+        "values": ["booked", "completed", "cancelled", "no_show"],
+        "default": "booked"
+      },
+      "list": {
+        "title": "code",
+        "subtitle": "customer_id",
+        "meta": "price",
+        "timestamp": "starts_at",
+        "badge": "status"
+      },
+      "detail": {
+        "title": "code",
+        "fields": ["service_id", "staff_id", "customer_id", "starts_at", "ends_at", "price", "status", "notes"],
+        "actions": [
+          { "key": "mark-completed", "label": "Mark completed", "set": { "status": "completed" } },
+          { "key": "mark-no-show", "label": "Mark no-show", "set": { "status": "no_show" } },
+          { "key": "cancel", "label": "Cancel", "set": { "status": "cancelled" }, "tone": "danger" }
+        ]
+      }
+    },
+    {
+      "key": "bookings-services",
+      "title": { "key": "mft.bookings.page.services", "fallback": "Services" },
+      "path": "/services",
+      "type": "page-crud",
+      "icon": "sparkles",
+      "source": "services",
+      "view": "card-gallery",
+      "nav": { "group": "manifest:bookings", "order": 4 },
+      "card": {
+        "image": "image_url",
+        "title": "name",
+        "subtitle": "category_id",
+        "badge": "active",
+        "meta": "price"
+      },
+      "columns": ["image_url", "name", "category_id", "duration_min", "price", "active"],
+      "search": ["name", "description"],
+      "filters": ["category_id", "active"],
+      "create": true,
+      "edit": true
+    },
+    {
+      "key": "bookings-staff",
+      "title": { "key": "mft.bookings.page.staff", "fallback": "Staff" },
+      "path": "/staff",
+      "type": "page-directory",
+      "icon": "users",
+      "source": "staff",
+      "nav": { "group": "manifest:bookings", "order": 5 },
+      "directory": {
+        "avatar": "avatar_url",
+        "title": "name",
+        "subtitle": "role",
+        "badge": "active"
+      },
+      "search": ["name", "role"],
+      "related": [
+        { "source": "staff_services", "foreignKey": "staff_id", "label": "Services offered" },
+        { "source": "appointments", "foreignKey": "staff_id", "label": "Appointments" }
+      ]
+    },
+    {
+      "key": "bookings-schedule",
+      "title": { "key": "mft.bookings.page.schedule", "fallback": "Schedule" },
+      "path": "/schedule",
+      "type": "page-scheduler",
+      "icon": "clock",
+      "source": "availability_rules",
+      "nav": { "group": "manifest:bookings", "order": 6 },
+      "scheduler": {
+        "resource": "staff_id",
+        "weekday": "weekday",
+        "opens": "opens",
+        "closes": "closes",
+        "exceptions": { "source": "time_off", "foreignKey": "staff_id", "start": "starts_at", "end": "ends_at" }
+      },
+      "create": true,
+      "edit": true
+    },
+    {
+      "key": "bookings-guests",
+      "title": { "key": "mft.bookings.page.guests", "fallback": "Guests" },
+      "path": "/guests",
+      "type": "page-directory",
+      "icon": "contact",
+      "source": "customers",
+      "nav": { "group": "manifest:bookings", "order": 7 },
+      "directory": {
+        "title": "name",
+        "subtitle": "email",
+        "timestamp": "created_at"
+      },
+      "search": ["name", "email", "phone"],
+      "related": [
+        { "source": "appointments", "foreignKey": "customer_id", "label": "Appointments" },
+        { "source": "waitlist_entries", "foreignKey": "customer_id", "label": "Waitlist" },
+        { "source": "loyalty_ledger", "foreignKey": "customer_id", "label": "Loyalty" }
+      ]
+    },
+    {
+      "key": "bookings-gift-cards",
+      "title": { "key": "mft.bookings.page.gift_cards", "fallback": "Gift cards" },
+      "path": "/gift-cards",
+      "type": "page-crud",
+      "icon": "gift",
+      "source": "gift_cards",
+      "nav": { "group": "manifest:bookings", "order": 8 },
+      "columns": ["code", "amount", "balance", "recipient_name", "status", "issued_at"],
+      "search": ["code", "recipient_name", "recipient_email"],
+      "filters": ["status"],
+      "create": true,
+      "edit": true
+    }
+  ],
+
+  "roles": [
+    {
+      "key": "front-desk",
+      "name": { "key": "mft.bookings.role.front_desk", "fallback": "Front desk" },
+      "description": {
+        "key": "mft.bookings.role.front_desk.desc",
+        "fallback": "Book, reschedule and cancel appointments and manage guests; read-only on services and staff, no access to settings."
+      },
+      "permissions": [
+        { "resource": "appointments", "actions": ["read", "create", "update"] },
+        { "resource": "customers", "actions": ["read", "create", "update"] },
+        { "resource": "waitlist_entries", "actions": ["read", "create", "update"] },
+        { "resource": "services", "actions": ["read"] },
+        { "resource": "staff", "actions": ["read"] },
+        { "resource": "availability_rules", "actions": ["read"] }
+      ]
+    }
+  ],
+
+  "settings": [
+    {
+      "key": "studio_name",
+      "type": "text",
+      "label": { "key": "mft.bookings.set.studio_name", "fallback": "Studio name" },
+      "required": true
+    },
+    {
+      "key": "time_zone",
+      "type": "text",
+      "label": { "key": "mft.bookings.set.time_zone", "fallback": "Time zone" },
+      "default": "America/Los_Angeles",
+      "required": true
+    },
+    {
+      "key": "slot_minutes",
+      "type": "enum",
+      "label": { "key": "mft.bookings.set.slot_minutes", "fallback": "Slot interval (minutes)" },
+      "options": ["15", "20", "30", "60"],
+      "default": "30"
+    },
+    {
+      "key": "lead_time_hours",
+      "type": "number",
+      "label": { "key": "mft.bookings.set.lead_time", "fallback": "Minimum booking notice (hours)" },
+      "min": 0,
+      "max": 168,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "key": "cancel_window_hours",
+      "type": "number",
+      "label": { "key": "mft.bookings.set.cancel_window", "fallback": "Free cancellation window (hours)" },
+      "min": 0,
+      "max": 168,
+      "step": 1,
+      "default": 24
+    },
+    {
+      "key": "reply_to_email",
+      "type": "text",
+      "label": { "key": "mft.bookings.set.reply_to", "fallback": "Confirmation reply-to address" }
+    }
+  ],
+
+  "capabilities": ["file-storage", "email-delivery", "realtime"],
+
+  "frontend": {
+    "kind": "spa",
+    "root": ".",
+    "buildCommand": "npm run build",
+    "buildOutput": "dist",
+    "entry": "index.html",
+    "routes": {
+      "home": "/",
+      "services": "/services",
+      "book": "/book",
+      "manage": "/manage",
+      "team": "/team"
+    }
+  }
+}

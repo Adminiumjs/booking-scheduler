@@ -1,0 +1,167 @@
+/*
+ * Manage booking (spec §3.5). Logical properties throughout, so the screen
+ * mirrors cleanly in RTL.
+ */
+
+.sm-manage {
+  --page-max: 620px;
+  padding-block: clamp(24px, 4vw, 44px) clamp(28px, 4vw, 52px);
+}
+
+.sm-manage__head {
+  margin-block-end: 24px;
+}
+
+.sm-manage__head .sm-sub {
+  margin-block-start: 8px;
+}
+
+/* ---------------- find mode ---------------- */
+
+.sm-manage-find {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sm-manage-find__code {
+  letter-spacing: 0.02em;
+}
+
+.sm-manage-find__cta {
+  padding: 13px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.sm-manage-find__tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-subtle);
+}
+
+.sm-manage-find__tip svg {
+  flex-shrink: 0;
+  margin-block-start: 1px;
+}
+
+/* ---------------- card mode ---------------- */
+
+.sm-manage-card {
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.sm-manage-card[data-cancelled="true"] {
+  opacity: 0.72;
+}
+
+.sm-manage-card__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 22px;
+  border-block-end: 1px solid var(--border);
+}
+
+.sm-manage-card[data-cancelled="true"] .sm-manage-card__tile {
+  opacity: 0.6;
+}
+
+.sm-manage-card__id {
+  flex: 1;
+  min-width: 0;
+}
+
+.sm-manage-card__svc {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sm-manage-card__code {
+  margin-block-start: 2px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+.sm-manage-card__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 18px 22px;
+}
+
+.sm-manage-card__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sm-manage-card__rowicon {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.sm-manage-card__rowlabel {
+  flex: 1;
+  font-size: 13.5px;
+  color: var(--fg-muted);
+}
+
+.sm-manage-card__rowval {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: end;
+}
+
+.sm-manage-card__rowval--mono {
+  font-weight: 600;
+}
+
+.sm-manage-card__foot {
+  display: flex;
+  gap: 10px;
+  padding: 16px 22px;
+  border-block-start: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.sm-manage-card__action {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+}
+
+.sm-manage-card__action--danger {
+  border-color: color-mix(in srgb, var(--danger) 32%, transparent);
+  color: var(--danger);
+}
+
+.sm-manage-card__note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 15px 22px;
+  border-block-start: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+.sm-manage-card__note svg {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.sm-manage__another {
+  margin-block: 16px 0;
+}

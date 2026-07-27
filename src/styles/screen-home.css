@@ -1,0 +1,327 @@
+/*
+ * Home screen (spec §3.1). Section-scoped rules only — every class is
+ * prefixed `sm-home-` so no other screen can collide. Logical properties
+ * throughout, one 900px breakpoint policy inherited from base.css (this
+ * screen needs no media query at all: every grid is intrinsic).
+ */
+
+.sm-home {
+  --page-max: 1180px;
+}
+
+.sm-home-section {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-block: clamp(20px, 3vw, 36px);
+}
+
+/* ------------------------------------------------------------------ *
+ * A. Hero
+ * ------------------------------------------------------------------ */
+
+.sm-home-hero {
+  padding-block: clamp(24px, 4vw, 48px) clamp(12px, 2vw, 20px);
+}
+
+.sm-home-hero__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  gap: clamp(20px, 3vw, 40px);
+  align-items: center;
+}
+
+.sm-home-hero__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sm-home-eyebrow {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sm-home-hero__title {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 54px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.sm-home-hero__lede {
+  margin: 0;
+  max-width: 460px;
+  font-size: clamp(15px, 1.7vw, 17.5px);
+  line-height: 1.55;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+.sm-home-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* The hero CTAs are larger than the `lg` button size; the primitive sets its
+   padding inline, so the override has to win on specificity. */
+.sm-home-cta {
+  padding: 14px 22px !important;
+  border-radius: 13px !important;
+  font-size: 15px !important;
+}
+
+.sm-home-cta--ghost {
+  color: var(--fg);
+}
+
+.sm-home-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-block-start: 4px;
+}
+
+.sm-home-trust__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.sm-home-hero__tile {
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------------------------------------------------ *
+ * Shared section furniture
+ * ------------------------------------------------------------------ */
+
+.sm-home-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 20px;
+}
+
+.sm-home-head--stack {
+  display: block;
+}
+
+.sm-home-head--wrap {
+  flex-wrap: wrap;
+  margin-block-end: 22px;
+}
+
+.sm-home-sub {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+.sm-home-seeall {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--fg-muted);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.sm-home-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.sm-home-grid--services {
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+}
+
+.sm-home-grid--team {
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+}
+
+.sm-home-grid--reviews {
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+}
+
+/* ------------------------------------------------------------------ *
+ * D. Reviews band — the rating box
+ * ------------------------------------------------------------------ */
+
+.sm-home-rating {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.sm-home-rating__avg {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.sm-home-rating__caption {
+  margin-block-start: 3px;
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+/* ------------------------------------------------------------------ *
+ * E. Visit us
+ * ------------------------------------------------------------------ */
+
+.sm-home-visit {
+  padding-block: clamp(20px, 3vw, 36px) clamp(28px, 4vw, 52px);
+}
+
+.sm-home-visit__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+
+.sm-home-cardhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block-end: 18px;
+}
+
+.sm-home-cardtitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sm-home-hours {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-home-hours-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.sm-home-hours-row[data-today="true"] {
+  background: var(--accent-soft);
+}
+
+.sm-home-hours-day {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.sm-home-hours-row[data-today="true"] .sm-home-hours-day {
+  font-weight: 800;
+}
+
+.sm-home-today-pill {
+  margin-inline-start: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sm-home-hours-val {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.sm-home-hours-val[data-today="true"] {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.sm-home-hours-val[data-closed="true"] {
+  color: var(--fg-subtle);
+}
+
+.sm-home-hours-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  margin-block-start: 16px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.sm-home-hours-note svg {
+  flex-shrink: 0;
+  margin-block-start: 1px;
+  color: var(--fg-subtle);
+}
+
+.sm-home-map {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm-home-map__body {
+  padding: 20px 22px;
+}
+
+.sm-home-map__name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sm-home-map__addr {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+.sm-home-map__contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-block-start: 14px;
+}

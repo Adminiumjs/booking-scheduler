@@ -1,0 +1,135 @@
+/*
+ * My upcoming visits (spec §3.7).
+ */
+
+.sm-visits {
+  --page-max: 680px;
+  padding-block: clamp(24px, 4vw, 44px) clamp(28px, 4vw, 52px);
+}
+
+.sm-visits__head {
+  margin-block-end: 22px;
+}
+
+.sm-visits__head .sm-sub {
+  margin-block-start: 8px;
+}
+
+.sm-visits__empty-cta {
+  margin-block-start: 6px;
+  padding: 12px 20px;
+  border-radius: 12px;
+}
+
+.sm-visits__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------------- one visit ---------------- */
+
+.sm-visits-card {
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.sm-visits-card__head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 18px 20px;
+  border-block-end: 1px solid var(--border);
+}
+
+.sm-visits-card__id {
+  flex: 1;
+  min-width: 0;
+}
+
+.sm-visits-card__svc {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sm-visits-card__code {
+  margin-block-start: 2px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.sm-visits-card__price {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sm-visits-card__body,
+.sm-visits-card__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.sm-visits-card__body {
+  padding: 16px 20px;
+}
+
+.sm-visits-card__rows {
+  margin: 0;
+}
+
+.sm-visits-card__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sm-visits-card__rowicon {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.sm-visits-card__rowlabel {
+  flex: 1;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.sm-visits-card__rowval {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: end;
+}
+
+.sm-visits-card__rowval--mono {
+  font-weight: 600;
+}
+
+.sm-visits-card__recur {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sm-visits-card__foot {
+  padding: 14px 20px;
+  border-block-start: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.sm-visits-card__manage {
+  padding: 10px 16px;
+  border-radius: 11px;
+  font-size: 13px;
+}

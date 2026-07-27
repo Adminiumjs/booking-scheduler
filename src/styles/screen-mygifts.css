@@ -1,0 +1,74 @@
+/* Purchased gift cards (spec §3.7). Logical properties throughout. */
+
+.sm-mygifts-page {
+  --page-max: 680px;
+}
+
+.sm-mygifts-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-block-end: 22px;
+}
+
+.sm-mygifts-head .sm-sub {
+  margin-block-start: 8px;
+}
+
+.sm-mygifts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sm-mygift {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.sm-mygift__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 52px;
+  block-size: 52px;
+  border-radius: 13px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sm-mygift__text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.sm-mygift__top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sm-mygift__amount {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sm-mygift__code {
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.sm-mygift__meta {
+  margin-block-start: 3px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}

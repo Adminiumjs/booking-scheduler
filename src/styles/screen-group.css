@@ -1,0 +1,254 @@
+/* Group booking (spec §3.7). Logical properties throughout. */
+
+.sm-group-page {
+  --page-max: 720px;
+}
+
+.sm-group-head {
+  margin-block-end: 22px;
+}
+
+.sm-group-head .sm-sub {
+  margin-block-start: 8px;
+}
+
+.sm-group-section {
+  margin-block-end: 24px;
+}
+
+.sm-group-section--tight {
+  margin-block-end: 20px;
+}
+
+.sm-group-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sm-group-title--block {
+  display: block;
+  margin-block-end: 12px;
+}
+
+.sm-group-partyhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 12px;
+}
+
+.sm-group-count {
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- guest rows ---------------- */
+
+.sm-group-guests {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sm-group-guest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.sm-group-guest__num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sm-group-guest__name {
+  flex: 1;
+  min-inline-size: 120px;
+}
+
+.sm-group-guest__svc {
+  flex: 1;
+  min-inline-size: 160px;
+  cursor: pointer;
+}
+
+.sm-group-guest__remove {
+  border-radius: 10px;
+  color: var(--fg-subtle);
+}
+
+.sm-group-add {
+  margin-block-start: 12px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border-style: dashed;
+  color: var(--fg);
+  font-size: 13px;
+}
+
+/* ---------------- organiser fields ---------------- */
+
+.sm-group-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sm-group-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 14px;
+}
+
+.sm-group-err {
+  margin-block-end: 16px;
+}
+
+/* ---------------- summary bar ---------------- */
+
+.sm-group-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+.sm-group-bar__stats {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+.sm-group-stat__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+.sm-group-stat__value {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.sm-group-cta {
+  font-size: 14px;
+}
+
+.sm-group-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-subtle);
+}
+
+.sm-group-note svg {
+  margin-block-start: 1px;
+}
+
+/* ---------------- done ---------------- */
+
+.sm-group-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sm-group-done .sm-success-tile {
+  margin-block-end: 18px;
+}
+
+.sm-group-done__sub {
+  margin: 12px auto 0;
+  max-inline-size: 420px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+.sm-group-done .sm-code-pill {
+  margin-block: 18px 22px;
+}
+
+.sm-group-summary {
+  inline-size: 100%;
+  margin-block-end: 22px;
+  text-align: start;
+}
+
+.sm-group-summary__body {
+  padding: 8px 20px 12px;
+}
+
+.sm-group-summary__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 12px;
+  border-block-end: 1px solid var(--border);
+}
+
+.sm-group-summary__name {
+  font-size: 13.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sm-group-summary__svc {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+  text-align: start;
+}
+
+.sm-group-summary__price {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sm-group-done__banner {
+  margin-block-end: 22px;
+  text-align: start;
+}
+
+.sm-group-done__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  inline-size: 100%;
+}
+
+.sm-group-done__btn {
+  flex: 1;
+  min-inline-size: 160px;
+  font-size: 14px;
+}
+
+.sm-group-done .sm-button--ghost {
+  color: var(--fg);
+}
