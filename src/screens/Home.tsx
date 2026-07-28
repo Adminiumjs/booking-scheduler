@@ -116,6 +116,7 @@ export default function Home() {
             minHeight={300}
             angle="150deg"
             filename="studio_hero.jpg"
+            imgWidth={1400}
             radius={22}
             bordered
             borderBlockEnd={false}

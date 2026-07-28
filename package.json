@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Booking Scheduler \u2014 an open-source appointment-booking example app for Adminium.",
+  "description": "Booking Scheduler — an open-source appointment-booking example app for Adminium.",
   "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "vite",
@@ -19,6 +19,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@types/node": "^26.1.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",

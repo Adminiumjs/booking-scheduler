@@ -1,11 +1,20 @@
 /*
- * The procedural placeholder system (spec §4.3) — every "image" in the app.
- * No bitmaps ship: a tinted three-layer gradient, a centred Lucide glyph, and
- * an optional mono filename chip in the corner.
+ * Every "image" in the app.
+ *
+ * Tiles are keyed by a `filename` like `"bond_mask.jpg"`, a convention from the
+ * design comp where a tinted gradient plus a mono filename chip stood in for a
+ * photo not yet chosen. `data/photos.ts` now maps most of those names to real
+ * photography: when a name has a photo the tile renders it, and when it does
+ * not the original procedural tile is drawn instead — so a new placeholder
+ * name still works, it just looks like it used to until a photo is picked.
+ *
+ * The gradient stays underneath the photo as the loading backdrop, which means
+ * a tile is never blank while the image is in flight.
  */
 
 import type { CSSProperties, ReactNode } from "react";
 
+import { photoUrl } from "../data/photos.ts";
 import { hexToRgba } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 import { Icon } from "./Icon.tsx";
@@ -51,8 +60,11 @@ export interface PlaceholderTileProps {
   minHeight?: number;
   /** Gradient angle. */
   angle?: string;
-  /** Fake filename shown in the bottom-start chip. */
+  /** Image key — resolved against `data/photos.ts`. Falls back to being shown
+   * verbatim in the bottom-start chip when no photo is mapped to it. */
   filename?: string;
+  /** Intended rendered width in px, so the CDN sends a right-sized file. */
+  imgWidth?: number;
   /** Border radius; omit for a square-cornered card header. */
   radius?: number | string;
   /** Draw the comp's 1px bottom border (card headers do, standalone don't). */
@@ -71,6 +83,7 @@ export function PlaceholderTile({
   minHeight = 132,
   angle = "158deg",
   filename,
+  imgWidth = 800,
   radius,
   borderBlockEnd = true,
   bordered = false,
@@ -79,6 +92,7 @@ export function PlaceholderTile({
   children,
 }: PlaceholderTileProps) {
   const dark = useIsDark();
+  const photo = photoUrl(filename, imgWidth);
   return (
     <div
       className={["bk-ph", className].filter(Boolean).join(" ")}
@@ -91,11 +105,19 @@ export function PlaceholderTile({
         ...style,
       }}
     >
-      {icon ? (
-        <Icon name={icon} size={iconSize} color={placeholderInk(tint, dark)} />
-      ) : null}
+      {photo ? (
+        /* Decorative: every tile sits next to the name of whatever it depicts,
+           so alt text here would only repeat the adjacent heading. */
+        <img className="bk-ph-img" src={photo} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <>
+          {icon ? (
+            <Icon name={icon} size={iconSize} color={placeholderInk(tint, dark)} />
+          ) : null}
+          {filename ? <span className="bk-ph-chip">{filename}</span> : null}
+        </>
+      )}
       {children}
-      {filename ? <span className="bk-ph-chip">{filename}</span> : null}
     </div>
   );
 }

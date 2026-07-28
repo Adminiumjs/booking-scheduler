@@ -163,6 +163,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Contain the photo's stacking so a negative/zero z-index cannot escape into
+     an ancestor and slide behind a card background. */
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/*
+ * The photo fills the tile, with the procedural gradient still painted behind
+ * it as the loading backdrop. `border-radius: inherit` keeps rounded tiles
+ * rounded — the radius is set inline on the parent, per call site.
+ */
+.bk-ph-img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* Anything the caller layers on top — Shop's "Bestseller" badge is the only
+   one today — sits above the photo. These are already positioned, so this is
+   a z-index bump and not a position change. */
+.bk-ph > :not(.bk-ph-img) {
+  z-index: 1;
 }
 
 .bk-ph-chip {
