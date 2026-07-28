@@ -128,6 +128,16 @@ export function eligibleStaff(
   const svc = findService(ctx, serviceId);
   if (!svc) return [];
   if (selection && selection !== "first") {
+    /*
+     * The selection must also be QUALIFIED. `selectSvc` clears `staffSel`
+     * whenever the service changes, so the UI cannot currently present an
+     * unqualified pair — but this is the function that owns the rule, and
+     * without the check it happily builds a grid from the wrong person's
+     * hours (a 180-minute service against a specialist who does not offer it
+     * still fits their window, so a bookable slot appears). Relying on a
+     * store action to remember the reset is not the same as enforcing it.
+     */
+    if (!canPerform(svc, selection)) return [];
     const one = findStaff(ctx, selection);
     return one ? [one] : [];
   }
