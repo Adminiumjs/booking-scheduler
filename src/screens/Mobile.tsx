@@ -1,10 +1,20 @@
 /*
  * COMPANION APP SHOWCASE (view: 'mobile') — the Mobile comp.
  *
- * The Mobile comp is not a breakpoint of the web app: it is a separate native
- * design — five tabs (Home, Book, Visits, Offers, You) drawn inside a 402×874
- * phone. It ships as one showcase screen: a device-framed mockup the visitor
- * can flip between the five tabs of.
+ * This screen showcases the companion app's DESIGN. It is not the companion
+ * app running: the phone is a mockup on a web page, and nothing inside it
+ * reaches the account. What it does do is behave — the five tabs (Home, Book,
+ * Visits, Offers, You) and the booking flow are live, because a still image
+ * cannot show that the design works for thumbs.
+ *
+ * The Mobile comp is not a breakpoint of the web app either: it is a separate
+ * native design drawn inside a 402×874 phone, with an Android sibling at
+ * 412×892. Both frames are reachable from the switch above the device; the
+ * tabs and their content are identical between them, only the device chrome
+ * changes. The chrome itself lives in ../components/DeviceFrame.tsx — read
+ * that file's header for what was ported from the comps and what had to be
+ * reconstructed, because the comps imported their frame from a file that was
+ * never supplied.
  *
  * Everything inside the frame is component state on purpose. The mockup must
  * not move the real app's booking draft, cart or loyalty balance — a visitor
@@ -21,7 +31,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Avatar, Icon, IconTile, PlaceholderTile } from "../components/index.ts";
+import {
+  DeviceFrame,
+  type DevicePlatform,
+} from "../components/DeviceFrame.tsx";
+import {
+  Avatar,
+  Icon,
+  IconTile,
+  PlaceholderTile,
+  Segmented,
+} from "../components/index.ts";
 import {
   ACCOUNT_ROWS,
   APP_VERSION,
@@ -62,6 +82,23 @@ import "../styles/screen-mobile.css";
 type Toaster = (msg: string, kind?: ToastKind) => void;
 type VisitTab = "upcoming" | "past";
 
+/*
+ * The comps declare two device frames — IOSDevice at 402×874 and
+ * AndroidDevice at 412×892 — and this switches between them.
+ *
+ * It switches the HANDSET only. The Android comp also specifies a different
+ * app design (Material 3: no top border on the nav bar, 56px items with an
+ * accent-soft pill behind the active icon, a 14px top-bar inset against iOS's
+ * 58px, and an M3 snackbar instead of the pill toast). None of that is ported
+ * — the app inside this frame is the iOS design either way. The labels are
+ * hardware names and the note under the control says so, because "Android"
+ * over the iOS design would be a claim the screen cannot back up.
+ */
+const DEVICE_OPTIONS: { value: DevicePlatform; label: string }[] = [
+  { value: "ios", label: "iPhone" },
+  { value: "android", label: "Android phone" },
+];
+
 interface PhoneToast {
   id: number;
   msg: string;
@@ -78,6 +115,7 @@ export default function Mobile() {
   const theme = useStore((s) => s.theme);
   const toggleTheme = useStore((s) => s.toggleTheme);
 
+  const [device, setDevice] = useState<DevicePlatform>("ios");
   const [tab, setTab] = useState<MobileTabKey>("home");
   const [cat, setCat] = useState<CategoryFilter>("all");
   const [svcId, setSvcId] = useState<string | null>(null);
@@ -163,32 +201,28 @@ export default function Mobile() {
         <p className="scr-mobile__sub">
           The phone app is its own design, not a squeezed-down website — five
           tabs, a booking flow built for thumbs, and your points on the home
-          screen. Tap through it below.
+          screen. What follows is a showcase of that design rather than the
+          shipping app, but it is not a screenshot: tap through it.
         </p>
       </header>
 
       <div className="scr-mobile__stage">
-        <div
-          className="scr-mobile__device"
-          role="group"
-          aria-label="Companion app mockup"
-        >
-          <div className="scr-mobile__screen">
-            {/* --- status bar: the comp got this from its device frame --- */}
-            <div className="scr-mobile__status" aria-hidden="true">
-              <span className="bk-mono scr-mobile__clock">9:41</span>
-              <span className="scr-mobile__island" />
-              <span className="scr-mobile__meters">
-                <span className="scr-mobile__bars">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="scr-mobile__battery" />
-              </span>
-            </div>
+        <div className="scr-mobile__switch">
+          <Segmented
+            options={DEVICE_OPTIONS}
+            value={device}
+            onChange={setDevice}
+            label="Device frame"
+          />
+          <span className="scr-mobile__switchnote">
+            This switches the handset, not the app. The Android build has its
+            own Material design — a different nav bar, tighter top spacing —
+            which is a separate comp and is not shown here.
+          </span>
+        </div>
 
+        <DeviceFrame platform={device}>
+          <div className="scr-mobile__app">
             {/* --- header --- */}
             <div className="scr-mobile__header">
               <div className="scr-mobile__headid">
@@ -310,7 +344,7 @@ export default function Mobile() {
               </div>
             ) : null}
 
-            {/* --- tab bar --- */}
+            {/* --- tab bar: app navigation, not device chrome --- */}
             <nav className="scr-mobile__tabs" aria-label="App tabs">
               {MOBILE_TABS.map((t) => (
                 <button
@@ -325,7 +359,6 @@ export default function Mobile() {
                   {t.label}
                 </button>
               ))}
-              <span className="scr-mobile__indicator" aria-hidden="true" />
             </nav>
 
             {/* --- in-device toast --- */}
@@ -353,16 +386,19 @@ export default function Mobile() {
               />
             ) : null}
           </div>
-        </div>
+        </DeviceFrame>
       </div>
 
       <p className="scr-mobile__note">
         <Icon name="info" size={17} className="scr-mobile__noteicon" />
         <span>
-          A live mockup, not a screenshot — the tabs, the booking flow and the
-          promo codes all work. Rows that opened the app's deeper screens (the
-          team, the shelf, gift cards) answer with a toast here; those flows
-          ship in full on the web.
+          A design showcase, not the running app — nothing you tap here reaches
+          your account. The tabs, the booking flow and the promo codes are live
+          so the design can be felt; rows that opened the app's deeper screens
+          (the team, the shelf, gift cards) answer with a toast instead, and
+          those flows ship in full on the web. The phone itself is a
+          reconstruction: the comps imported a device frame that was never
+          handed over with them.
         </span>
       </p>
     </section>

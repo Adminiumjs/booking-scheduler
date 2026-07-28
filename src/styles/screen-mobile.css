@@ -2,20 +2,25 @@
  * COMPANION APP SHOWCASE (view `mobile`).
  *
  * A phone-sized design living inside a desktop page, so everything here is
- * deliberately scoped to the device: the sizes are the comp's native iOS
- * sizes and must not scale with the page.
+ * deliberately scoped to the device: the sizes are the comp's native sizes
+ * and must not scale with the page.
  *
- * Two translations away from the comp:
+ * The device itself is NOT here. The bezel, the status bar, the cutout and the
+ * home indicator moved into the shared `.bk-device` rules at the end of
+ * components.css, because the comps import the same frame from three files and
+ * a screen is the wrong place for it. What this file keeps is the app that
+ * lives inside the frame.
  *
- * 1. The comp's device frame came from an external `ios-frame.jsx` that painted
- *    hardcoded blacks. This one is drawn from tokens, which makes it a pale
- *    phone in light mode and a graphite one in dark — both plausible devices,
- *    and no hex ships.
- * 2. The comp's overlays used flat rgba blacks. Here the sheet scrim is a
- *    frosted `--bg` so it reads correctly in either theme.
+ * The seam between the two is a pair of custom properties the frame publishes:
+ * `--bk-device-safe-start` and `--bk-device-safe-end`, the clearance the app
+ * must leave for chrome. The comps prove those numbers (top 56/58px, bottom
+ * 30px on iOS; 14px and 16px on Android) and prove that the app reserves them
+ * rather than the frame demanding extra room. Reading them from the frame is
+ * what lets one set of app markup sit inside either handset — the fallbacks
+ * are only there so the app still looks sane outside a frame.
  *
- * The frame is a fixed inline-size with `max-inline-size: 100%`, so a narrow
- * viewport squeezes the phone rather than scrolling the page sideways.
+ * One translation away from the comp: its overlays used flat rgba blacks; here
+ * the sheet scrim is a frosted `--bg` so it reads correctly in either theme.
  */
 
 .scr-mobile {
@@ -58,13 +63,33 @@
   text-wrap: pretty;
 }
 
+/* A shrink-to-fit column, exactly like the comp's page wrapper. The device is
+ * a fixed-inline-size item centred in it — never a percentage width, or it
+ * collapses against a column that has no width of its own to resolve. */
 .scr-mobile__stage {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
   padding: clamp(20px, 4vw, 40px) clamp(10px, 3vw, 30px);
   border: 1px solid var(--border);
   border-radius: 28px;
   background: var(--surface-2);
+}
+
+/* Page furniture above the device, the way the comps put their caption pill
+ * and theme chip outside the frame import. */
+.scr-mobile__switch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+}
+
+.scr-mobile__switchnote {
+  font-size: 12px;
+  color: var(--fg-subtle);
 }
 
 .scr-mobile__note {
@@ -87,33 +112,32 @@
   color: var(--info);
 }
 
-/* ---------------- the device ---------------- */
+/* ---------------- the app inside the frame ---------------- */
 
-.scr-mobile__device {
-  /* 402px of screen + the 12px bezel and 1px edge on each side. */
-  inline-size: 428px;
-  max-inline-size: 100%;
-  padding: 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 56px;
-  background: linear-gradient(160deg, var(--surface-3), var(--surface-2));
-  box-shadow: var(--shadow-lg);
-}
-
-.scr-mobile__screen {
+/*
+ * The single child DeviceFrame renders into its screen slot, matching what the
+ * comps hand their import: one flex column that fills the screen. It is
+ * positioned because the success sheet inside is `inset: 0` and needs a
+ * containing block; the frame's slot supplies one too, but keeping it here
+ * means the app is still correct if it is ever rendered without a frame.
+ */
+/*
+ * The app fills the slot and paints its own background, exactly as all three
+ * comps do (`background: var(--bg)` at full height). Relying on the frame's
+ * screen to supply it would make this markup frame-dependent — drop it into
+ * anything else and it would render transparent.
+ */
+.scr-mobile__app {
   position: relative;
+  flex: 1;
+  min-block-size: 0;
   display: flex;
   flex-direction: column;
-  block-size: 874px;
-  border-radius: 44px;
   background: var(--bg);
-  color: var(--fg);
-  box-shadow: inset 0 0 0 1px var(--border-strong);
-  overflow: hidden;
 }
 
 /* Every control in the phone gets the comp's tap-shrink. */
-.scr-mobile__screen button {
+.scr-mobile__app button {
   transition:
     transform 0.12s ease,
     background 0.12s ease,
@@ -121,112 +145,26 @@
     color 0.12s ease;
 }
 
-.scr-mobile__screen button:active {
+.scr-mobile__app button:active {
   transform: scale(0.97);
-}
-
-/* ---------------- status bar ---------------- */
-
-.scr-mobile__status {
-  position: relative;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  block-size: 44px;
-  padding-inline: 26px;
-  color: var(--fg);
-}
-
-.scr-mobile__clock {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.scr-mobile__island {
-  position: absolute;
-  inset-block-start: 8px;
-  inset-inline-start: 50%;
-  translate: -50% 0;
-  inline-size: 108px;
-  block-size: 30px;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--surface-3);
-}
-
-.scr-mobile__meters {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fg-muted);
-}
-
-.scr-mobile__bars {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  block-size: 11px;
-}
-
-.scr-mobile__bars i {
-  inline-size: 3px;
-  border-radius: 1px;
-  background: currentColor;
-}
-
-.scr-mobile__bars i:nth-child(1) {
-  block-size: 4px;
-}
-.scr-mobile__bars i:nth-child(2) {
-  block-size: 6px;
-}
-.scr-mobile__bars i:nth-child(3) {
-  block-size: 8px;
-}
-.scr-mobile__bars i:nth-child(4) {
-  block-size: 11px;
-}
-
-.scr-mobile__battery {
-  position: relative;
-  inline-size: 23px;
-  block-size: 12px;
-  border: 1.4px solid currentColor;
-  border-radius: 3.5px;
-}
-
-.scr-mobile__battery::before {
-  content: "";
-  position: absolute;
-  inset-block: 1.6px;
-  inset-inline-start: 1.6px;
-  inline-size: 62%;
-  border-radius: 1.5px;
-  background: currentColor;
-}
-
-.scr-mobile__battery::after {
-  content: "";
-  position: absolute;
-  inset-block-start: 3.5px;
-  inset-inline-start: 100%;
-  margin-inline-start: 1.5px;
-  inline-size: 2px;
-  block-size: 5px;
-  border-radius: 0 2px 2px 0;
-  background: currentColor;
 }
 
 /* ---------------- header ---------------- */
 
+/*
+ * The comps put the whole top clearance in this element's padding — Mobile
+ * L69 `padding:58px 20px 10px`, Admin Phone L76 `padding:56px 20px 8px` — so
+ * the status bar the frame draws lands in the app's own reserved space rather
+ * than pushing the header down. Same trick, but the number comes from the
+ * frame so an Android frame gets its tighter 38px instead of iOS's 56px.
+ */
 .scr-mobile__header {
   flex-shrink: 0;
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  padding: 12px 20px 10px;
+  padding-block: var(--bk-device-safe-start, 12px) 10px;
+  padding-inline: 20px;
 }
 
 .scr-mobile__headid {
@@ -1188,13 +1126,17 @@
   color: var(--accent-fg);
 }
 
+/* The trailing lane is dead space under the tab labels in both comps (Mobile
+ * L541, Admin L333) — it is where the frame draws the home indicator. Read
+ * from the frame for the same reason the header's top padding is. */
 .scr-mobile__tabs {
   position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: stretch;
   gap: 2px;
-  padding: 9px 8px 30px;
+  padding-block: 9px var(--bk-device-safe-end, 12px);
+  padding-inline: 8px;
   border-block-start: 1px solid var(--border);
   background: var(--surface);
 }
@@ -1222,24 +1164,15 @@
   color: var(--accent);
 }
 
-.scr-mobile__indicator {
-  position: absolute;
-  inset-block-end: 9px;
-  inset-inline-start: 50%;
-  translate: -50% 0;
-  inline-size: 134px;
-  block-size: 5px;
-  border-radius: 999px;
-  background: var(--fg-subtle);
-  opacity: 0.4;
-}
-
 /* ---------------- toast + success sheet ---------------- */
 
+/* Floats just clear of the tab bar, which is 9px + a 50px tab + the frame's
+ * bottom lane — so the offset has to track the lane the way the comps' own
+ * 104px tracked theirs. */
 .scr-mobile__toastwrap {
   position: absolute;
   inset-inline: 0;
-  inset-block-end: 104px;
+  inset-block-end: calc(var(--bk-device-safe-end, 12px) + 74px);
   z-index: 2;
   display: flex;
   justify-content: center;
@@ -1372,21 +1305,14 @@
 
 /* ---------------- narrow viewports ---------------- */
 
+/* The device thins its own wall and radii at this breakpoint (see `.bk-device`
+ * in components.css); all the stage has to do is get out of the way. */
 @media (max-width: 520px) {
   .scr-mobile__stage {
     padding-inline: 0;
     border: none;
     border-radius: 0;
     background: transparent;
-  }
-
-  .scr-mobile__device {
-    padding: 8px;
-    border-radius: 44px;
-  }
-
-  .scr-mobile__screen {
-    border-radius: 38px;
   }
 }
 
@@ -1397,7 +1323,7 @@
     animation: none;
   }
 
-  .scr-mobile__screen button:active {
+  .scr-mobile__app button:active {
     transform: none;
   }
 }
