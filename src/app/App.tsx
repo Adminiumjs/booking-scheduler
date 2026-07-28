@@ -15,9 +15,11 @@ import type { ComponentType } from "react";
 
 import {
   CancelModal,
+  DemoDock,
   Footer,
   Header,
   MobileSheet,
+  StudioChrome,
   ToastLayer,
 } from "../components/index.ts";
 import type { View } from "../data/types.ts";
@@ -39,6 +41,42 @@ import Refer from "../screens/Refer.tsx";
 import Services from "../screens/Services.tsx";
 import Visits from "../screens/Visits.tsx";
 import WaitlistStatus from "../screens/WaitlistStatus.tsx";
+
+/* --- added by the 2026-07-28 comp revision --- */
+import Account from "../screens/Account.tsx";
+import Blog from "../screens/Blog.tsx";
+import Careers from "../screens/Careers.tsx";
+import Checkout from "../screens/Checkout.tsx";
+import Dash from "../screens/Dash.tsx";
+import Event from "../screens/Event.tsx";
+import ExportData from "../screens/ExportData.tsx";
+import Help from "../screens/Help.tsx";
+import Join from "../screens/Join.tsx";
+import Location from "../screens/Location.tsx";
+import NotifPrefs from "../screens/NotifPrefs.tsx";
+import Offers from "../screens/Offers.tsx";
+import Orders from "../screens/Orders.tsx";
+import Packages from "../screens/Packages.tsx";
+import Post from "../screens/Post.tsx";
+import Reviews from "../screens/Reviews.tsx";
+import Rewards from "../screens/Rewards.tsx";
+import Shop from "../screens/Shop.tsx";
+import SignIn from "../screens/SignIn.tsx";
+import Staff from "../screens/Staff.tsx";
+import Waitlist from "../screens/Waitlist.tsx";
+import Mobile from "../screens/Mobile.tsx";
+import AdminToday from "../screens/AdminToday.tsx";
+import AdminCal from "../screens/AdminCal.tsx";
+import AdminPos from "../screens/AdminPos.tsx";
+import AdminClients from "../screens/AdminClients.tsx";
+import AdminServices from "../screens/AdminServices.tsx";
+import AdminTeam from "../screens/AdminTeam.tsx";
+import AdminStock from "../screens/AdminStock.tsx";
+import AdminMarketing from "../screens/AdminMarketing.tsx";
+import AdminPayroll from "../screens/AdminPayroll.tsx";
+import AdminReviews from "../screens/AdminReviews.tsx";
+import AdminReports from "../screens/AdminReports.tsx";
+import AdminSettings from "../screens/AdminSettings.tsx";
 
 /**
  * Every routable view, mapped to its screen. Keyed by the `View` union so a
@@ -62,6 +100,44 @@ const SCREENS: Record<View, ComponentType> = {
   intake: Intake,
   lhistory: LoyaltyHistory,
   notfound: NotFound,
+
+  /* --- the twenty-two guest screens the revised comp added --- */
+  account: Account,
+  blog: Blog,
+  careers: Careers,
+  checkout: Checkout,
+  dash: Dash,
+  event: Event,
+  export: ExportData,
+  help: Help,
+  join: Join,
+  location: Location,
+  notifprefs: NotifPrefs,
+  offers: Offers,
+  orders: Orders,
+  packages: Packages,
+  post: Post,
+  reviews: Reviews,
+  rewards: Rewards,
+  shop: Shop,
+  signin: SignIn,
+  staff: Staff,
+  waitlist: Waitlist,
+  mobile: Mobile,
+
+  /* --- the studio half --- */
+  "admin-today": AdminToday,
+  "admin-cal": AdminCal,
+  "admin-pos": AdminPos,
+  "admin-clients": AdminClients,
+  "admin-services": AdminServices,
+  "admin-team": AdminTeam,
+  "admin-stock": AdminStock,
+  "admin-marketing": AdminMarketing,
+  "admin-payroll": AdminPayroll,
+  "admin-reviews": AdminReviews,
+  "admin-reports": AdminReports,
+  "admin-settings": AdminSettings,
 };
 
 function CurrentScreen() {
@@ -93,13 +169,39 @@ export default function App() {
   }, [escape]);
 
   return (
+    <>
+      <DemoDock />
+      <Shell />
+      <ToastLayer />
+      <CancelModal />
+    </>
+  );
+}
+
+/**
+ * The chrome differs by persona, not by route.
+ *
+ * A guest gets the marketing header, the mobile sheet and the footer; the
+ * studio half gets its own sidebar and topbar and none of those. Keeping the
+ * split here means no screen has to know which shell it is inside.
+ */
+function Shell() {
+  const persona = useStore((s) => s.persona);
+
+  if (persona === "studio") {
+    return (
+      <StudioChrome>
+        <CurrentScreen />
+      </StudioChrome>
+    );
+  }
+
+  return (
     <div className="bk-app">
       <Header />
       <MobileSheet />
       <CurrentScreen />
       <Footer />
-      <ToastLayer />
-      <CancelModal />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { create } from "zustand";
 
 import { data } from "../data/source.ts";
 import type {
+  AccountProfile,
   Appointment,
   Booking,
   CategoryFilter,
@@ -27,8 +28,12 @@ import type {
   IntakePressure,
   IntakeState,
   GroupGuest,
+  NotifPrefs,
+  OwnedPackage,
+  Persona,
   RecurFreq,
   ReminderWhen,
+  SignInStep,
   StaffSelection,
   Theme,
   Toast,
@@ -55,6 +60,16 @@ import {
 
 /** Artificial slot-grid latency, in ms (spec §6.4). */
 export const SKELETON_MS = 560;
+
+/**
+ * Which half of the product a view belongs to.
+ *
+ * Derived from the id rather than stored beside it, so the two can never
+ * disagree: every studio view is `admin-` prefixed.
+ */
+export function personaOf(view: View): Persona {
+  return view.startsWith("admin-") ? "studio" : "guest";
+}
 /** Toast lifetime, in ms (spec §6.13). */
 export const TOAST_MS = 2600;
 /** Where a "smooth scroll to section" lands: 66px header + 16px. */
@@ -166,6 +181,158 @@ export interface StoreState {
   /* ---- intake ---- */
   intake: IntakeState;
   intakeDone: boolean;
+
+  /* ================================================================== *
+   * Added by the 2026-07-28 comp revision.
+   *
+   * The original sixteen screens above are untouched — the revision was
+   * purely additive (37 guest screens where there were 16, plus a studio-side
+   * Admin comp). Everything below backs one of the new screens.
+   * ================================================================== */
+
+  /** Which half of the product the dock is showing. */
+  persona: Persona;
+
+  /* ---- account, sign-in, notification preferences ---- */
+  signedIn: boolean;
+  acctMenu: boolean;
+  acct: AccountProfile;
+  np: NotifPrefs;
+  siStep: SignInStep;
+  siEmail: string;
+  siCode: string;
+  siErr: string;
+  siRemember: boolean;
+
+  /* ---- shop, cart, checkout ---- */
+  shopCat: string;
+  cart: Record<string, number>;
+  ckMethod: string;
+  ckTip: number;
+  ckPromo: string;
+  ckPromoOk: boolean;
+  ckStep: string;
+  ckCode: string | null;
+  ckNum: string;
+  ckExp: string;
+  ckCvc: string;
+  ckZip: string;
+
+  /* ---- packages, rewards, offers ---- */
+  planSel: string;
+  planCycle: string;
+  planStep: string;
+  planStart: string;
+  planName: string;
+  planEmail: string;
+  planPhone: string;
+  pkgOwned: OwnedPackage[];
+  rwRedeemed: Record<string, number>;
+  rwPoints: number;
+
+  /* ---- waitlist join form ---- */
+  wlSvc: string;
+  wlDays: string[];
+  wlWin: string;
+  wlNotify: string;
+
+  /* ---- reviews ---- */
+  rvFilter: string;
+  rvStars: number;
+  rvText: string;
+  rvSent: boolean;
+  rvHelpful: Record<string, number>;
+
+  /* ---- careers ---- */
+  carRole: string | null;
+  carName: string;
+  carEmail: string;
+  carNote: string;
+  carFile: boolean;
+  carSent: boolean;
+
+  /* ---- data export ---- */
+  exFrom: string;
+  exTo: string;
+  exRange: string;
+  exFmt: string;
+  exState: string;
+  exEmail: boolean;
+  exInc: Record<string, boolean>;
+
+  /* ---- blog, orders, help, event ---- */
+  blogCat: string;
+  post: string | null;
+  blogEmail: string;
+  ordFilter: string;
+  helpQ: string;
+  helpOpen: string;
+  evtGuests: number;
+  evtRsvp: boolean;
+  /** Which code the copy button last copied, for the "Copied" flash. */
+  copiedCode: string;
+  /** Staff directory selection. */
+  staffId: string | null;
+
+  /* ================================================================== *
+   * The studio half (Admin comp).
+   * ================================================================== */
+
+  /** Topbar search, shared across the studio screens. */
+  query: string;
+
+  /* ---- today + calendar ---- */
+  dayOff: number;
+  staffFilter: string;
+  selAppt: string | null;
+  apptState: Record<string, string>;
+  apptTime: Record<string, number>;
+  calMode: string;
+  rooms: boolean;
+
+  /* ---- point of sale ---- */
+  posCat: string;
+  posCart: Record<string, number>;
+  posTip: number;
+  posMethod: string;
+  posDone: boolean;
+  posGuest: string;
+
+  /* ---- service pricing ---- */
+  svcCat: string;
+  prices: Record<string, string>;
+  svcOff: Record<string, boolean>;
+
+  /* ---- marketing, payroll, reports ---- */
+  mkFilter: string;
+  payPeriod: string;
+  payRun: boolean;
+  repRange: string;
+
+  /* ---- clients ---- */
+  clientFilter: string;
+  clientSel: string | null;
+  notes: Record<string, string>;
+
+  /* ---- stock ---- */
+  stockFilter: string;
+  ordered: Record<string, number>;
+
+  /* ---- studio-side review replies ---- */
+  revFilter: string;
+  replyOpen: string | null;
+  replyDraft: string;
+  replied: Record<string, string>;
+
+  /* ---- studio settings ---- */
+  setName: string;
+  setAddr: string;
+  setPhone: string;
+  setEmail: string;
+  setClosed: Record<number, boolean>;
+  setWindow: string;
+  setFee: string;
+  setMsg: Record<string, boolean>;
 }
 
 export interface StoreActions {
@@ -174,6 +341,10 @@ export interface StoreActions {
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   go: (view: View) => void;
+  /** Switch halves. Lands on that persona's home screen. */
+  setPersona: (persona: Persona) => void;
+  /** The general-purpose patch the new screens use for their own fields. */
+  set: (patch: Partial<StoreState>) => void;
   goHomeScroll: (anchor: HomeAnchor) => void;
   clearHomeScroll: () => void;
   setMenu: (open: boolean) => void;
@@ -431,6 +602,157 @@ export const useStore = create<Store>()((set, get) => {
     intake: { concerns: {}, allergies: "", pressure: "medium", consent: false },
     intakeDone: false,
 
+    /* ---- added by the 2026-07-28 revision (guest half) ---- */
+    persona: "guest",
+
+    signedIn: true,
+    acctMenu: false,
+    acct: {
+      name: "Ava Reyes",
+      email: "ava@example.com",
+      phone: "(415) 555-0142",
+      bday: "Mar 12",
+      pref: "selma",
+      contact: "sms",
+      twofa: false,
+    },
+    np: {
+      email: true,
+      sms: true,
+      push: false,
+      when: "24h",
+      quiet: true,
+      quietWin: "10p8a",
+      cat: {
+        reminders: true,
+        waitlist: true,
+        loyalty: true,
+        packages: true,
+        journal: true,
+        offers: false,
+      },
+    },
+    siStep: "email",
+    siEmail: "ava@example.com",
+    siCode: "",
+    siErr: "",
+    siRemember: true,
+
+    shopCat: "all",
+    cart: {},
+    ckMethod: "visa",
+    ckTip: 18,
+    ckPromo: "",
+    ckPromoOk: false,
+    ckStep: "pay",
+    ckCode: null,
+    ckNum: "",
+    ckExp: "",
+    ckCvc: "",
+    ckZip: "",
+
+    planSel: "glow",
+    planCycle: "month",
+    planStep: "pick",
+    planStart: "today",
+    planName: "Ava Reyes",
+    planEmail: "ava@example.com",
+    planPhone: "(415) 555-0182",
+    pkgOwned: [{ id: "glow5", used: 2 }],
+    rwRedeemed: {},
+    rwPoints: 340,
+
+    wlSvc: "gel",
+    wlDays: ["tue", "thu"],
+    wlWin: "afternoon",
+    wlNotify: "sms",
+
+    rvFilter: "all",
+    rvStars: 5,
+    rvText: "",
+    rvSent: false,
+    rvHelpful: {},
+
+    carRole: null,
+    carName: "",
+    carEmail: "",
+    carNote: "",
+    carFile: false,
+    carSent: false,
+
+    exFrom: "2026-01-01",
+    exTo: "2026-07-27",
+    exRange: "ytd",
+    exFmt: "csv",
+    exState: "idle",
+    exEmail: false,
+    exInc: { visits: true, packages: true, gifts: false, products: false },
+
+    blogCat: "all",
+    post: null,
+    blogEmail: "",
+    ordFilter: "all",
+    helpQ: "",
+    helpOpen: "",
+    evtGuests: 1,
+    evtRsvp: false,
+    copiedCode: "",
+    staffId: null,
+
+    /* ---- the studio half (Admin comp) ---- */
+    query: "",
+
+    dayOff: 0,
+    staffFilter: "all",
+    selAppt: null,
+    apptState: {},
+    apptTime: {},
+    calMode: "day",
+    rooms: false,
+
+    posCat: "svc",
+    posCart: {},
+    posTip: 18,
+    posMethod: "card",
+    posDone: false,
+    posGuest: "ava",
+
+    svcCat: "all",
+    prices: {},
+    svcOff: {},
+
+    mkFilter: "all",
+    payPeriod: "week",
+    payRun: false,
+    repRange: "7d",
+
+    clientFilter: "all",
+    clientSel: null,
+    notes: {},
+
+    stockFilter: "all",
+    ordered: {},
+
+    revFilter: "todo",
+    replyOpen: null,
+    replyDraft: "",
+    replied: {},
+
+    /*
+     * The studio's own details. The comp seeded these with the fictional
+     * salon's name; the shipped app runs the Lumen Studio rebrand, so they
+     * carry the rebranded strings — the comp is the visual spec, not the
+     * naming one.
+     */
+    setName: "Lumen Studio",
+    setAddr: "148 Alder Lane, Suite 2",
+    setPhone: "(415) 555-0148",
+    setEmail: "hello@lumenstudio.demo",
+    setClosed: { 0: true },
+    setWindow: "24h",
+    setFee: "50",
+    setMsg: { remind: true, followup: true, rebook: false, birthday: true },
+
     /* ---------------- chrome ---------------- */
 
     initTheme: () => {
@@ -451,9 +773,22 @@ export const useStore = create<Store>()((set, get) => {
     },
 
     go: (view) => {
-      set({ view, menuOpen: false });
+      /* Persona is derived from the view, never set alongside it — so a deep
+       * link or a footer link into the other half switches the chrome too. */
+      set({ view, menuOpen: false, persona: personaOf(view) });
       scrollTop();
     },
+
+    setPersona: (persona) => {
+      set({
+        persona,
+        view: persona === "guest" ? "home" : "admin-today",
+        menuOpen: false,
+      });
+      scrollTop();
+    },
+
+    set: (patch) => set(patch),
 
     goHomeScroll: (anchor) => {
       set({ view: "home", menuOpen: false, homeScroll: anchor });

@@ -315,8 +315,15 @@ export interface GroupGuest {
  * Chrome
  * ------------------------------------------------------------------ */
 
-/** Every routable view. Anything not in this union renders the 404 screen. */
-export type View =
+/**
+ * The guest-facing views — what a client of the studio sees.
+ *
+ * The first sixteen shipped with the original comp; the rest arrived with the
+ * 2026-07-28 revision, which grew the comp from 16 screens to 37 without
+ * changing a single one of the originals.
+ */
+export type GuestView =
+  /* --- the original sixteen --- */
   | "home"
   | "services"
   | "booking"
@@ -332,7 +339,106 @@ export type View =
   | "refer"
   | "intake"
   | "lhistory"
-  | "notfound";
+  | "notfound"
+  /* --- the twenty-one added by the revised comp --- */
+  | "account"
+  | "blog"
+  | "careers"
+  | "checkout"
+  | "dash"
+  | "event"
+  | "export"
+  | "help"
+  | "join"
+  | "location"
+  | "notifprefs"
+  | "offers"
+  | "orders"
+  | "packages"
+  | "post"
+  | "reviews"
+  | "rewards"
+  | "shop"
+  | "signin"
+  | "staff"
+  | "waitlist"
+  /* --- the native-app design, shown as a device-framed showcase --- */
+  | "mobile";
+
+/**
+ * The studio-facing views — what the people who run the salon see.
+ *
+ * Every id is `admin-` prefixed on purpose. Four of them (`services`,
+ * `reviews`, `settings`, `reports`) would otherwise collide with a guest view
+ * of the same name, and the prefix also makes `personaOf()` a string test
+ * rather than a lookup table that can drift.
+ */
+export type AdminView =
+  | "admin-today"
+  | "admin-cal"
+  | "admin-pos"
+  | "admin-clients"
+  | "admin-services"
+  | "admin-team"
+  | "admin-stock"
+  | "admin-marketing"
+  | "admin-payroll"
+  | "admin-reviews"
+  | "admin-reports"
+  | "admin-settings";
+
+/** Every routable view. Anything not in this union renders the 404 screen. */
+export type View = GuestView | AdminView;
+
+/**
+ * Which half of the product a screen belongs to.
+ *
+ * The studio half exists because the 2026-07-28 Admin comp designed one. It
+ * refines the 19 D4 "portal-only" ruling the same way 20 D4 did for the LMS:
+ * the app owns the surfaces someone works in all day, the dashboard Adminium
+ * generates still owns the records behind them.
+ */
+export type Persona = "guest" | "studio";
+
+/* ------------------------------------------------------------------ *
+ * Added by the 2026-07-28 comp revision
+ * ------------------------------------------------------------------ */
+
+/** The signed-in client's own details, editable on the account screen. */
+export interface AccountProfile {
+  name: string;
+  email: string;
+  phone: string;
+  /** Birthday as a display string — the studio only wants day + month. */
+  bday: string;
+  /** Preferred specialist id, or "any". */
+  pref: string;
+  /** Preferred contact channel. */
+  contact: string;
+  twofa: boolean;
+}
+
+/** Notification preferences, one screen's worth. */
+export interface NotifPrefs {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+  /** How long before an appointment the reminder goes out. */
+  when: string;
+  quiet: boolean;
+  quietWin: string;
+  /** Per-category opt-ins: reminders, waitlist, loyalty, packages, journal, offers. */
+  cat: Record<string, boolean>;
+}
+
+/** The passwordless sign-in is two steps: ask for the email, then the code. */
+export type SignInStep = "email" | "code";
+
+/** A package the client has bought, and how much of it they have used. */
+export interface OwnedPackage {
+  id: string;
+  used: number;
+}
 
 export type Theme = "light" | "dark";
 
