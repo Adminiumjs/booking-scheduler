@@ -134,3 +134,6 @@ export {
   screensFor,
 } from "./chrome.ts";
 export type { DockScreen, StudioNavItem } from "./chrome.ts";
+
+export { DeviceFrame } from "./DeviceFrame.tsx";
+export type { DeviceFrameProps, DevicePlatform } from "./DeviceFrame.tsx";
