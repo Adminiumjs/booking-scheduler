@@ -612,7 +612,14 @@ export const useStore = create<Store>()((set, get) => {
       email: "ava@example.com",
       phone: "(415) 555-0142",
       bday: "Mar 12",
-      pref: "selma",
+      /*
+       * A real id from the shipped roster (elin/noor/ivy/marco). The comp
+       * seeded "selma" because its roster had a stylist by that name; after
+       * the rebrand Selma is the studio's owner, not someone you can book, so
+       * the comp's value would leave the preferred-specialist control with
+       * nothing selected. Elin is the specialist the seeded next visit is with.
+       */
+      pref: "elin",
       contact: "sms",
       twofa: false,
     },

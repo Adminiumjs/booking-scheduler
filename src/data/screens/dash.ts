@@ -1,35 +1,18 @@
 /*
  * Page-local seed for the account dashboard.
  *
- * The package catalogue lives here because nothing in `src/data/source.ts`
- * exposes one: the store seeds `pkgOwned` with bare ids, so something has to
- * turn an id into a name, a size and a tint before the dashboard can draw the
- * "Your package" panel. If a second screen ends up needing the same rows the
- * catalogue should move up into the data seam.
+ * The package catalogue is NOT here — it is contract data and lives in
+ * `demo.ts` behind `data.getPackages()`. It briefly existed in two copies
+ * (this screen and the packages screen), which is exactly the drift a seam
+ * exists to prevent.
  */
 
-/** One bundle in the studio's package catalogue. */
-export interface PackageDeal {
-  id: string;
-  name: string;
-  /** Service the sessions are spent on; `null` = anything in the studio. */
-  svc: string | null;
-  qty: number;
-  icon: string;
-  tint: string;
-}
+import { data } from "../source.ts";
+import type { PackageDeal } from "../types.ts";
 
-export const PACKAGES: readonly PackageDeal[] = [
-  { id: "glow5", name: "Glow Five", svc: "facial", qty: 5, icon: "flower-2", tint: "#6f8bb0" },
-  { id: "color3", name: "Color Care Trio", svc: "root", qty: 3, icon: "paintbrush", tint: "#a06f96" },
-  { id: "nail6", name: "Nail Club", svc: "gel", qty: 6, icon: "sparkles", tint: "#c08a6a" },
-  { id: "move10", name: "Movement Ten", svc: "reformer", qty: 10, icon: "activity", tint: "#7d9166" },
-  { id: "aroma3", name: "Slow Sundays", svc: "aroma", qty: 3, icon: "leaf", tint: "#7d9179" },
-  { id: "sampler", name: "Studio Sampler", svc: null, qty: 3, icon: "gift", tint: "#b07d9a" },
-];
-
+/** Turn a `pkgOwned` id into the catalogue row it refers to. */
 export function findPackage(id: string): PackageDeal | undefined {
-  return PACKAGES.find((p) => p.id === id);
+  return data.getPackages().find((p) => p.id === id);
 }
 
 /** A row in the "Recent activity" list — demo fiction, newest first. */

@@ -11,11 +11,8 @@ import { useMemo } from "react";
 
 import { Button, Icon, IconTile } from "../components/index.ts";
 import { data } from "../data/source.ts";
-import {
-  PACKAGES,
-  PACKAGE_VALID_LABEL,
-  type PackageDeal,
-} from "../data/screens/packages.ts";
+import { PACKAGE_VALID_LABEL } from "../data/screens/packages.ts";
+import type { PackageDeal } from "../data/types.ts";
 import { MONTH_SHORT, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
@@ -50,7 +47,7 @@ export default function Packages() {
     () =>
       pkgOwned
         .map((o) => {
-          const pkg = PACKAGES.find((p) => p.id === o.id);
+          const pkg = data.getPackages().find((p) => p.id === o.id);
           return pkg ? { used: o.used, pkg } : null;
         })
         .filter((o): o is { used: number; pkg: PackageDeal } => o !== null),
@@ -151,7 +148,7 @@ export default function Packages() {
 
       <h2 className="scr-packages__label">Available packages</h2>
       <div className="scr-packages__grid">
-        {PACKAGES.map((pkg) => {
+        {data.getPackages().map((pkg) => {
           const have = pkgOwned.some((o) => o.id === pkg.id);
           return (
             <article
