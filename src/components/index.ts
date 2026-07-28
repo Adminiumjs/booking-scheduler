@@ -119,3 +119,18 @@ export type { DayChipProps, WeekStripProps } from "./WeekStrip.tsx";
 
 export { WaitlistCard } from "./WaitlistCard.tsx";
 export type { WaitlistCardProps } from "./WaitlistCard.tsx";
+
+/* --- added by the 2026-07-28 comp revision: the two-persona shell --- */
+
+export { default as DemoDock } from "./DemoDock.tsx";
+export { default as StudioChrome } from "./StudioChrome.tsx";
+export {
+  BRAND,
+  GUEST_SCREENS,
+  STUDIO_NAV_BIZ,
+  STUDIO_NAV_OPS,
+  STUDIO_PAGE_META,
+  STUDIO_SCREENS,
+  screensFor,
+} from "./chrome.ts";
+export type { DockScreen, StudioNavItem } from "./chrome.ts";
