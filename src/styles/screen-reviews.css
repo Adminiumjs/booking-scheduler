@@ -1,1 +1,299 @@
-/* screen-reviews.css — Reviews. */
+/*
+ * Reviews & ratings.
+ *
+ * The composer's accent-tinted card uses `--accent-border`, the token pair for
+ * `--accent-soft`; the comp wrote `--accent-line`, which this token set does
+ * not ship.
+ */
+
+.scr-reviews {
+  --page-max: 900px;
+}
+
+/* ---------------- summary ---------------- */
+
+.scr-reviews__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 20px;
+  align-items: center;
+  padding: 24px;
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  margin-block-end: 22px;
+}
+
+.scr-reviews__avg {
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.scr-reviews__avgstars {
+  margin-block-start: 8px;
+}
+
+.scr-reviews__total {
+  margin-block-start: 6px;
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.scr-reviews__dist {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.scr-reviews__distrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-reviews__distlabel {
+  inline-size: 26px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-reviews__disttrack {
+  flex: 1;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-reviews__distbar {
+  display: block;
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.scr-reviews__distcount {
+  inline-size: 30px;
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+  text-align: end;
+}
+
+/* ---------------- composer ---------------- */
+
+.scr-reviews__compose {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  background: var(--accent-soft);
+  margin-block-end: 22px;
+}
+
+.scr-reviews__composetitle {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-reviews__thanks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.scr-reviews__thanks svg {
+  color: var(--pos);
+  flex-shrink: 0;
+}
+
+.scr-reviews__starpick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-reviews__star {
+  border: 0;
+  background: transparent;
+  padding: 0 2px;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--border-strong);
+}
+
+.scr-reviews__star[data-on="true"] {
+  color: var(--accent);
+}
+
+.scr-reviews__starword {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.scr-reviews__textarea {
+  min-block-size: 96px;
+  resize: vertical;
+  line-height: 1.6;
+  background: var(--surface);
+}
+
+.scr-reviews__composefoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-reviews__posting {
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.scr-reviews__post {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+/* ---------------- filters ---------------- */
+
+.scr-reviews__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block-end: 16px;
+}
+
+.scr-reviews__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scr-reviews__showing {
+  font-size: 12.5px;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- one review ---------------- */
+
+.scr-reviews__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scr-reviews__card {
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.scr-reviews__cardhead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block-end: 12px;
+}
+
+.scr-reviews__who {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-reviews__name {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.scr-reviews__meta {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.scr-reviews__quote {
+  margin: 0;
+  font-size: 14px;
+  color: var(--fg-muted);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.scr-reviews__reply {
+  display: flex;
+  gap: 12px;
+  margin-block-start: 14px;
+  padding: 15px 16px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.scr-reviews__replytext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-reviews__replyby {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.scr-reviews__replybody {
+  display: block;
+  margin-block-start: 5px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  line-height: 1.6;
+}
+
+.scr-reviews__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-block-start: 14px;
+}
+
+.scr-reviews__helpful {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-reviews__helpful[data-on="true"] {
+  color: var(--accent);
+}
+
+.scr-reviews__report {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg-subtle);
+  font-size: 12.5px;
+  font-weight: 600;
+}

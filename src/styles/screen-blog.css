@@ -1,1 +1,228 @@
-/* screen-blog.css — Journal. */
+/*
+ * Studio journal — the article index.
+ *
+ * The comp branched the featured card and the grid on `S.w`; both are plain
+ * `auto-fit` / `auto-fill` grids here, so the layout is decided by available
+ * inline size rather than by a measured viewport (ruling R8).
+ */
+
+.scr-blog {
+  --page-max: 1080px;
+}
+
+.scr-blog__head {
+  margin-block-end: 20px;
+}
+
+.scr-blog__lede {
+  margin-block-start: 8px;
+  max-inline-size: 520px;
+  font-size: 15px;
+}
+
+.scr-blog__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-block-end: 22px;
+}
+
+/* ---------------- the clickable title ---------------- */
+
+/*
+ * One control per card: the title button, stretched over the whole card. The
+ * card itself is not focusable, so the tab order stays one stop per article.
+ */
+.scr-blog__open {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-blog__open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.scr-blog__open:focus-visible {
+  outline: none;
+}
+
+.scr-blog__feat:has(.scr-blog__open:focus-visible),
+.scr-blog__post:has(.scr-blog__open:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------------- featured ---------------- */
+
+.scr-blog__feat {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-block-end: 22px;
+}
+
+.scr-blog__feat-body {
+  padding: clamp(20px, 3vw, 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.scr-blog__feat-title {
+  margin: 0;
+  font-size: clamp(19px, 2.4vw, 25px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.scr-blog__feat-excerpt {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--fg-muted);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* ---------------- grid ---------------- */
+
+.scr-blog__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
+  margin-block-end: 28px;
+}
+
+.scr-blog__post {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.scr-blog__post-body {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  flex: 1;
+}
+
+.scr-blog__post-title {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.scr-blog__post-excerpt {
+  margin: 0;
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* ---------------- byline ---------------- */
+
+.scr-blog__byline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block-start: 2px;
+}
+
+.scr-blog__avatar {
+  border-radius: 50%;
+}
+
+.scr-blog__byline-name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-blog__byline-meta {
+  display: block;
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+  margin-block-start: 2px;
+}
+
+.scr-blog__byline-meta--inline {
+  margin-block-start: 0;
+}
+
+/* ---------------- newsletter ---------------- */
+
+.scr-blog__news {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(20px, 3vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-2);
+}
+
+.scr-blog__news-copy {
+  flex: 1;
+  min-inline-size: 220px;
+}
+
+.scr-blog__news-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-blog__news-sub {
+  margin-block-start: 5px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  line-height: 1.55;
+}
+
+.scr-blog__news-form {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-inline-size: 270px;
+}
+
+.scr-blog__subscribe {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+}

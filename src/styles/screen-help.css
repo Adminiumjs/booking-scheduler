@@ -1,1 +1,191 @@
-/* screen-help.css — Help. */
+/*
+ * Help centre (view: 'help').
+ */
+
+.scr-help {
+  --page-max: 760px;
+  padding-block: clamp(24px, 4vw, 44px) clamp(28px, 4vw, 52px);
+}
+
+.scr-help__head {
+  margin-block-end: 24px;
+  text-align: center;
+}
+
+.scr-help__title {
+  font-size: clamp(26px, 4vw, 36px);
+}
+
+.scr-help__sub {
+  margin-block-start: 9px;
+  font-size: 15px;
+}
+
+/* ---------------- search ---------------- */
+
+.scr-help__search {
+  position: relative;
+  margin-block-end: 26px;
+}
+
+.scr-help__searchicon {
+  position: absolute;
+  inset-inline-start: 16px;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-subtle);
+  pointer-events: none;
+}
+
+/* Scoped past `.bk-input` so the glyph gets its gutter whatever the sheet
+ * order ends up being. */
+.scr-help .scr-help__searchinput {
+  padding-block: 14px;
+  padding-inline: 44px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 14.5px;
+}
+
+/* ---------------- reach a person ---------------- */
+
+.scr-help__contacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  margin-block-end: 28px;
+}
+
+.scr-help__contact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-help__contacticon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.scr-help__contactlabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.scr-help__contactsub {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+/* ---------------- the accordion ---------------- */
+
+.scr-help__count {
+  margin: 0 0 12px;
+}
+
+.scr-help__empty {
+  margin-block-end: 22px;
+  padding-block: 44px;
+}
+
+.scr-help__faqs {
+  margin-block-end: 24px;
+  box-shadow: var(--shadow);
+}
+
+.scr-help__faq:not(:last-child) {
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-help__faq[data-open="true"] {
+  background: var(--surface-2);
+}
+
+.scr-help__faqq {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  inline-size: 100%;
+  padding: 16px 18px;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-help__faqtext {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+/* The icon registry has no `chevron-up`, so the open state rotates the down
+ * chevron rather than swapping glyphs. */
+.scr-help__chev {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+  transition: transform 0.18s ease;
+}
+
+.scr-help__faq[data-open="true"] .scr-help__chev {
+  transform: rotate(180deg);
+}
+
+.scr-help__faqa {
+  margin: 0;
+  padding: 0 18px 18px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+/* ---------------- still stuck ---------------- */
+
+.scr-help__stuck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+.scr-help__stucktitle {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-help__stuckbody {
+  margin-block-start: 4px;
+  max-inline-size: 340px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}

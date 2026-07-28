@@ -1,1 +1,591 @@
-/* screen-admin-cal.css — Calendar. */
+/*
+ * Calendar (view: 'admin-cal').
+ *
+ * The diary is one scroll container: column heads stick to its top, and the
+ * whole thing scrolls sideways once there are more chairs than fit. The
+ * appointment panel sits beside it on a desk and stacks underneath on a
+ * phone — a media query, never a measured viewport (ruling R8).
+ *
+ * `--row` (the half-hour row height) is handed in by the screen so the drag
+ * arithmetic and the grid cannot drift apart. `--tint` is the per-record
+ * colour of a block's specialist or room; it falls back to the accent, which
+ * is what the week view wants.
+ */
+
+.scr-admin-cal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  --tint: var(--accent);
+  /* How hard a block reads against its column, per theme. */
+  --blk-fill: 14%;
+  --blk-line: 30%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .scr-admin-cal {
+    --blk-fill: 24%;
+    --blk-line: 42%;
+  }
+}
+:root[data-theme="dark"] .scr-admin-cal {
+  --blk-fill: 24%;
+  --blk-line: 42%;
+}
+
+@media (min-width: 1040px) {
+  .scr-admin-cal.is-split {
+    grid-template-columns: minmax(0, 1fr) min(330px, 34vw);
+  }
+}
+
+.scr-admin-cal__main {
+  min-inline-size: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+/* ---------------- toolbar ---------------- */
+
+.scr-admin-cal__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.scr-admin-cal__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scr-admin-cal__navbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--fg-muted);
+}
+
+.scr-admin-cal__today {
+  padding: 8px 13px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-cal__daylabel {
+  flex: 1;
+  min-inline-size: 150px;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-cal__rooms {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  transition:
+    background 0.13s ease,
+    color 0.13s ease,
+    border-color 0.13s ease;
+}
+/* Scoped to the off state so hovering an engaged toggle does not read as
+ * turning it off — which is what the shared `bk-gi` hover would have done. */
+.scr-admin-cal__rooms[data-active="false"]:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+.scr-admin-cal__rooms[data-active="true"] {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.scr-admin-cal__modes {
+  flex-shrink: 0;
+}
+
+.scr-admin-cal__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* Same chip as everywhere else, one size down for a dense toolbar. */
+.scr-admin-cal__chip {
+  padding: 7px 12px;
+  font-size: 12px;
+}
+
+/* ---------------- the grid ---------------- */
+
+.scr-admin-cal__grid {
+  block-size: clamp(380px, 66vh, 1000px);
+  overflow: auto;
+  padding: 0 14px 18px;
+  background: var(--bg);
+}
+
+.scr-admin-cal__heads {
+  display: flex;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 6;
+  padding-block-start: 12px;
+  background: var(--bg);
+}
+
+.scr-admin-cal__gutterhead {
+  inline-size: 58px;
+  flex-shrink: 0;
+}
+
+.scr-admin-cal__head {
+  flex: 1 0 142px;
+  min-inline-size: 142px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-block-end: none;
+  border-radius: 10px 10px 0 0;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.scr-admin-cal__daynum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.scr-admin-cal__headid {
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+.scr-admin-cal__headname {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-admin-cal__headsub {
+  display: block;
+  margin-block-start: 1px;
+  font-size: 11px;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-admin-cal__body {
+  display: flex;
+  position: relative;
+}
+
+.scr-admin-cal__gutter {
+  inline-size: 58px;
+  flex-shrink: 0;
+}
+
+.scr-admin-cal__hour {
+  block-size: calc(var(--row) * 2);
+  padding-block-start: 2px;
+  padding-inline-end: 10px;
+  text-align: end;
+  font-size: 10.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-cal__col {
+  flex: 1 0 142px;
+  min-inline-size: 142px;
+  position: relative;
+  border-inline-end: 1px solid var(--border);
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+.scr-admin-cal__gutter + .scr-admin-cal__col {
+  border-inline-start: 1px solid var(--border);
+}
+
+.scr-admin-cal__line {
+  block-size: calc(var(--row) * 2);
+  border-block-start: 1px solid var(--border);
+}
+.scr-admin-cal__line:first-child {
+  border-block-start: none;
+}
+
+.scr-admin-cal__now {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: var(--now-top);
+  block-size: 2px;
+  z-index: 3;
+  background: var(--danger);
+}
+
+.scr-admin-cal__nowdot {
+  position: absolute;
+  inset-inline-start: -4px;
+  inset-block-start: -3px;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+/* ---------------- a booking ---------------- */
+
+.scr-admin-cal__blk {
+  position: absolute;
+  inset-block-start: var(--top);
+  inset-inline-start: calc(var(--lane) * 100% / var(--lanes) + 3px);
+  inline-size: calc(100% / var(--lanes) - 6px);
+  block-size: var(--blk-h);
+  z-index: 1;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--tint) var(--blk-line), transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--tint) var(--blk-fill), var(--surface));
+  color: var(--fg);
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+.scr-admin-cal__blk[data-movable="true"] {
+  cursor: grab;
+  /* Only a block that can actually move swallows the touch gesture; in the
+   * week and room views a finger on a block still scrolls the diary. */
+  touch-action: none;
+}
+.scr-admin-cal__blk[data-dragging="true"] {
+  /* Above its neighbours and the now-line, below the sticky column heads. */
+  z-index: 5;
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+}
+.scr-admin-cal__blk[data-selected="true"] {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.scr-admin-cal__blk[data-status="done"] {
+  opacity: 0.78;
+}
+.scr-admin-cal__blk[data-status="cancelled"] {
+  background: var(--surface-2);
+  color: var(--fg-subtle);
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.scr-admin-cal__blkclient {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-admin-cal__blktime {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 10.5px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-admin-cal__blksvc {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 11px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- appointment panel ---------------- */
+
+.scr-admin-cal__panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+}
+@media (min-width: 1040px) {
+  .scr-admin-cal__panel {
+    max-block-size: clamp(440px, 76vh, 1100px);
+    overflow-y: auto;
+  }
+}
+
+.scr-admin-cal__panelhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-cal__paneltitle {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-cal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg-muted);
+}
+
+.scr-admin-cal__panelbody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+}
+
+.scr-admin-cal__guest {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-admin-cal__guestid {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-cal__guestname {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-cal__guestmeta {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-cal__pill {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.scr-admin-cal__pill[data-tone="info"] {
+  color: var(--info);
+  background: var(--info-soft);
+}
+.scr-admin-cal__pill[data-tone="pos"] {
+  color: var(--pos);
+  background: var(--pos-soft);
+}
+.scr-admin-cal__pill[data-tone="warn"] {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+.scr-admin-cal__pill[data-tone="danger"] {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.scr-admin-cal__pill[data-tone="muted"] {
+  color: var(--fg-muted);
+  background: var(--surface-3);
+}
+
+.scr-admin-cal__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.scr-admin-cal__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.scr-admin-cal__rowicon {
+  color: var(--fg-subtle);
+}
+
+.scr-admin-cal__rowlabel {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-cal__rowval {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: end;
+}
+
+.scr-admin-cal__note {
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.scr-admin-cal__noteicon {
+  margin-block-start: 1px;
+  color: var(--warn);
+}
+
+.scr-admin-cal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scr-admin-cal__action {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  inline-size: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.scr-admin-cal__action[data-kind="primary"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.scr-admin-cal__action[data-kind="danger"] {
+  color: var(--danger);
+}
+
+.scr-admin-cal__eyebrow {
+  display: block;
+  margin-block-end: 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-cal__history {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scr-admin-cal__visit {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.scr-admin-cal__visitsvc {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scr-admin-cal__visitdate {
+  font-size: 11px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-cal__visitamt {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.scr-admin-cal__nohistory {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}

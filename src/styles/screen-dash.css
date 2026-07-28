@@ -1,1 +1,326 @@
-/* screen-dash.css — Your dashboard. */
+/*
+ * Your dashboard (view: 'dash').
+ *
+ * Every grid here is `auto-fit`/`auto-fill` over a `min()` floor, so the
+ * screen reflows on its own — the comp's JS width branch is not ported
+ * (ruling R8).
+ */
+
+.scr-dash {
+  --page-max: 1020px;
+  padding-block: clamp(24px, 4vw, 44px) clamp(28px, 4vw, 52px);
+}
+
+.scr-dash__signedout {
+  padding-block: 56px;
+}
+
+/* ---------------- greeting ---------------- */
+
+.scr-dash__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-block-end: 24px;
+}
+
+.scr-dash__avatar {
+  border-radius: 50%;
+}
+
+.scr-dash__id {
+  flex: 1;
+  min-inline-size: 220px;
+}
+
+.scr-dash__title {
+  font-size: clamp(24px, 4vw, 34px);
+}
+
+.scr-dash__sub {
+  margin-block-start: 6px;
+  font-size: 14px;
+}
+
+.scr-dash__headbtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------------- stat tiles ---------------- */
+
+.scr-dash__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 14px;
+  margin-block-end: 18px;
+}
+
+.scr-dash__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-dash__staticon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.scr-dash__statvalue {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-dash__statlabel {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+/* ---------------- the two summary panels ---------------- */
+
+.scr-dash__panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  margin-block-end: 22px;
+}
+
+.scr-dash__panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* An `Eyebrow` doing double duty as the panel's header band. */
+.scr-dash__phead {
+  padding: 15px 20px;
+  border-block-end: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.scr-dash__phead svg {
+  color: var(--accent);
+}
+
+.scr-dash__pbody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.scr-dash__cardtitle {
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-dash__cardsub {
+  margin-block-start: 3px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+.scr-dash__nextid {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.scr-dash__nexttext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-dash__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scr-dash__fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-dash__fact--time {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+
+/* Buttons split the width evenly and stay pinned to the panel floor. */
+.scr-dash__pfoot {
+  display: flex;
+  gap: 10px;
+  margin-block-start: auto;
+}
+
+.scr-dash__pfoot > * {
+  flex: 1;
+}
+
+.scr-dash__pempty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.scr-dash__pemptytitle {
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+.scr-dash__pemptybody {
+  margin: 0;
+  max-inline-size: 250px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+/* ---------------- package progress ---------------- */
+
+.scr-dash__bar {
+  block-size: 10px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-dash__barfill {
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: inline-size 0.35s ease;
+}
+
+.scr-dash__barmeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-block-start: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+/* ---------------- quick actions + activity ---------------- */
+
+.scr-dash__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 18px;
+}
+
+.scr-dash__coltitle {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-dash__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+  gap: 10px;
+}
+
+.scr-dash__action {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-dash__actionlabel {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* Shared by the action tiles and the activity rows. */
+.scr-dash__smalltile {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 10px;
+  background: var(--surface-3);
+  color: var(--fg-muted);
+}
+
+.scr-dash__actrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.scr-dash__actrow:not(:last-child) {
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-dash__actrowtext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-dash__actrowlabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.scr-dash__actrowdate {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}

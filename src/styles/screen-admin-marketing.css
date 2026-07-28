@@ -1,1 +1,158 @@
-/* screen-admin-marketing.css — Marketing. */
+/*
+ * Marketing campaigns (studio) — Admin comp template 329–350.
+ *
+ * `.bk-studio__body` already pads the page, so nothing here sets a page
+ * padding. Everything is scoped under `.scr-admin-marketing`; the `mk-`
+ * prefix is local to this screen.
+ */
+
+/* ---------------- KPI strip ---------------- */
+
+.scr-admin-marketing .mk-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 12px;
+  margin-block-end: 18px;
+}
+
+.scr-admin-marketing .mk-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.scr-admin-marketing .mk-kpi__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-marketing .mk-kpi__value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-marketing .mk-kpi__sub {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- filter bar ---------------- */
+
+.scr-admin-marketing .mk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-block-end: 14px;
+}
+
+/* Pushes the "New campaign" button to the far end; collapses when the bar
+ * wraps on a narrow window, so the button sits under the chips instead. */
+.scr-admin-marketing .mk-bar__gap {
+  flex: 1;
+}
+
+/* ---------------- campaign list ---------------- */
+
+.scr-admin-marketing .mk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scr-admin-marketing .mk-camp {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 16px;
+}
+
+.scr-admin-marketing .mk-camp__id {
+  flex: 1;
+  min-inline-size: 180px;
+}
+
+.scr-admin-marketing .mk-camp__titlerow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+.scr-admin-marketing .mk-camp__name {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-marketing .mk-camp__status {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+  background: var(--surface-3);
+}
+
+.scr-admin-marketing .mk-camp__status[data-status="live"] {
+  color: var(--pos);
+  background: var(--pos-soft);
+}
+
+.scr-admin-marketing .mk-camp__status[data-status="scheduled"] {
+  color: var(--info);
+  background: var(--info-soft);
+}
+
+.scr-admin-marketing .mk-camp__meta {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-marketing .mk-camp__stats {
+  display: flex;
+  gap: 18px;
+}
+
+.scr-admin-marketing .mk-camp__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scr-admin-marketing .mk-camp__statval {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.scr-admin-marketing .mk-camp__statlabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.scr-admin-marketing .mk-camp__action {
+  flex-shrink: 0;
+  padding-inline: 16px;
+}
+
+/* On a phone the row stacks; the action then spans the full width rather
+ * than stranding itself beside the stats. */
+@media (max-width: 560px) {
+  .scr-admin-marketing .mk-camp__action {
+    inline-size: 100%;
+  }
+}

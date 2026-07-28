@@ -1,1 +1,292 @@
-/* screen-event.css — Studio event. */
+/*
+ * Studio event — the Autumn Open House RSVP page.
+ */
+
+.scr-event {
+  --page-max: 900px;
+}
+
+.scr-event__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 24px;
+  margin-block-start: 26px;
+}
+
+/* ---------------- the write-up ---------------- */
+
+.scr-event__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-block-end: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.scr-event__title {
+  font-size: clamp(26px, 4vw, 36px);
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.scr-event__lede {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: var(--fg-muted);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.scr-event__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block-start: 22px;
+}
+
+.scr-event__metarow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-event__metatile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 36px;
+  block-size: 36px;
+  border-radius: 11px;
+  background: var(--surface-3);
+  color: var(--fg-muted);
+}
+
+.scr-event__metatext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-event__metalabel {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+.scr-event__metavalue {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.scr-event__section {
+  margin: 26px 0 12px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-event__includes {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scr-event__include {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.scr-event__include svg {
+  flex-shrink: 0;
+  margin-block-start: 2px;
+  color: var(--accent);
+}
+
+/* ---------------- the RSVP card ---------------- */
+
+.scr-event__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scr-event__rsvp {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 22px;
+  border-color: var(--accent);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.scr-event__price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.scr-event__pricefig {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-event__pricenote {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.scr-event__track {
+  block-size: 10px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-event__bar {
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: inline-size 0.35s ease;
+}
+
+.scr-event__capacity {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-block-start: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.scr-event__steplabel {
+  display: block;
+  margin-block-end: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.scr-event__confirmed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pos-soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scr-event__confirmed svg {
+  flex-shrink: 0;
+  color: var(--pos);
+}
+
+.scr-event__strong {
+  font-weight: 700;
+}
+
+.scr-event__disclaimer {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- also coming up ---------------- */
+
+.scr-event__upcoming {
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.scr-event__upcominghead {
+  padding: 15px 18px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-event__uprow {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 18px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-event__uprow:last-child {
+  border-block-end: 0;
+}
+
+.scr-event__update {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 12px;
+  background: var(--surface-3);
+  color: var(--fg-muted);
+}
+
+.scr-event__upday {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scr-event__upmon {
+  margin-block-start: 2px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.scr-event__uptext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-event__uptitle {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.scr-event__upsub {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.scr-event__notify {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 700;
+}

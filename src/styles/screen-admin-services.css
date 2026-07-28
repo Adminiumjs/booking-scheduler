@@ -1,1 +1,187 @@
-/* screen-admin-services.css — Services. */
+/*
+ * Services & pricing (view: 'admin-services').
+ *
+ * A real table needs its columns to line up, so head and rows share one grid
+ * template. Below 860px the "Booked 30d" column is dropped (head and cells
+ * together, which is why the template also drops a track) and the table keeps
+ * a floor width it can scroll to — no JavaScript measures anything (R8).
+ */
+
+.scr-admin-services__panel {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.scr-admin-services__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.scr-admin-services__new {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-services__scroll {
+  overflow-x: auto;
+}
+
+.scr-admin-services__track {
+  min-inline-size: 660px;
+}
+
+.scr-admin-services__head,
+.scr-admin-services__row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 96px 104px 96px 92px;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-admin-services__head {
+  padding: 10px 16px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
+.scr-admin-services__end {
+  text-align: end;
+}
+
+.scr-admin-services__row {
+  padding: 11px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-services__row:last-child {
+  border-block-end: none;
+}
+
+/* A service pulled from the booking page still reads, just quieter. */
+.scr-admin-services__row[data-off="true"] {
+  opacity: 0.55;
+}
+
+.scr-admin-services__name {
+  min-inline-size: 0;
+}
+
+.scr-admin-services__title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.scr-admin-services__meta {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-services__dur {
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+/* Scoped to the row: the head carries the same class only so the media query
+ * can drop both cells together, and it must keep its own uppercase styling. */
+.scr-admin-services__row .scr-admin-services__booked {
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-services__pricecell,
+.scr-admin-services__livecell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.scr-admin-services__price {
+  inline-size: 82px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: end;
+}
+
+.scr-admin-services__price:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (max-width: 860px) {
+  .scr-admin-services__track {
+    min-inline-size: 520px;
+  }
+
+  .scr-admin-services__head,
+  .scr-admin-services__row {
+    grid-template-columns: 30px minmax(0, 1fr) 96px 104px 92px;
+  }
+
+  .scr-admin-services__booked {
+    display: none;
+  }
+}
+
+/* ---------------- the footer note ---------------- */
+
+.scr-admin-services__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.scr-admin-services__footicon {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-services__footnote {
+  flex: 1;
+  min-inline-size: 200px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.scr-admin-services__save {
+  padding: 9px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
