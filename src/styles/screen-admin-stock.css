@@ -1,1 +1,205 @@
-/* screen-admin-stock.css — Stock. */
+/*
+ * Stock (view: 'admin-stock').
+ *
+ * Same table mechanics as Services: head and rows share one grid template,
+ * "Sold 30d" drops out below 860px, and the track keeps a floor width it can
+ * scroll to rather than crushing the level bar. The fill's width is the one
+ * inline style on the screen — it is a per-row scalar, not a static value.
+ */
+
+.scr-admin-stock__panel {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.scr-admin-stock__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.scr-admin-stock__reorder {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-stock__scroll {
+  overflow-x: auto;
+}
+
+.scr-admin-stock__track {
+  min-inline-size: 700px;
+}
+
+.scr-admin-stock__head,
+.scr-admin-stock__row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 150px 80px 96px 110px;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-admin-stock__head {
+  padding: 10px 16px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
+.scr-admin-stock__end {
+  text-align: end;
+}
+
+.scr-admin-stock__row {
+  padding: 11px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-stock__row:last-child {
+  border-block-end: none;
+}
+
+/* Low and not yet on a purchase order — the one row that wants the eye. */
+.scr-admin-stock__row[data-alert="true"] {
+  background: var(--danger-soft);
+}
+
+.scr-admin-stock__name {
+  min-inline-size: 0;
+}
+
+.scr-admin-stock__title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.scr-admin-stock__meta {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+/* ---------------- how full the shelf is ---------------- */
+
+.scr-admin-stock__level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.scr-admin-stock__bar {
+  flex: 1;
+  block-size: 7px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-admin-stock__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: 99px;
+  background: var(--pos);
+}
+
+.scr-admin-stock__fill[data-tone="low"] {
+  background: var(--danger);
+}
+
+.scr-admin-stock__fill[data-tone="thin"] {
+  background: var(--warn);
+}
+
+.scr-admin-stock__count {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-stock__price {
+  font-size: 12.5px;
+}
+
+/* Scoped to the row: the head carries the same class only so the media query
+ * can drop both cells together, and it must keep its own uppercase styling. */
+.scr-admin-stock__row .scr-admin-stock__sold {
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+/* ---------------- ordering ---------------- */
+
+.scr-admin-stock__actioncell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.scr-admin-stock__order {
+  padding: 7px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-stock__order[data-state="urgent"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.scr-admin-stock__order[data-state="done"] {
+  border-color: var(--border);
+  background: var(--surface-3);
+  color: var(--fg-subtle);
+  cursor: default;
+}
+
+.scr-admin-stock__empty {
+  margin: 0;
+  padding: 28px 16px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .scr-admin-stock__track {
+    min-inline-size: 560px;
+  }
+
+  .scr-admin-stock__head,
+  .scr-admin-stock__row {
+    grid-template-columns: 32px minmax(0, 1fr) 130px 80px 110px;
+  }
+
+  .scr-admin-stock__sold {
+    display: none;
+  }
+}

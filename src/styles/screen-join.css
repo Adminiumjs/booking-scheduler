@@ -1,1 +1,373 @@
-/* screen-join.css — Join the studio. */
+/*
+ * JOIN THE CIRCLE (view `join`) — the three membership-signup modes.
+ *
+ * The plan cards in step 1 are real <button>s, so everything inside them is a
+ * <span> laid out as a block; that is why the perk list and the CTA are
+ * `display: flex` spans rather than the <ul>/<div> the visual implies.
+ */
+
+.scr-join {
+  --page-max: 960px;
+}
+
+/* ---------------- step 1 · pick ---------------- */
+
+.scr-join__intro {
+  margin-block-end: 26px;
+  text-align: center;
+}
+
+.scr-join__h1 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.scr-join__sub {
+  margin: 9px auto 0;
+  max-inline-size: 520px;
+  font-size: 15px;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+.scr-join__cycle {
+  margin-block-start: 18px;
+}
+
+.scr-join__plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+  margin-block-end: 24px;
+}
+
+.scr-join-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-join-plan[data-selected="true"] {
+  border-color: var(--accent);
+}
+
+.scr-join-plan__badge {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scr-join-plan__name {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-join-plan__pricerow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.scr-join-plan__price {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-join-plan__cadence {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.scr-join-plan__blurb {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+.scr-join-plan__perks {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-block-start: 4px;
+}
+
+.scr-join-plan__perk {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scr-join-plan__tick {
+  flex-shrink: 0;
+  margin-block-start: 2px;
+  color: var(--accent);
+}
+
+.scr-join-plan__cta {
+  display: block;
+  margin-block-start: 6px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.scr-join-plan[data-selected="true"] .scr-join-plan__cta {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.scr-join__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--info) 22%, transparent);
+  border-radius: 14px;
+  background: var(--info-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.scr-join__noteicon {
+  flex-shrink: 0;
+  margin-block-start: 1px;
+  color: var(--info);
+}
+
+/* ---------------- step 2 · pay ---------------- */
+
+.scr-join__payh1 {
+  margin: 0 0 22px;
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.scr-join__pay {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.scr-join__details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.scr-join__panellabel {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+/* The comp nudges the second section label down a touch from the field grid. */
+.scr-join__fields + .scr-join__panellabel {
+  margin-block-start: 4px;
+}
+
+.scr-join__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 14px;
+}
+
+.scr-join__field--wide {
+  grid-column: 1 / -1;
+}
+
+.scr-join__starts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scr-join__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid var(--accent);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.scr-join__summaryname {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-join__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+}
+
+.scr-join__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-join__totallabel {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.scr-join__totalvalue {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.scr-join__totalvalue[data-accent="true"] {
+  color: var(--accent);
+}
+
+.scr-join__rule {
+  block-size: 1px;
+  background: var(--border);
+}
+
+.scr-join__due {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-join__duelabel {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.scr-join__duevalue {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-join__fine {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--fg-subtle);
+  text-align: center;
+}
+
+/* ---------------- step 3 · done ---------------- */
+
+.scr-join__done {
+  max-inline-size: 520px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.scr-join__gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 70px;
+  block-size: 70px;
+  margin-block-end: 18px;
+  border-radius: 22px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  /* `bk-pop` is the shared entrance keyframe from base.css — the comp had its
+   * own `sm-pop`, but redefining a global @keyframes name would silently
+   * change every other screen that uses it. */
+  animation: bk-pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.scr-join__doneh1 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.scr-join__donesub {
+  margin: 10px 0 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.scr-join__donecard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: start;
+}
+
+.scr-join__donerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-join__donelabel {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.scr-join__donevalue {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scr-join__doneactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}

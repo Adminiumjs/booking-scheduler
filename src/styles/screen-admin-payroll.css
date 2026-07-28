@@ -1,1 +1,182 @@
-/* screen-admin-payroll.css — Payroll. */
+/*
+ * Payroll & tips (studio) — Admin comp template 353–385.
+ *
+ * Page padding comes from `.bk-studio__body`. Everything is scoped under
+ * `.scr-admin-payroll`; `pay-` is this screen's own prefix.
+ */
+
+/* ---------------- period toolbar ---------------- */
+
+.scr-admin-payroll .pay-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-block-end: 18px;
+}
+
+.scr-admin-payroll .pay-bar__gap {
+  flex: 1;
+}
+
+.scr-admin-payroll .pay-bar__period {
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+/* The approved state has no button variant of its own — it is the comp's
+ * "done, nothing left to press" look. */
+.scr-admin-payroll .pay-run:disabled {
+  border-color: var(--border);
+  background: var(--pos-soft);
+  color: var(--pos);
+}
+
+/* ---------------- KPI strip ---------------- */
+
+.scr-admin-payroll .pay-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 12px;
+  margin-block-end: 18px;
+}
+
+.scr-admin-payroll .pay-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.scr-admin-payroll .pay-kpi__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-payroll .pay-kpi__value {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-payroll .pay-kpi__sub {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- the table ---------------- */
+
+.scr-admin-payroll .pay-tablewrap {
+  border-radius: 16px;
+  overflow-x: auto;
+}
+
+.scr-admin-payroll .pay-table {
+  inline-size: 100%;
+  min-inline-size: 620px;
+  border-collapse: collapse;
+}
+
+/* Named for screen readers only — the topbar already says "Payroll". */
+.scr-admin-payroll .pay-table__caption {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.scr-admin-payroll .pay-table thead th {
+  padding: 10px 12px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-subtle);
+  text-align: end;
+  white-space: nowrap;
+}
+
+.scr-admin-payroll .pay-table tbody td,
+.scr-admin-payroll .pay-table tbody th {
+  padding: 11px 12px;
+  border-block-end: 1px solid var(--border);
+  font-size: 12.5px;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.scr-admin-payroll .pay-table tbody tr:last-child td,
+.scr-admin-payroll .pay-table tbody tr:last-child th {
+  border-block-end: none;
+}
+
+/* Written against `thead th` / `tbody th` so it outranks the alignment rules
+ * above without reaching for `!important`. */
+.scr-admin-payroll .pay-table thead th.pay-table__whocol,
+.scr-admin-payroll .pay-table tbody th.pay-table__whocol {
+  inline-size: 100%;
+  min-inline-size: 210px;
+  padding-inline-start: 16px;
+  text-align: start;
+}
+
+.scr-admin-payroll .pay-table tbody th.pay-table__whocol {
+  font-weight: 400;
+}
+
+.scr-admin-payroll .pay-table td:last-child,
+.scr-admin-payroll .pay-table th:last-child {
+  padding-inline-end: 16px;
+}
+
+.scr-admin-payroll .pay-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-admin-payroll .pay-who__text {
+  min-inline-size: 0;
+}
+
+.scr-admin-payroll .pay-who__name {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scr-admin-payroll .pay-who__rate {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.scr-admin-payroll .pay-table__muted {
+  color: var(--fg-muted);
+}
+
+.scr-admin-payroll .pay-table__tips {
+  color: var(--accent);
+}
+
+.scr-admin-payroll .pay-table__total {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+/* ---------------- footnote ---------------- */
+
+.scr-admin-payroll .pay-note {
+  margin-block-start: 16px;
+}

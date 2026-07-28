@@ -1,1 +1,355 @@
-/* screen-admin-today.css — Today. */
+/*
+ * Today (view: 'admin-today').
+ *
+ * Two auto-fit grids and nothing else: the KPI strip and the two panel
+ * columns reflow on their own, so the comp's `S.vw` branches are not ported
+ * (ruling R8). Per-record tints arrive as a `--tint` custom property and are
+ * mixed against the surface here — the only reason this file names a colour
+ * it did not get from a token.
+ */
+
+.scr-admin-today {
+  /* How hard a tinted tile reads against the page, per theme. */
+  --tile-fill: 13%;
+  --tile-ink: 72%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .scr-admin-today {
+    --tile-fill: 22%;
+    --tile-ink: 88%;
+  }
+}
+:root[data-theme="dark"] .scr-admin-today {
+  --tile-fill: 22%;
+  --tile-ink: 88%;
+}
+
+/* ---------------- KPI strip ---------------- */
+
+.scr-admin-today__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 12px;
+  margin-block-end: 18px;
+}
+
+.scr-admin-today__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.scr-admin-today__kpihead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scr-admin-today__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--tint) var(--tile-fill), transparent);
+  color: color-mix(in srgb, var(--tint) var(--tile-ink), var(--fg));
+}
+
+.scr-admin-today__tile--sm {
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 8px;
+}
+
+.scr-admin-today__kpilabel {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-today__kpirow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.scr-admin-today__kpivalue {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-today__kpidelta {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.scr-admin-today__kpidelta[data-dir="up"] {
+  color: var(--pos);
+}
+.scr-admin-today__kpidelta[data-dir="down"] {
+  color: var(--danger);
+}
+
+.scr-admin-today__kpisub {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- panels ---------------- */
+
+.scr-admin-today__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.scr-admin-today__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scr-admin-today__panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.scr-admin-today__panelhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-today__paneltitle {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-today__clock {
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-today__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scr-admin-today__empty {
+  margin: 0;
+  padding: 22px 16px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+
+/* ---------------- now & next ---------------- */
+
+.scr-admin-today__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px;
+}
+.scr-admin-today__row:not(:last-child) {
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-today__rowtime {
+  inline-size: 62px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.scr-admin-today__rowid {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-today__rowname {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.scr-admin-today__rowmeta {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-today__pill {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.scr-admin-today__pill[data-tone="info"] {
+  color: var(--info);
+  background: var(--info-soft);
+}
+.scr-admin-today__pill[data-tone="pos"] {
+  color: var(--pos);
+  background: var(--pos-soft);
+}
+.scr-admin-today__pill[data-tone="warn"] {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+.scr-admin-today__pill[data-tone="danger"] {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.scr-admin-today__pill[data-tone="muted"] {
+  color: var(--fg-muted);
+  background: var(--surface-3);
+}
+
+.scr-admin-today__rowbtn {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* A phone-width row stacks the status and the action under the guest. */
+@media (max-width: 520px) {
+  .scr-admin-today__row {
+    flex-wrap: wrap;
+  }
+  .scr-admin-today__rowid {
+    flex: 1 0 60%;
+  }
+  .scr-admin-today__rowbtn {
+    margin-inline-start: auto;
+  }
+}
+
+/* ---------------- needs a decision ---------------- */
+
+.scr-admin-today__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 16px;
+}
+.scr-admin-today__alert:not(:last-child) {
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-today__alertid {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-today__alerttitle {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-today__alertsub {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+.scr-admin-today__alertbtn {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* ---------------- chair utilisation ---------------- */
+
+.scr-admin-today__util {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 16px;
+}
+
+.scr-admin-today__utilhead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-block-end: 7px;
+}
+
+.scr-admin-today__dot {
+  inline-size: 9px;
+  block-size: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tint);
+}
+
+.scr-admin-today__utilname {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-today__utilpct {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-today__track {
+  block-size: 7px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-admin-today__bar {
+  display: block;
+  block-size: 100%;
+  border-radius: 99px;
+  background: var(--tint);
+}
+
+.scr-admin-today__utilsub {
+  display: block;
+  margin-block-start: 6px;
+  font-size: 11px;
+  color: var(--fg-subtle);
+}

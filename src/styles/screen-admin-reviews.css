@@ -1,1 +1,188 @@
-/* screen-admin-reviews.css — Reviews. */
+/*
+ * Reviews (view: 'admin-reviews') — the studio's reply queue.
+ */
+
+.scr-admin-reviews__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 12px;
+  margin-block-end: 18px;
+}
+
+.scr-admin-reviews__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.scr-admin-reviews__kpilabel {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-reviews__kpival {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-reviews__kpisub {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-reviews__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 14px;
+}
+
+.scr-admin-reviews__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------------- one review ---------------- */
+
+.scr-admin-reviews__card {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.scr-admin-reviews__head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-block-end: 11px;
+}
+
+.scr-admin-reviews__id {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-reviews__name {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.scr-admin-reviews__meta {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-reviews__quote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+/* ---------------- the studio's reply ---------------- */
+
+.scr-admin-reviews__reply {
+  display: flex;
+  gap: 10px;
+  margin-block-start: 12px;
+  padding: 13px 14px;
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+
+.scr-admin-reviews__replyico {
+  margin-block-start: 1px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-reviews__replybody {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-reviews__replyby {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.scr-admin-reviews__replytext {
+  display: block;
+  margin-block-start: 4px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+
+/* ---------------- composing ---------------- */
+
+.scr-admin-reviews__compose {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-block-start: 12px;
+}
+
+.scr-admin-reviews__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 12px;
+}
+
+.scr-admin-reviews__compose .scr-admin-reviews__actions {
+  margin-block-start: 0;
+}
+
+.scr-admin-reviews__post,
+.scr-admin-reviews__cancel {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-reviews__post {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.scr-admin-reviews__cancel {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--fg-muted);
+}
+
+.scr-admin-reviews__act {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-reviews__act--quiet {
+  color: var(--fg-muted);
+}

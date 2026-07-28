@@ -1,1 +1,144 @@
-/* screen-notifprefs.css — Notifications. */
+/*
+ * Notification preferences (revised comp, guest half).
+ *
+ * Two flush lists of toggle rows plus the timing card. Row separators are
+ * driven by `data-last` rather than :last-child so the markup stays honest
+ * when a list is filtered.
+ */
+
+.scr-notifprefs {
+  --page-max: 680px;
+  padding-block-start: clamp(24px, 4vw, 44px);
+}
+
+.scr-notifprefs__head {
+  margin-block-end: 22px;
+}
+
+.scr-notifprefs__head .bk-sub {
+  margin-block-start: 8px;
+}
+
+.scr-notifprefs__eyebrow {
+  margin-block-end: 12px;
+}
+
+.scr-notifprefs__list {
+  margin-block-end: 24px;
+}
+
+/* ---------------- one row ---------------- */
+
+.scr-notifprefs__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-notifprefs__row[data-last="true"] {
+  border-block-end: none;
+}
+
+.scr-notifprefs__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: 34px;
+  block-size: 34px;
+  border-radius: 10px;
+  background: var(--surface-3);
+  color: var(--fg-muted);
+}
+
+.scr-notifprefs__text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-notifprefs__title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.scr-notifprefs__sub {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+.scr-notifprefs__sub--spaced {
+  margin-block: 3px 10px;
+}
+
+/* ---------------- timing ---------------- */
+
+.scr-notifprefs__timing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-block-end: 24px;
+}
+
+.scr-notifprefs__quiet {
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.scr-notifprefs__quietrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-notifprefs__quietrow .scr-notifprefs__sub {
+  margin-block-start: 3px;
+}
+
+.scr-notifprefs__quietwin {
+  margin-block-start: 14px;
+}
+
+/* ---------------- pause everything ---------------- */
+
+.scr-notifprefs__pause {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+.scr-notifprefs__pausetitle {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-notifprefs__pausebody {
+  margin-block-start: 4px;
+  max-inline-size: 340px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.scr-notifprefs__pausebtn {
+  flex-shrink: 0;
+  padding: 11px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 700;
+}

@@ -1,12 +1,168 @@
-/* PORT-STUB: admin-stock — replace with the ported screen. */
+/*
+ * STOCK (view: 'admin-stock') — the retail shelf and what needs ordering.
+ *
+ * A line is "low" at or under 35% of par. Ordering records the *units* a
+ * purchase order would bring in rather than a bare flag, because the store
+ * types `ordered` as id → number and the count is what the toast and the row
+ * both want to say. Zero is never written, so the truthiness check that decides
+ * "Ordered" vs "Reorder" still holds.
+ */
+
+import { Chip, Icon, IconTile } from "../components/index.ts";
+import {
+  isLow,
+  reorderUnits,
+  STOCK_FILTERS,
+  STOCK_ITEMS,
+  stockPercent,
+} from "../data/screens/admin-stock.ts";
+import type { StockItem } from "../data/screens/admin-stock.ts";
+import { money, plural } from "../lib/format.ts";
+import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-stock.css";
 
+/** Which colour the fill takes: empty shelf, thin shelf, healthy shelf. */
+function barTone(item: StockItem): string {
+  if (isLow(item)) return "low";
+  return stockPercent(item) < 70 ? "thin" : "ok";
+}
+
 export default function AdminStock() {
+  const stockFilter = useStore((s) => s.stockFilter);
+  const ordered = useStore((s) => s.ordered);
+  const set = useStore((s) => s.set);
+  const showToast = useStore((s) => s.showToast);
+
+  const rows = STOCK_ITEMS.filter((p) => {
+    if (stockFilter === "all") return true;
+    return stockFilter === "low" ? isLow(p) : !isLow(p);
+  });
+
+  const order = (item: StockItem): void => {
+    if (ordered[item.id]) return;
+    const units = reorderUnits(item);
+    set({ ordered: { ...ordered, [item.id]: units } });
+    showToast(`${item.name} · ${plural(units, "unit")} ordered`, "ok");
+  };
+
+  const orderAllLow = (): void => {
+    const next = { ...ordered };
+    let added = 0;
+    for (const p of STOCK_ITEMS) {
+      if (!isLow(p) || next[p.id]) continue;
+      next[p.id] = reorderUnits(p);
+      added += 1;
+    }
+    /* Nothing left to order is a real state — the comp claimed a purchase
+     * order had gone out even when every low line was already on one. */
+    if (added === 0) {
+      showToast("Every low line is already on order", "warn");
+      return;
+    }
+    set({ ordered: next });
+    showToast("Purchase order sent to two suppliers", "ok");
+  };
+
   return (
-    <section className="bk-page scr-admin-stock">
-      <h1>Stock</h1>
-      <p>Not ported yet.</p>
-    </section>
+    <div className="scr-admin-stock">
+      <div className="bk-panel scr-admin-stock__panel">
+        <div className="scr-admin-stock__bar">
+          {STOCK_FILTERS.map((f) => (
+            <Chip
+              key={f.id}
+              label={f.label}
+              active={stockFilter === f.id}
+              onClick={() => set({ stockFilter: f.id })}
+            />
+          ))}
+          <button
+            type="button"
+            className="bk-gi scr-admin-stock__reorder"
+            onClick={orderAllLow}
+          >
+            <Icon name="truck" size={15} />
+            Reorder all low stock
+          </button>
+        </div>
+
+        <div className="scr-admin-stock__scroll">
+          <div className="scr-admin-stock__track">
+            <div className="scr-admin-stock__head">
+              <span />
+              <span>Product</span>
+              <span>Stock</span>
+              <span className="scr-admin-stock__end">Retail</span>
+              <span className="scr-admin-stock__end scr-admin-stock__sold">
+                Sold 30d
+              </span>
+              <span className="scr-admin-stock__end">Action</span>
+            </div>
+
+            {rows.map((p) => {
+              const low = isLow(p);
+              const onOrder = Boolean(ordered[p.id]);
+              const pct = stockPercent(p);
+              return (
+                <div
+                  key={p.id}
+                  className="scr-admin-stock__row"
+                  data-alert={low && !onOrder ? "true" : "false"}
+                >
+                  <IconTile
+                    icon={p.icon}
+                    tint={p.tint}
+                    size={32}
+                    iconSize={15}
+                    radius={10}
+                  />
+                  <span className="scr-admin-stock__name">
+                    <span className="scr-admin-stock__title">{p.name}</span>
+                    <span className="scr-admin-stock__meta">
+                      {p.size} · par {p.par}
+                    </span>
+                  </span>
+                  <span className="scr-admin-stock__level">
+                    <span className="scr-admin-stock__bar">
+                      <span
+                        className="scr-admin-stock__fill"
+                        data-tone={barTone(p)}
+                        style={{ inlineSize: `${pct}%` }}
+                      />
+                    </span>
+                    <span className="bk-mono scr-admin-stock__count">
+                      {p.qty}/{p.par}
+                    </span>
+                  </span>
+                  <span className="bk-mono scr-admin-stock__end scr-admin-stock__price">
+                    {money(p.price)}
+                  </span>
+                  <span className="bk-mono scr-admin-stock__end scr-admin-stock__sold">
+                    {p.sold}
+                  </span>
+                  <span className="scr-admin-stock__actioncell">
+                    <button
+                      type="button"
+                      className="scr-admin-stock__order"
+                      data-state={onOrder ? "done" : low ? "urgent" : "idle"}
+                      disabled={onOrder}
+                      onClick={() => order(p)}
+                    >
+                      {onOrder ? "Ordered" : low ? "Reorder" : "Order"}
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
+
+            {rows.length === 0 ? (
+              <p className="scr-admin-stock__empty">
+                Nothing in this bracket. Every product is where it should be.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,1 +1,260 @@
-/* screen-admin-reports.css — Reports. */
+/*
+ * Reports (studio) — Admin comp template 609–654.
+ *
+ * Page padding comes from `.bk-studio__body`. Everything is scoped under
+ * `.scr-admin-reports`; `rep-` is this screen's own prefix.
+ */
+
+/* ---------------- range bar ---------------- */
+
+.scr-admin-reports .rep-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 16px;
+}
+
+.scr-admin-reports .rep-bar__gap {
+  flex: 1;
+}
+
+/* ---------------- KPI strip ---------------- */
+
+.scr-admin-reports .rep-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 12px;
+  margin-block-end: 16px;
+}
+
+.scr-admin-reports .rep-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.scr-admin-reports .rep-kpi__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-reports .rep-kpi__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.scr-admin-reports .rep-kpi__value {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-reports .rep-kpi__delta {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.scr-admin-reports .rep-kpi__delta[data-up="true"] {
+  color: var(--pos);
+}
+
+/* ---------------- the two-panel body ---------------- */
+
+.scr-admin-reports .rep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.scr-admin-reports .rep-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scr-admin-reports .rep-card {
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.scr-admin-reports .rep-card--banded {
+  padding: 0;
+  overflow: hidden;
+}
+
+.scr-admin-reports .rep-card__title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-reports .rep-card__title--spaced {
+  margin-block-end: 14px;
+}
+
+.scr-admin-reports .rep-band {
+  margin: 0;
+  padding: 14px 16px;
+  border-block-end: 1px solid var(--border);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------- revenue by day ---------------- */
+
+.scr-admin-reports .rep-chart__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-block-end: 18px;
+}
+
+.scr-admin-reports .rep-chart__range {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-reports .rep-chart__plot {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  block-size: 170px;
+}
+
+.scr-admin-reports .rep-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  block-size: 100%;
+}
+
+/* The track is the full plot height minus the day label, so a bar's
+ * percentage height is a share of what is actually available. */
+.scr-admin-reports .rep-bar-col__track {
+  flex: 1;
+  inline-size: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.scr-admin-reports .rep-bar-col__fill {
+  display: block;
+  inline-size: 100%;
+  border-radius: 7px 7px 3px 3px;
+  background: color-mix(in srgb, var(--accent) var(--bar-alpha, 50%), transparent);
+}
+
+/* The day in progress is drawn flat — its figure is not final. */
+.scr-admin-reports .rep-bar-col__fill[data-progress="true"] {
+  background: var(--surface-3);
+}
+
+.scr-admin-reports .rep-bar-col__day {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- revenue mix ---------------- */
+
+.scr-admin-reports .rep-mix {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scr-admin-reports .rep-mix__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-block-end: 6px;
+}
+
+.scr-admin-reports .rep-mix__dot {
+  inline-size: 9px;
+  block-size: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tint);
+}
+
+.scr-admin-reports .rep-mix__label {
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-reports .rep-mix__amount {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-reports .rep-mix__track {
+  block-size: 7px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-admin-reports .rep-mix__fill {
+  block-size: 100%;
+  border-radius: 99px;
+  background: var(--tint);
+}
+
+/* ---------------- best guests ---------------- */
+
+.scr-admin-reports .rep-top {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scr-admin-reports .rep-top__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-reports .rep-top__row:last-child {
+  border-block-end: none;
+}
+
+.scr-admin-reports .rep-top__id {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-reports .rep-top__name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-reports .rep-top__sub {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-reports .rep-top__amount {
+  font-size: 12.5px;
+  font-weight: 700;
+}

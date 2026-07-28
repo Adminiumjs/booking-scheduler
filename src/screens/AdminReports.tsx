@@ -1,12 +1,209 @@
-/* PORT-STUB: admin-reports — replace with the ported screen. */
+/*
+ * REPORTS (view: 'admin-reports') — Admin comp template 609–654,
+ * logic 1235–1260.
+ *
+ * StudioChrome owns the heading and the body padding; this file is the body.
+ * Every figure is derived from the seed for the selected range, so switching
+ * the range moves the whole page at once.
+ */
+
+import { useMemo } from "react";
+import type { CSSProperties } from "react";
+
+import { Avatar, Button, Chip } from "../components/index.ts";
+import {
+  REPORT_KPIS,
+  REPORT_RANGES,
+  REVENUE_MIX,
+  REVENUE_SERIES,
+  TOP_CLIENTS,
+} from "../data/screens/admin-reports.ts";
+import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-reports.css";
 
+/* Whole dollars — see the note in AdminPayroll; `money()` is the guest-facing
+ * two-decimal formatter and reads as noise on a reporting page. */
+function dollars(n: number): string {
+  return `$${Math.round(n).toLocaleString("en-US")}`;
+}
+
 export default function AdminReports() {
+  const repRange = useStore((s) => s.repRange);
+  const set = useStore((s) => s.set);
+  const showToast = useStore((s) => s.showToast);
+
+  const range = REPORT_RANGES.find((r) => r.id === repRange) ?? REPORT_RANGES[0];
+
+  const kpis = useMemo(
+    () =>
+      REPORT_KPIS.map((k) => {
+        const scaled = (k.base ?? 0) * range.multiplier;
+        return {
+          label: k.label,
+          value:
+            k.fixed ?? (k.money ? dollars(scaled) : String(Math.round(scaled))),
+          delta: k.delta,
+          up: k.delta.startsWith("+"),
+        };
+      }),
+    [range],
+  );
+
+  /*
+   * The comp sized each bar in px against a fixed 140px scale, which overflowed
+   * the 170px chart once a longer range multiplied the series. Sizing every bar
+   * as a share of the tallest bar in the *current* range keeps the shape and
+   * can never outgrow the track.
+   */
+  const bars = useMemo(() => {
+    const scaled = REVENUE_SERIES.map((d) => Math.round(d.value * range.chartScale));
+    const max = Math.max(...scaled, 1);
+    return REVENUE_SERIES.map((d, i) => ({
+      day: d.day,
+      pct: Math.max(4, Math.round((scaled[i] / max) * 100)),
+      /* Taller days read as stronger: 35% accent at the floor, 85% at the top. */
+      alpha: Math.round((0.35 + 0.5 * (scaled[i] / max)) * 100),
+      /* The range always ends on the day in progress — drawn flat and grey. */
+      inProgress: i === REVENUE_SERIES.length - 1,
+    }));
+  }, [range]);
+
+  const mix = useMemo(() => {
+    const max = Math.max(...REVENUE_MIX.map((m) => m.value), 1);
+    return REVENUE_MIX.map((m) => ({
+      label: m.label,
+      tint: m.tint,
+      amount: dollars(m.value * range.multiplier),
+      pct: Math.round((m.value / max) * 100),
+    }));
+  }, [range]);
+
   return (
-    <section className="bk-page scr-admin-reports">
-      <h1>Reports</h1>
-      <p>Not ported yet.</p>
-    </section>
+    <div className="scr-admin-reports">
+      <div className="rep-bar">
+        {REPORT_RANGES.map((r) => (
+          <Chip
+            key={r.id}
+            label={r.label}
+            active={repRange === r.id}
+            onClick={() => set({ repRange: r.id })}
+          />
+        ))}
+        <span className="rep-bar__gap" />
+        <Button
+          variant="ghost"
+          icon="file-down"
+          iconSize={15}
+          size="sm"
+          onClick={() =>
+            showToast(`lumen-report-${range.id}.csv downloaded`, "ok")
+          }
+        >
+          Export CSV
+        </Button>
+      </div>
+
+      <div className="rep-kpis">
+        {kpis.map((k) => (
+          <div className="rep-kpi" key={k.label}>
+            <span className="rep-kpi__label">{k.label}</span>
+            <span className="rep-kpi__figure">
+              <span className="rep-kpi__value bk-mono">{k.value}</span>
+              <span className="rep-kpi__delta" data-up={k.up ? "true" : "false"}>
+                {k.delta}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="rep-grid">
+        <section className="bk-panel rep-card rep-chart">
+          <div className="rep-chart__head">
+            <h2 className="rep-card__title">Revenue by day</h2>
+            <span className="rep-chart__range">{range.range}</span>
+          </div>
+          <div className="rep-chart__plot">
+            {bars.map((b) => (
+              <div className="rep-bar-col" key={b.day}>
+                <span className="rep-bar-col__track">
+                  <span
+                    className="rep-bar-col__fill"
+                    data-progress={b.inProgress ? "true" : "false"}
+                    style={
+                      {
+                        blockSize: `${b.pct}%`,
+                        "--bar-alpha": `${b.alpha}%`,
+                      } as CSSProperties
+                    }
+                  />
+                </span>
+                <span className="rep-bar-col__day">{b.day}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="rep-col">
+          <section className="bk-panel rep-card">
+            <h2 className="rep-card__title rep-card__title--spaced">
+              Where the money comes from
+            </h2>
+            <div className="rep-mix">
+              {mix.map((m) => (
+                <div className="rep-mix__row" key={m.label}>
+                  <div className="rep-mix__head">
+                    <span
+                      className="rep-mix__dot"
+                      style={{ "--tint": m.tint } as CSSProperties}
+                    />
+                    <span className="rep-mix__label">{m.label}</span>
+                    <span className="rep-mix__amount bk-mono">{m.amount}</span>
+                  </div>
+                  <div className="rep-mix__track">
+                    <div
+                      className="rep-mix__fill"
+                      style={
+                        {
+                          inlineSize: `${m.pct}%`,
+                          "--tint": m.tint,
+                        } as CSSProperties
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="bk-panel rep-card rep-card--banded">
+            <h2 className="rep-band">Best guests this month</h2>
+            <ul className="rep-top">
+              {TOP_CLIENTS.map((c) => (
+                <li className="rep-top__row" key={c.name}>
+                  <Avatar
+                    initials={c.initials}
+                    tint={c.tint}
+                    size={30}
+                    fontSize={11}
+                    radius={15}
+                  />
+                  <span className="rep-top__id">
+                    <span className="rep-top__name">{c.name}</span>
+                    <span className="rep-top__sub">
+                      {c.visits} visits · usually {c.staff}
+                    </span>
+                  </span>
+                  <span className="rep-top__amount bk-mono">
+                    {dollars(c.spend)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
   );
 }

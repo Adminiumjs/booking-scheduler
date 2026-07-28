@@ -1,1 +1,445 @@
-/* screen-admin-pos.css — Point of sale. */
+/*
+ * Point of sale (view: 'admin-pos').
+ *
+ * The comp ran the two panes as a full-bleed flex row, each with its own
+ * scroller. Inside StudioChrome the body already scrolls and already has
+ * padding, so the panes are two panels in a grid instead and the ticket sticks
+ * under the topbar rather than owning a scroller of its own. Below 1000px the
+ * ticket drops under the catalogue — a media query, never a measured viewport
+ * (R8).
+ */
+
+.scr-admin-pos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .scr-admin-pos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------- the catalogue ---------------- */
+
+.scr-admin-pos__catalogue {
+  min-inline-size: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.scr-admin-pos__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.scr-admin-pos__hint {
+  margin-inline-start: auto;
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-pos__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.scr-admin-pos__item {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--fg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-admin-pos__itemname {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.scr-admin-pos__itemfoot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scr-admin-pos__itemprice {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.scr-admin-pos__itemmeta {
+  font-size: 11px;
+  color: var(--fg-subtle);
+}
+
+/* ---------------- the ticket ---------------- */
+
+.scr-admin-pos__ticket {
+  position: sticky;
+  /* Clears the sticky studio topbar (64px) plus the body's own inset. */
+  inset-block-start: 84px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+@media (max-width: 1000px) {
+  .scr-admin-pos__ticket {
+    position: static;
+  }
+}
+
+.scr-admin-pos__tickethead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.scr-admin-pos__tickettitle {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-pos__ref {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-pos__pay {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px 20px;
+}
+
+/* ---- who the ticket belongs to ---- */
+
+.scr-admin-pos__guest {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 13px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.scr-admin-pos__guesttext {
+  flex: 1;
+  min-inline-size: 0;
+  text-align: start;
+}
+
+.scr-admin-pos__guestname {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-pos__guestmeta {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-pos__guestchev {
+  flex-shrink: 0;
+  color: var(--fg-subtle);
+}
+
+/* ---- lines ---- */
+
+.scr-admin-pos__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 34px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.scr-admin-pos__emptyicon {
+  color: var(--fg-subtle);
+}
+
+.scr-admin-pos__emptytitle {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.scr-admin-pos__emptybody {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.scr-admin-pos__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scr-admin-pos__line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-admin-pos__linetext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-pos__linename {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-pos__lineeach {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-pos__qty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scr-admin-pos__qtybtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.scr-admin-pos__qtyval {
+  min-inline-size: 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.scr-admin-pos__lineamt {
+  inline-size: 62px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: end;
+}
+
+/* ---- tip + method ---- */
+
+.scr-admin-pos__grouplabel {
+  display: block;
+  margin-block-end: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-pos__tips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.scr-admin-pos__methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.scr-admin-pos__meth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.13s ease,
+    border-color 0.13s ease,
+    color 0.13s ease;
+}
+
+.scr-admin-pos__meth[data-on="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---- totals ---- */
+
+.scr-admin-pos__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--border);
+}
+
+.scr-admin-pos__totalrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-admin-pos__totallabel {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-pos__totalval {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scr-admin-pos__grand {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-block-start: 4px;
+}
+
+.scr-admin-pos__grandlabel {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.scr-admin-pos__grandval {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-pos__charge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-block-start: 4px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Still live when the ticket is empty — it warns rather than sitting dead. */
+.scr-admin-pos__charge[data-ready="false"] {
+  background: var(--surface-3);
+  color: var(--fg-subtle);
+}
+
+/* ---------------- the settled ticket ---------------- */
+
+.scr-admin-pos__done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.scr-admin-pos__donemark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 62px;
+  block-size: 62px;
+  border-radius: 19px;
+  background: var(--pos-soft);
+  color: var(--pos);
+}
+
+.scr-admin-pos__donetotal {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.scr-admin-pos__donesub {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.scr-admin-pos__doneacts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  inline-size: 100%;
+  margin-block-start: 6px;
+}
+
+.scr-admin-pos__doneghost {
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-pos__donenew {
+  padding: 12px;
+  border: none;
+  border-radius: 11px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}

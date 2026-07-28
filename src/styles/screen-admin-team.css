@@ -1,1 +1,243 @@
-/* screen-admin-team.css — Team. */
+/*
+ * Team (view: 'admin-team') — specialist cards over the time-off queue.
+ */
+
+.scr-admin-team__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 14px;
+  margin-block-end: 20px;
+}
+
+/* ---------------- one specialist ---------------- */
+
+.scr-admin-team__card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.scr-admin-team__who {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.scr-admin-team__id {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-team__name {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-team__role {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__state {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__state[data-busy="true"] {
+  background: var(--pos-soft);
+  color: var(--pos);
+}
+
+.scr-admin-team__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.scr-admin-team__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.scr-admin-team__statval {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-admin-team__statlabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+/* ---------------- the day bar ---------------- */
+
+.scr-admin-team__barhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-block-end: 6px;
+}
+
+.scr-admin-team__barlabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__barpct {
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__track {
+  block-size: 7px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.scr-admin-team__bar {
+  display: block;
+  block-size: 100%;
+  border-radius: 99px;
+  /* Per-specialist tint, handed in from the seeded staff record. */
+  background: var(--bar-tint, var(--accent));
+}
+
+/* ---------------- card actions ---------------- */
+
+.scr-admin-team__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.scr-admin-team__act {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-team__act--quiet {
+  color: var(--fg-muted);
+}
+
+/* ---------------- time off ---------------- */
+
+.scr-admin-team__panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.scr-admin-team__paneltitle {
+  margin: 0;
+  padding: 14px 16px;
+  border-block-end: 1px solid var(--border);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-team__req {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-team__req:last-child {
+  border-block-end: none;
+}
+
+.scr-admin-team__reqid {
+  flex: 1;
+  min-inline-size: 140px;
+}
+
+.scr-admin-team__reqwho {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-team__reqwhen {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__reqacts {
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.scr-admin-team__approve,
+.scr-admin-team__decline {
+  padding: 7px 13px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.scr-admin-team__approve {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.scr-admin-team__decline {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__verdict {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-team__verdict[data-approved="true"] {
+  background: var(--pos-soft);
+  color: var(--pos);
+}

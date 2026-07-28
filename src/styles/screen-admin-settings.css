@@ -1,1 +1,174 @@
-/* screen-admin-settings.css — Settings. */
+/*
+ * Studio settings (studio) — Admin comp template 388–423.
+ *
+ * Page padding comes from `.bk-studio__body`. Everything is scoped under
+ * `.scr-admin-settings`; `set-` is this screen's own prefix.
+ */
+
+.scr-admin-settings .set-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.scr-admin-settings .set-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------------- cards ---------------- */
+
+.scr-admin-settings .set-card {
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* A banded card puts its title in a bordered header strip instead, so it
+ * pads its own sections rather than the card. */
+.scr-admin-settings .set-card--banded {
+  padding: 0;
+  overflow: hidden;
+}
+
+.scr-admin-settings .set-card__title {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-admin-settings .set-band {
+  margin: 0;
+  padding: 14px 16px;
+  border-block-end: 1px solid var(--border);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------- studio details ---------------- */
+
+.scr-admin-settings .set-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 12px;
+}
+
+.scr-admin-settings .set-field--wide {
+  grid-column: 1 / -1;
+}
+
+/* ---------------- opening hours ---------------- */
+
+.scr-admin-settings .set-hours,
+.scr-admin-settings .set-msgs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scr-admin-settings .set-hour {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-settings .set-hour:last-child {
+  border-block-end: none;
+}
+
+.scr-admin-settings .set-hour__day {
+  inline-size: 96px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.scr-admin-settings .set-hour__time {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 12.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-admin-settings .set-hour__time[data-open="true"] {
+  color: var(--fg-muted);
+}
+
+/* ---------------- booking policy ---------------- */
+
+.scr-admin-settings .set-policy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+/* `min-inline-size: 0` because a fieldset's intrinsic minimum is
+ * `min-content`, which stops the chip rows wrapping inside a narrow column. */
+.scr-admin-settings .set-policy__group {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-inline-size: 0;
+}
+
+/* A <legend> renders inside the fieldset's border box; forcing it block and
+ * full-width makes it lay out like the label it is. */
+.scr-admin-settings .set-policy__label {
+  display: block;
+  inline-size: 100%;
+  padding: 0;
+  margin-block-end: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.scr-admin-settings .set-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* ---------------- automatic messages ---------------- */
+
+.scr-admin-settings .set-msg {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-block-end: 1px solid var(--border);
+}
+
+.scr-admin-settings .set-msg:last-child {
+  border-block-end: none;
+}
+
+.scr-admin-settings .set-msg__text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-admin-settings .set-msg__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scr-admin-settings .set-msg__sub {
+  display: block;
+  margin-block-start: 3px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+/* ---------------- save ---------------- */
+
+.scr-admin-settings .set-save {
+  align-self: start;
+}

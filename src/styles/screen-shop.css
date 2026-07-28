@@ -1,1 +1,277 @@
-/* screen-shop.css — Shop. */
+/*
+ * The shelf (view: 'shop') — product grid plus a sticky bag.
+ *
+ * The two-pane split is the comp's: one `auto-fit` track list where the
+ * product grid spans two tracks and the bag takes one. Below ~940px the track
+ * list drops to two columns and the bag falls under the grid on its own row;
+ * below ~640px everything is one column. Nothing measures the viewport in JS
+ * (R8) — the track list does all of it.
+ */
+
+.scr-shop {
+  --page-max: 1080px;
+  padding-block-start: clamp(24px, 4vw, 44px);
+}
+
+.scr-shop__head {
+  margin-block-end: 22px;
+}
+
+.scr-shop__title {
+  font-size: clamp(26px, 4vw, 38px);
+}
+
+.scr-shop__sub {
+  margin-block-start: 8px;
+  max-inline-size: 540px;
+  font-size: 15px;
+}
+
+.scr-shop__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.scr-shop__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 20px;
+  align-items: start;
+  margin-block-start: 16px;
+}
+
+.scr-shop__products {
+  grid-column: span 2;
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 16px;
+}
+
+/* ---------------- one product ---------------- */
+
+.scr-shop__card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.scr-shop__badge {
+  position: absolute;
+  inset-inline-end: 12px;
+  inset-block-start: 12px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.scr-shop__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px;
+}
+
+.scr-shop__name {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.scr-shop__blurb {
+  flex: 1;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+.scr-shop__pricerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-shop__price {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.scr-shop__size {
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-shop__qty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-shop__qtybtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 34px;
+  block-size: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.scr-shop__qtyval {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.scr-shop__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------------- the bag ---------------- */
+
+.scr-shop__cartpane {
+  position: sticky;
+  inset-block-start: 92px;
+  inline-size: 100%;
+  max-inline-size: 340px;
+}
+
+.scr-shop__cart {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.scr-shop__carthead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-shop__bagicon {
+  color: var(--accent);
+}
+
+.scr-shop__carttitle {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.scr-shop__cartcount {
+  font-size: 12.5px;
+  color: var(--fg-subtle);
+}
+
+.scr-shop__cartempty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.scr-shop__line {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.scr-shop__linetext {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.scr-shop__linename {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.scr-shop__lineqty {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+
+.scr-shop__lineamt {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scr-shop__rule {
+  block-size: 1px;
+  background: var(--border);
+}
+
+.scr-shop__subtotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.scr-shop__subtotallabel {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.scr-shop__subtotalval {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.scr-shop__checkout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border: none;
+  border-radius: 13px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.scr-shop__ship {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fg-subtle);
+  text-align: center;
+}
