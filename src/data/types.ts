@@ -440,6 +440,30 @@ export interface OwnedPackage {
   used: number;
 }
 
+/**
+ * A prepaid bundle of sessions.
+ *
+ * Contract data, not page copy — a studio owner edits their packages the same
+ * way they edit services — so it lives behind the `DataSource` seam and is
+ * defined once. Both the dashboard tile and the packages screen read it; the
+ * dashboard simply ignores the marketing fields.
+ */
+export interface PackageDeal {
+  id: string;
+  name: string;
+  /** Service id the sessions are spent on, or `null` for anything we do. */
+  svc: string | null;
+  qty: number;
+  /** What the same sessions cost bought one at a time. */
+  was: number;
+  now: number;
+  featured?: boolean;
+  icon: string;
+  /** Per-record tint — the one place a raw hex belongs. */
+  tint: string;
+  blurb: string;
+}
+
 export type Theme = "light" | "dark";
 
 export type ToastKind = "ok" | "warn";

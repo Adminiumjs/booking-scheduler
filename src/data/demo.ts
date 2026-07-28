@@ -28,6 +28,7 @@ import type {
   Review,
   Service,
   StaffMember,
+  PackageDeal,
   StudioHoursRow,
   StudioLocation,
   WaitlistEntry,
@@ -677,3 +678,82 @@ export function buildSeedAppointments(week: readonly Date[]): Appointment[] {
 
   return out;
 }
+
+
+/* ------------------------------------------------------------------ *
+ * Packages — prepaid bundles of sessions
+ *
+ * Contract data: a studio owner edits these like services. Both the account
+ * dashboard tile and the packages screen read this one array through the
+ * seam, so the two can never drift apart on price or session count.
+ * ------------------------------------------------------------------ */
+
+export const PACKAGES: readonly PackageDeal[] = [
+  {
+    id: "glow5",
+    name: "Glow Five",
+    svc: "facial",
+    qty: 5,
+    was: 550,
+    now: 475,
+    icon: "flower-2",
+    tint: "#6f8bb0",
+    blurb: "Five signature facials, spaced however your skin likes them.",
+  },
+  {
+    id: "color3",
+    name: "Color Care Trio",
+    svc: "root",
+    qty: 3,
+    was: 405,
+    now: 355,
+    icon: "paintbrush",
+    tint: "#a06f96",
+    blurb: "Three root touch-ups, booked whenever the line shows up.",
+  },
+  {
+    id: "nail6",
+    name: "Nail Club",
+    svc: "gel",
+    qty: 6,
+    was: 348,
+    now: 290,
+    icon: "sparkles",
+    tint: "#c08a6a",
+    blurb: "Six gel sets — roughly half a year of very good hands.",
+  },
+  {
+    id: "move10",
+    name: "Movement Ten",
+    svc: "reformer",
+    qty: 10,
+    was: 400,
+    now: 320,
+    featured: true,
+    icon: "activity",
+    tint: "#7d9166",
+    blurb: "Ten reformer sessions with Marco. The habit-builder.",
+  },
+  {
+    id: "aroma3",
+    name: "Slow Sundays",
+    svc: "aroma",
+    qty: 3,
+    was: 465,
+    now: 399,
+    icon: "leaf",
+    tint: "#7d9179",
+    blurb: "Three ninety-minute aromatherapy rituals, no rushing.",
+  },
+  {
+    id: "sampler",
+    name: "Studio Sampler",
+    svc: null,
+    qty: 3,
+    was: 233,
+    now: 199,
+    icon: "gift",
+    tint: "#b07d9a",
+    blurb: "One cut, one facial, one manicure — try the whole studio.",
+  },
+];

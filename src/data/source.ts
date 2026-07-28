@@ -19,6 +19,7 @@ import type {
   LoyaltyLedgerRow,
   LoyaltyReward,
   MembershipPlan,
+  PackageDeal,
   ReferralData,
   Review,
   ReviewSummary,
@@ -55,6 +56,7 @@ import {
   STAFF,
   STUDIO_HOURS,
   STUDIO_LOCATION,
+  PACKAGES,
 } from "./demo.ts";
 import { FIRST_CODE_NUMBER } from "../lib/codes.ts";
 
@@ -87,6 +89,8 @@ export interface DataSource {
   /* loyalty */
   getRewards(): readonly LoyaltyReward[];
   getPlans(): readonly MembershipPlan[];
+  /** Prepaid session bundles. One catalogue, read by the dashboard and the packages screen. */
+  getPackages(): readonly PackageDeal[];
   /** Newest first, each row carrying the balance *after* it was applied. */
   getLoyaltyLedger(): LoyaltyLedgerRow[];
   getLoyaltyStartPoints(): number;
@@ -216,6 +220,10 @@ class DemoDataSource implements DataSource {
 
   getPlans(): readonly MembershipPlan[] {
     return PLANS;
+  }
+
+  getPackages(): readonly PackageDeal[] {
+    return PACKAGES;
   }
 
   getLoyaltyLedger(): LoyaltyLedgerRow[] {
