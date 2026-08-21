@@ -46,6 +46,34 @@ Then open the URL Vite prints (default http://localhost:5173).
 | `npm run build:demo` | Build to `dist/` at base `/demo/booking-scheduler/` (Adminium demo). |
 | `npm run preview`    | Preview a production build locally.                                  |
 
+## Demo data
+
+`docker compose up` starts `booking-db`, the Postgres database behind the
+self-host stack. On first boot it applies `db/schema.sql`, installs the demo
+bookkeeping, then runs a hook that by default loads `db/seed.sql` — Lumen
+Studio's service menu, specialists and appointments — so the database has
+working data the moment it comes up.
+
+To start empty instead, with the same full schema, set `DEMO_DATA=0` in `.env`
+before the first `docker compose up`. Neither choice is permanent — four
+scripts move the demo rows in and out afterwards:
+
+| Script                | What it does                                              |
+| --------------------- | --------------------------------------------------------- |
+| `npm run demo:status` | Report what is loaded, table by table.                    |
+| `npm run demo:import` | Load `db/seed.sql`.                                       |
+| `npm run demo:wipe`   | Remove the demo rows — your own rows and the schema stay. |
+| `npm run demo:reset`  | Wipe, then import a fresh copy.                           |
+
+A wipe deletes only the rows the ledger attributes to the seed, so the schema
+stays and, with one exception, so does anything you added yourself. A demo row
+your own data depends on is kept rather than force-deleted, and reported under
+`kept`. The exception is `ON DELETE CASCADE`: time off you entered against a
+demo stylist goes when that stylist does, and those rows are counted
+separately as `cascaded`. `wipe` and `reset` ask before they act; pass
+`-- --yes` to skip the question. `DATABASE_URL` points all four at a Postgres
+somewhere else. Full reference: [db/README.md](db/README.md).
+
 ## Connecting to Adminium
 
 All scheduling data goes through a thin `DataSource` interface
