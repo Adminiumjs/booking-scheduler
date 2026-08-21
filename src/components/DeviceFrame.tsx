@@ -94,6 +94,8 @@
 
 import type { ReactNode } from "react";
 
+import { useT } from "../i18n/index.tsx";
+
 export type DevicePlatform = "ios" | "android";
 
 export interface DeviceFrameProps {
@@ -113,8 +115,11 @@ export interface DeviceFrameProps {
 const CLOCK = "9:41";
 
 export function DeviceFrame({ platform, children, className, label }: DeviceFrameProps) {
+  const t = useT();
+  /* Two whole messages, not one with the handset spliced in: "iPhone" and
+     "Android" are product names that some locales place differently. */
   const name =
-    label ?? `Companion app mockup — ${platform === "ios" ? "iPhone" : "Android"}`;
+    label ?? t(platform === "ios" ? "chrome.device.ios" : "chrome.device.android");
 
   return (
     <div

@@ -23,9 +23,12 @@ import {
   POS_TIPS,
 } from "../data/screens/admin-pos.ts";
 import { STOCK_ITEMS } from "../data/screens/admin-stock.ts";
+import { sizeLabel } from "../data/screens/shop.ts";
 import { data } from "../data/source.ts";
 import { hash } from "../lib/codes.ts";
-import { money, plural } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import type { TFunction } from "../i18n/index.tsx";
+import { durationLabel, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-pos.css";
@@ -44,13 +47,13 @@ interface PosItem {
 }
 
 /** Everything the till can ring up, in tab order. */
-function buildCatalogue(): PosItem[] {
+function buildCatalogue(t: TFunction): PosItem[] {
   const services: PosItem[] = data.getServices().map((s) => ({
     id: `s_${s.id}`,
     tab: "svc",
     name: s.name,
     price: s.price,
-    meta: `${s.dur} min`,
+    meta: durationLabel(s.dur),
     icon: s.icon,
     tint: s.tint,
   }));
@@ -60,7 +63,7 @@ function buildCatalogue(): PosItem[] {
     tab: "retail",
     name: p.name,
     price: p.price,
-    meta: p.size,
+    meta: sizeLabel(t, p.ml),
     icon: p.icon,
     tint: p.tint,
   }));
@@ -68,9 +71,9 @@ function buildCatalogue(): PosItem[] {
   const gifts: PosItem[] = data.getGiftAmounts().map((n) => ({
     id: `g_${n}`,
     tab: "gift",
-    name: `Gift card · ${money(n)}`,
+    name: t("screensA.pos.giftCard", { amount: money(n) }),
     price: n,
-    meta: "emailed",
+    meta: t("screensA.pos.emailed"),
     icon: "gift",
     tint: POS_GIFT_TINT,
   }));
@@ -79,6 +82,7 @@ function buildCatalogue(): PosItem[] {
 }
 
 export default function AdminPos() {
+  const { t, number } = useI18n();
   const posCat = useStore((s) => s.posCat);
   const posCart = useStore((s) => s.posCart);
   const posTip = useStore((s) => s.posTip);
@@ -88,7 +92,7 @@ export default function AdminPos() {
   const set = useStore((s) => s.set);
   const showToast = useStore((s) => s.showToast);
 
-  const catalogue = buildCatalogue();
+  const catalogue = buildCatalogue(t);
   const byId = new Map(catalogue.map((i) => [i.id, i]));
   const shown = catalogue.filter((i) => i.tab === posCat);
 
@@ -126,29 +130,29 @@ export default function AdminPos() {
 
   const charge = (): void => {
     if (empty) {
-      showToast("Add something to the ticket first", "warn");
+      showToast(t("screensA.pos.addFirst"), "warn");
       return;
     }
     set({ posDone: true });
-    showToast("Payment taken · demo only", "ok");
+    showToast(t("screensA.pos.paidToast"), "ok");
   };
 
   const methodLabel =
-    POS_METHODS.find((m) => m.id === posMethod)?.label ?? POS_METHODS[0].label;
+    t((POS_METHODS.find((m) => m.id === posMethod) ?? POS_METHODS[0]).labelKey);
 
   return (
     <div className="scr-admin-pos">
       <section className="bk-panel scr-admin-pos__catalogue">
         <div className="scr-admin-pos__tabs">
-          {POS_TABS.map((t) => (
+          {POS_TABS.map((tab) => (
             <Chip
-              key={t.id}
-              label={t.label}
-              active={posCat === t.id}
-              onClick={() => set({ posCat: t.id })}
+              key={tab.id}
+              label={t(tab.labelKey)}
+              active={posCat === tab.id}
+              onClick={() => set({ posCat: tab.id })}
             />
           ))}
-          <span className="scr-admin-pos__hint">Tap to add to the ticket</span>
+          <span className="scr-admin-pos__hint">{t("screensA.pos.tapHint")}</span>
         </div>
 
         <div className="scr-admin-pos__items">
@@ -180,7 +184,9 @@ export default function AdminPos() {
 
       <aside className="bk-panel scr-admin-pos__ticket">
         <div className="scr-admin-pos__tickethead">
-          <span className="scr-admin-pos__tickettitle">Ticket</span>
+          <span className="scr-admin-pos__tickettitle">
+            {t("screensA.pos.ticket")}
+          </span>
           <span className="bk-mono scr-admin-pos__ref">{ref}</span>
         </div>
 
@@ -189,7 +195,9 @@ export default function AdminPos() {
             <span className="scr-admin-pos__donemark">
               <Icon name="check" size={29} />
             </span>
-            <span className="scr-admin-pos__donetotal">Paid {money(total)}</span>
+            <span className="scr-admin-pos__donetotal">
+              {t("screensA.pos.paid", { amount: money(total) })}
+            </span>
             <span className="scr-admin-pos__donesub">
               {methodLabel} · {guest.name} · {ref}
             </span>
@@ -197,16 +205,21 @@ export default function AdminPos() {
               <button
                 type="button"
                 className="bk-gi scr-admin-pos__doneghost"
-                onClick={() => showToast(`Receipt emailed to ${guest.email}`, "ok")}
+                onClick={() =>
+                  showToast(
+                    t("screensA.pos.receiptSent", { email: guest.email }),
+                    "ok",
+                  )
+                }
               >
-                Email the receipt
+                {t("screensA.pos.emailReceipt")}
               </button>
               <button
                 type="button"
                 className="bk-btn scr-admin-pos__donenew"
                 onClick={() => set({ posCart: {}, posDone: false, posTip: 18 })}
               >
-                Start a new ticket
+                {t("screensA.pos.newTicket")}
               </button>
             </div>
           </div>
@@ -227,7 +240,10 @@ export default function AdminPos() {
               <span className="scr-admin-pos__guesttext">
                 <span className="scr-admin-pos__guestname">{guest.name}</span>
                 <span className="scr-admin-pos__guestmeta">
-                  {plural(guest.visits, "visit")} · {money(guest.spend)} lifetime
+                  {t("screensA.pos.guestMeta", {
+                    visits: t("count.visit", {}, guest.visits),
+                    spend: money(guest.spend),
+                  })}
                 </span>
               </span>
               <Icon
@@ -240,9 +256,11 @@ export default function AdminPos() {
             {empty ? (
               <div className="scr-admin-pos__empty">
                 <Icon name="receipt" size={24} className="scr-admin-pos__emptyicon" />
-                <span className="scr-admin-pos__emptytitle">Empty ticket</span>
+                <span className="scr-admin-pos__emptytitle">
+                  {t("screensA.pos.emptyTitle")}
+                </span>
                 <span className="scr-admin-pos__emptybody">
-                  Add a service or a product from the left.
+                  {t("screensA.pos.emptyBody")}
                 </span>
               </div>
             ) : (
@@ -252,7 +270,7 @@ export default function AdminPos() {
                     <span className="scr-admin-pos__linetext">
                       <span className="scr-admin-pos__linename">{l.item.name}</span>
                       <span className="scr-admin-pos__lineeach">
-                        {money(l.item.price)} each
+                        {t("screensA.pos.each", { price: money(l.item.price) })}
                       </span>
                     </span>
                     <span className="scr-admin-pos__qty">
@@ -260,16 +278,22 @@ export default function AdminPos() {
                         type="button"
                         className="bk-gi scr-admin-pos__qtybtn"
                         onClick={() => bump(l.item.id, -1)}
-                        aria-label={`Remove one ${l.item.name}`}
+                        aria-label={t("screensA.pos.removeOne", {
+                          name: l.item.name,
+                        })}
                       >
                         <Icon name="minus" size={13} />
                       </button>
-                      <span className="bk-mono scr-admin-pos__qtyval">{l.qty}</span>
+                      <span className="bk-mono scr-admin-pos__qtyval">
+                        {number(l.qty)}
+                      </span>
                       <button
                         type="button"
                         className="bk-gi scr-admin-pos__qtybtn"
                         onClick={() => bump(l.item.id, 1)}
-                        aria-label={`Add another ${l.item.name}`}
+                        aria-label={t("screensA.pos.addAnother", {
+                          name: l.item.name,
+                        })}
                       >
                         <Icon name="plus" size={13} />
                       </button>
@@ -283,12 +307,16 @@ export default function AdminPos() {
             )}
 
             <div className="scr-admin-pos__group">
-              <span className="scr-admin-pos__grouplabel">Tip</span>
+              <span className="scr-admin-pos__grouplabel">{t("screensA.pos.tip")}</span>
               <div className="scr-admin-pos__tips">
                 {POS_TIPS.map((n) => (
                   <Chip
                     key={n}
-                    label={n === 0 ? "No tip" : `${n}%`}
+                    label={
+                      n === 0
+                        ? t("screensA.common.noTip")
+                        : number(n / 100, { style: "percent" })
+                    }
                     active={posTip === n}
                     onClick={() => set({ posTip: n })}
                   />
@@ -297,7 +325,9 @@ export default function AdminPos() {
             </div>
 
             <div className="scr-admin-pos__group">
-              <span className="scr-admin-pos__grouplabel">Take payment by</span>
+              <span className="scr-admin-pos__grouplabel">
+                {t("screensA.pos.payBy")}
+              </span>
               <div className="scr-admin-pos__methods">
                 {POS_METHODS.map((m) => (
                   <button
@@ -309,7 +339,7 @@ export default function AdminPos() {
                     onClick={() => set({ posMethod: m.id })}
                   >
                     <Icon name={m.icon} size={15} />
-                    {m.label}
+                    {t(m.labelKey)}
                   </button>
                 ))}
               </div>
@@ -317,22 +347,32 @@ export default function AdminPos() {
 
             <div className="scr-admin-pos__totals">
               <div className="scr-admin-pos__totalrow">
-                <span className="scr-admin-pos__totallabel">Subtotal</span>
+                <span className="scr-admin-pos__totallabel">
+                  {t("screensA.common.subtotal")}
+                </span>
                 <span className="bk-mono scr-admin-pos__totalval">
                   {money(subtotal)}
                 </span>
               </div>
               <div className="scr-admin-pos__totalrow">
-                <span className="scr-admin-pos__totallabel">Tip · {posTip}%</span>
+                <span className="scr-admin-pos__totallabel">
+                  {t("screensA.pos.tipRow", {
+                    percent: number(posTip / 100, { style: "percent" }),
+                  })}
+                </span>
                 <span className="bk-mono scr-admin-pos__totalval">{money(tip)}</span>
               </div>
               <div className="scr-admin-pos__totalrow">
-                <span className="scr-admin-pos__totallabel">Tax</span>
+                <span className="scr-admin-pos__totallabel">
+                  {t("screensA.common.tax")}
+                </span>
                 <span className="bk-mono scr-admin-pos__totalval">{money(tax)}</span>
               </div>
 
               <div className="scr-admin-pos__grand">
-                <span className="scr-admin-pos__grandlabel">Total</span>
+                <span className="scr-admin-pos__grandlabel">
+                  {t("screensA.common.total")}
+                </span>
                 <span className="bk-mono scr-admin-pos__grandval">{money(total)}</span>
               </div>
 
@@ -343,7 +383,9 @@ export default function AdminPos() {
                 onClick={charge}
               >
                 <Icon name="credit-card" size={17} />
-                {empty ? "Add something first" : `Charge ${money(total)}`}
+                {empty
+                  ? t("screensA.pos.chargeEmpty")
+                  : t("screensA.pos.charge", { amount: money(total) })}
               </button>
             </div>
           </div>

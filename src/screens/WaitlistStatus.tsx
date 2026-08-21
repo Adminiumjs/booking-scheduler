@@ -10,12 +10,14 @@ import { useMemo } from "react";
 import { BackLink, Button, EmptyState, Icon, IconTile } from "../components/index.ts";
 import { data } from "../data/source.ts";
 import type { WaitlistEntry } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
 import { formatLongISO } from "../lib/format.ts";
 import { selectWaitlist, useStore } from "../state/store.ts";
 
 import "../styles/screen-waitliststatus.css";
 
 export default function WaitlistStatus() {
+  const t = useT();
   const waitlist = useStore((s) => s.waitlist);
   const go = useStore((s) => s.go);
   const leaveWaitlist = useStore((s) => s.leaveWaitlist);
@@ -29,20 +31,20 @@ export default function WaitlistStatus() {
 
   return (
     <main className="bk-screen bk-page bk-wstatus">
-      <BackLink onClick={() => go("home")}>Back home</BackLink>
+      <BackLink onClick={() => go("home")}>
+        {t("screensB.common.backHome")}
+      </BackLink>
 
       <div className="bk-wstatus__head">
-        <h1 className="bk-h1">Waitlist status</h1>
-        <p className="bk-sub">
-          Days you’re waiting on — we’ll text you the moment a spot opens.
-        </p>
+        <h1 className="bk-h1">{t("screensB.wstatus.title")}</h1>
+        <p className="bk-sub">{t("screensB.wstatus.sub")}</p>
       </div>
 
       {entries.length === 0 ? (
         <EmptyState
           icon="bell-off"
-          title="You’re not on any waitlists"
-          body="If a day is fully booked, join its waitlist from the date & time step and it’ll appear here."
+          title={t("screensB.wstatus.emptyTitle")}
+          body={t("screensB.wstatus.emptyBody")}
         />
       ) : (
         <div className="bk-wstatus__list">
@@ -69,6 +71,7 @@ interface WaitlistRowProps {
 }
 
 function WaitlistRow({ entry, onLeave }: WaitlistRowProps) {
+  const t = useT();
   const svc = data.getService(entry.svc);
   const staff = data.getStaffMember(entry.staff);
   const tint = svc?.tint ?? "#0d9488";
@@ -83,14 +86,20 @@ function WaitlistRow({ entry, onLeave }: WaitlistRowProps) {
         radius={12}
       />
       <div className="bk-wstatus-row__text">
-        <div className="bk-wstatus-row__svc">{svc?.name ?? "Any service"}</div>
+        <div className="bk-wstatus-row__svc">
+          {svc?.name ?? t("screensB.common.anyService")}
+        </div>
         <div className="bk-wstatus-row__when">
-          {entry.iso ? formatLongISO(entry.iso) : "Flexible"} ·{" "}
-          {staff ? staff.name : "First available"}
+          {t("screensB.wstatus.whenWho", {
+            date: entry.iso
+              ? formatLongISO(entry.iso)
+              : t("screensB.wstatus.flexible"),
+            who: staff ? staff.name : t("screensB.common.firstAvailable"),
+          })}
         </div>
         <span className="bk-wstatus-row__pill">
           <Icon name="clock" size={12} />
-          Waiting for an opening
+          {t("screensB.wstatus.waiting")}
         </span>
       </div>
       <Button
@@ -99,7 +108,7 @@ function WaitlistRow({ entry, onLeave }: WaitlistRowProps) {
         onClick={onLeave}
         className="bk-wstatus-row__leave"
       >
-        Leave
+        {t("screensB.common.leave")}
       </Button>
     </div>
   );

@@ -3,6 +3,7 @@
  * Taken slots are disabled and struck through.
  */
 
+import { useT } from "../i18n/index.tsx";
 import type { Slot } from "../lib/slots.ts";
 
 export interface SlotButtonProps {
@@ -19,6 +20,7 @@ export function SlotButton({
   onSelect,
   className,
 }: SlotButtonProps) {
+  const t = useT();
   const state = selected ? "selected" : slot.free ? "free" : "taken";
   return (
     <button
@@ -27,7 +29,9 @@ export function SlotButton({
       data-state={state}
       disabled={!slot.free}
       aria-pressed={selected}
-      aria-label={slot.free ? slot.label : `${slot.label} — unavailable`}
+      aria-label={
+        slot.free ? slot.label : t("chrome.slot.unavailable", { time: slot.label })
+      }
       onClick={() => onSelect(slot.min, slot.staff)}
     >
       {slot.label}

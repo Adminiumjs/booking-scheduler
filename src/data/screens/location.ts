@@ -5,54 +5,55 @@
  * The address, phone, email and opening hours all come from
  * `data.getLocation()` / `data.getStudioHours()`; only the how-you-get-here
  * and before-you-arrive copy lives here.
+ *
+ * All of it is keyed. The address itself is the salon's own record and stays
+ * as written; how to reach the door is guidance the product gives, so it is
+ * chrome.
  */
+
+import type { MessageKey } from "../../i18n/index.tsx";
 
 export interface LocationNote {
   icon: string;
-  text: string;
+  textKey: MessageKey;
 }
 
 export interface TravelOption {
   icon: string;
-  label: string;
-  sub: string;
+  labelKey: MessageKey;
+  subKey: MessageKey;
 }
 
 export const TRAVEL: readonly TravelOption[] = [
   {
     icon: "train-front",
-    label: "By tram",
-    sub: "Alder stop is two minutes’ walk — lines 6 and 14.",
+    labelKey: "data.location.tramLabel",
+    subKey: "data.location.tramSub",
   },
   {
     icon: "car",
-    label: "Parking",
-    sub: "Two hours free in the Alder Lane structure behind us. We validate.",
+    labelKey: "data.location.parkingLabel",
+    subKey: "data.location.parkingSub",
   },
   {
     icon: "bike",
-    label: "On two wheels",
-    sub: "Racks outside the bakery, and room inside for a folding bike.",
+    labelKey: "data.location.bikeLabel",
+    subKey: "data.location.bikeSub",
   },
 ];
 
 export const ARRIVAL_NOTES: readonly LocationNote[] = [
-  {
-    icon: "clock",
-    text: "Arrive five minutes early for a first visit — there is a short form.",
-  },
-  {
-    icon: "baby",
-    text: "Little ones are welcome; we keep a quiet corner and colouring pencils.",
-  },
-  {
-    icon: "accessibility",
-    text: "Step-free entrance at the rear — call ahead and we will meet you there.",
-  },
+  { icon: "clock", textKey: "data.location.noteEarly" },
+  { icon: "baby", textKey: "data.location.noteChildren" },
+  { icon: "accessibility", textKey: "data.location.noteStepFree" },
 ];
 
-/** How to find the street door — not part of the postal address. */
-export const DOOR_NOTE = "Street door beside the bakery · ring “Studio”";
+/**
+ * How to find the street door — not part of the postal address, and so not
+ * covered by the seed's address exemption: it is a sentence of guidance, which
+ * every reader needs in their own language.
+ */
+export const DOOR_NOTE_KEY: MessageKey = "data.location.doorNote";
 
 /** Map-tile tint (hex) — entity palette, deliberately not a token. */
 export const LOCATION_MAP_TINT = "#6f8bb0";

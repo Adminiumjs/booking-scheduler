@@ -18,6 +18,7 @@ import {
 } from "../components/index.ts";
 import { data } from "../data/source.ts";
 import type { Booking } from "../data/types.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
 import { durationLabel, formatLongISO, minutesToTime, money } from "../lib/format.ts";
 import { recurLabel } from "../lib/slots.ts";
 import { selectUpcoming, useStore } from "../state/store.ts";
@@ -25,6 +26,7 @@ import { selectUpcoming, useStore } from "../state/store.ts";
 import "../styles/screen-visits.css";
 
 export default function Visits() {
+  const t = useT();
   const bookings = useStore((s) => s.bookings);
   const go = useStore((s) => s.go);
   const startBooking = useStore((s) => s.startBooking);
@@ -39,24 +41,26 @@ export default function Visits() {
 
   return (
     <main className="bk-screen bk-page bk-visits">
-      <BackLink onClick={() => go("home")}>Back home</BackLink>
+      <BackLink onClick={() => go("home")}>
+        {t("screensB.common.backHome")}
+      </BackLink>
 
       <div className="bk-visits__head">
-        <h1 className="bk-h1">My upcoming visits</h1>
-        <p className="bk-sub">Everything you’ve got booked with us.</p>
+        <h1 className="bk-h1">{t("screensB.visits.title")}</h1>
+        <p className="bk-sub">{t("screensB.visits.sub")}</p>
       </div>
 
       {visits.length === 0 ? (
         <EmptyState
           icon="calendar"
-          title="Nothing booked yet"
-          body="When you book a visit it’ll show up here with all the details."
+          title={t("screensB.visits.emptyTitle")}
+          body={t("screensB.visits.emptyBody")}
           action={
             <Button
               onClick={() => startBooking(null)}
               className="bk-visits__empty-cta"
             >
-              Book a visit
+              {t("screensB.visits.bookVisit")}
             </Button>
           }
         />
@@ -85,6 +89,7 @@ interface VisitCardProps {
 }
 
 function VisitCard({ booking, onManage }: VisitCardProps) {
+  const { t, number } = useI18n();
   const svc = data.getService(booking.svc);
   const staff = data.getStaffMember(booking.staff);
 
@@ -99,7 +104,9 @@ function VisitCard({ booking, onManage }: VisitCardProps) {
           radius={12}
         />
         <div className="bk-visits-card__id">
-          <h2 className="bk-visits-card__svc">{svc?.name ?? "Appointment"}</h2>
+          <h2 className="bk-visits-card__svc">
+            {svc?.name ?? t("screensB.visits.appointment")}
+          </h2>
           <div className="bk-visits-card__code bk-mono">{booking.code}</div>
         </div>
         <span className="bk-visits-card__price bk-mono">{money(booking.price)}</span>
@@ -109,27 +116,42 @@ function VisitCard({ booking, onManage }: VisitCardProps) {
         <dl className="bk-visits-card__rows">
           <div className="bk-visits-card__row">
             <Icon name="calendar" size={15} className="bk-visits-card__rowicon" />
-            <dt className="bk-visits-card__rowlabel">When</dt>
+            <dt className="bk-visits-card__rowlabel">
+              {t("screensB.common.when")}
+            </dt>
             <dd className="bk-visits-card__rowval">{formatLongISO(booking.dateISO)}</dd>
           </div>
           <div className="bk-visits-card__row">
             <Icon name="clock" size={15} className="bk-visits-card__rowicon" />
-            <dt className="bk-visits-card__rowlabel">Time</dt>
+            <dt className="bk-visits-card__rowlabel">
+              {t("screensB.common.time")}
+            </dt>
             <dd className="bk-visits-card__rowval bk-visits-card__rowval--mono bk-mono">
-              {minutesToTime(booking.time)} · {durationLabel(booking.dur)}
+              {t("screensB.common.timeDur", {
+                time: minutesToTime(booking.time),
+                duration: durationLabel(booking.dur),
+              })}
             </dd>
           </div>
           <div className="bk-visits-card__row">
             <Icon name="user" size={15} className="bk-visits-card__rowicon" />
-            <dt className="bk-visits-card__rowlabel">With</dt>
-            <dd className="bk-visits-card__rowval">{staff?.name ?? "First available"}</dd>
+            <dt className="bk-visits-card__rowlabel">
+              {t("screensB.common.with")}
+            </dt>
+            <dd className="bk-visits-card__rowval">
+              {staff?.name ?? t("screensB.common.firstAvailable")}
+            </dd>
           </div>
         </dl>
 
         {booking.recurOn ? (
           <span className="bk-visits-card__recur">
             <Icon name="repeat" size={12} />
-            Repeats {recurLabel(booking.recurFreq)} · {booking.recurCount} visits
+            {t(
+              "screensB.visits.repeats",
+              { freq: recurLabel(booking.recurFreq), count: number(booking.recurCount) },
+              booking.recurCount,
+            )}
           </span>
         ) : null}
       </div>
@@ -143,7 +165,7 @@ function VisitCard({ booking, onManage }: VisitCardProps) {
           onClick={onManage}
           className="bk-visits-card__manage"
         >
-          Reschedule or cancel
+          {t("screensB.visits.manage")}
         </Button>
       </div>
     </article>

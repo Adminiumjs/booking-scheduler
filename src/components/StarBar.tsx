@@ -6,6 +6,8 @@
 
 import type { CSSProperties } from "react";
 
+import { useI18n } from "../i18n/index.tsx";
+
 export interface StarBarProps {
   /** Rating out of `max` — accepts fractions (4.75 renders 95% filled). */
   value: number;
@@ -31,12 +33,16 @@ export function StarBar({
   className,
   style,
 }: StarBarProps) {
+  const { t, number } = useI18n();
   const pct = Math.max(0, Math.min(1, value / max)) * 100;
   return (
     <span
       className={["bk-stars", className].filter(Boolean).join(" ")}
       role="img"
-      aria-label={label ?? `${value} out of ${max}`}
+      aria-label={
+        label ??
+        t("chrome.stars.rating", { value: number(value), max: number(max) })
+      }
       style={{ fontSize: `${size}px`, letterSpacing: `${gap}px`, ...style }}
     >
       <span className="bk-stars__back" aria-hidden="true">

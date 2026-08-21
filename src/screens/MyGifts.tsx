@@ -12,12 +12,14 @@ import {
   Icon,
   StatusPill,
 } from "../components/index.ts";
-import { money } from "../lib/format.ts";
+import { useT } from "../i18n/index.tsx";
+import { formatMediumISO, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-mygifts.css";
 
 export default function MyGifts() {
+  const t = useT();
   const gifts = useStore((s) => s.gifts);
   const go = useStore((s) => s.go);
   const setGift = useStore((s) => s.setGift);
@@ -29,23 +31,25 @@ export default function MyGifts() {
 
   return (
     <main className="bk-screen bk-page bk-mygifts-page">
-      <BackLink onClick={() => go("home")}>Back home</BackLink>
+      <BackLink onClick={() => go("home")}>
+        {t("screensB.common.backHome")}
+      </BackLink>
 
       <div className="bk-mygifts-head">
         <div>
-          <h1 className="bk-h1">Purchased gift cards</h1>
-          <p className="bk-sub">Gift cards you&apos;ve bought and sent.</p>
+          <h1 className="bk-h1">{t("screensB.mygifts.title")}</h1>
+          <p className="bk-sub">{t("screensB.mygifts.sub")}</p>
         </div>
         <Button icon="gift" onClick={buy}>
-          Buy a gift card
+          {t("screensB.mygifts.buy")}
         </Button>
       </div>
 
       {gifts.length === 0 ? (
         <EmptyState
           icon="gift"
-          title="No gift cards yet"
-          body="Gift a little calm — the cards you buy will live here."
+          title={t("screensB.mygifts.emptyTitle")}
+          body={t("screensB.mygifts.emptyBody")}
         />
       ) : null}
 
@@ -63,14 +67,24 @@ export default function MyGifts() {
                 <span className="bk-mono bk-mygift__code">{g.code}</span>
               </div>
               <div className="bk-mygift__meta">
-                To {g.to} · {g.date}
+                {t("screensB.mygifts.to", {
+                  name: g.to,
+                  date:
+                    g.dateISO === null
+                      ? t("chrome.gift.justNow")
+                      : formatMediumISO(g.dateISO),
+                })}
               </div>
             </div>
             <StatusPill
               tone={g.status === "sent" ? "pos" : "muted"}
               icon="check"
             >
-              {g.status === "sent" ? "Sent" : "Redeemed"}
+              {t(
+                g.status === "sent"
+                  ? "screensB.mygifts.sent"
+                  : "screensB.mygifts.redeemed",
+              )}
             </StatusPill>
           </div>
         ))}

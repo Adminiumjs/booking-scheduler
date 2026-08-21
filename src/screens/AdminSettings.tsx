@@ -17,11 +17,18 @@ import {
   studioFieldPatch,
 } from "../data/screens/admin-settings.ts";
 import type { StudioFieldKey } from "../data/screens/admin-settings.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { minutesToTime, weekdayName } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-settings.css";
 
 export default function AdminSettings() {
+  const { t, number } = useI18n();
+  /* The late fee is half the service price. Formatting it as a real percent
+   * rather than a literal "50%" is what puts the sign where the locale wants
+   * it — fr-FR writes "50 %" with a no-break space, and ar-EG uses ٪. */
+  const halfPct = number(0.5, { style: "percent", maximumFractionDigits: 0 });
   const setName = useStore((s) => s.setName);
   const setAddr = useStore((s) => s.setAddr);
   const setPhone = useStore((s) => s.setPhone);
@@ -45,12 +52,12 @@ export default function AdminSettings() {
       <div className="set-grid">
         <div className="set-col">
           <section className="bk-panel set-card">
-            <h2 className="set-card__title">Studio details</h2>
+            <h2 className="set-card__title">{t("screensA.settings.details")}</h2>
             <div className="set-fields">
               {STUDIO_FIELDS.map((f) => (
                 <Field
                   key={f.key}
-                  label={f.label}
+                  label={t(f.labelKey)}
                   className={f.wide ? "set-field--wide" : undefined}
                 >
                   {(control) => (
@@ -66,22 +73,29 @@ export default function AdminSettings() {
           </section>
 
           <section className="bk-panel set-card set-card--banded">
-            <h2 className="set-band">Opening hours</h2>
+            <h2 className="set-band">{t("screensA.settings.hours")}</h2>
             <ul className="set-hours">
               {OPENING_HOURS.map((h) => {
                 const open = !setClosed[h.day];
                 return (
                   <li className="set-hour" key={h.day}>
-                    <span className="set-hour__day">{h.label}</span>
+                    <span className="set-hour__day">{weekdayName(h.day)}</span>
                     <span
                       className="set-hour__time bk-mono"
                       data-open={open ? "true" : "false"}
                     >
-                      {open ? h.hours : "Closed"}
+                      {open
+                        ? t("screensA.settings.hoursRange", {
+                            open: minutesToTime(h.open),
+                            close: minutesToTime(h.close),
+                          })
+                        : t("screensA.settings.closed")}
                     </span>
                     <Toggle
                       checked={open}
-                      label={`${h.label} — open`}
+                      label={t("screensA.settings.openAria", {
+                        day: weekdayName(h.day),
+                      })}
                       onChange={() =>
                         set({ setClosed: { ...setClosed, [h.day]: open } })
                       }
@@ -95,17 +109,17 @@ export default function AdminSettings() {
 
         <div className="set-col">
           <section className="bk-panel set-card set-card--banded">
-            <h2 className="set-band">Booking policy</h2>
+            <h2 className="set-band">{t("screensA.settings.policy")}</h2>
             <div className="set-policy">
               <fieldset className="set-policy__group">
                 <legend className="set-policy__label">
-                  Free cancellation window
+                  {t("screensA.settings.cancelWindow")}
                 </legend>
                 <div className="set-chips">
                   {CANCEL_WINDOWS.map((o) => (
                     <Chip
                       key={o.id}
-                      label={o.label}
+                      label={t(o.labelKey, { pct: halfPct }, o.count)}
                       active={setWindow === o.id}
                       onClick={() => set({ setWindow: o.id })}
                     />
@@ -114,12 +128,14 @@ export default function AdminSettings() {
               </fieldset>
 
               <fieldset className="set-policy__group">
-                <legend className="set-policy__label">Late-cancel fee</legend>
+                <legend className="set-policy__label">
+                  {t("screensA.settings.lateFee")}
+                </legend>
                 <div className="set-chips">
                   {LATE_FEES.map((o) => (
                     <Chip
                       key={o.id}
-                      label={o.label}
+                      label={t(o.labelKey, { pct: halfPct }, o.count)}
                       active={setFee === o.id}
                       onClick={() => set({ setFee: o.id })}
                     />
@@ -130,7 +146,7 @@ export default function AdminSettings() {
           </section>
 
           <section className="bk-panel set-card set-card--banded">
-            <h2 className="set-band">Automatic messages</h2>
+            <h2 className="set-band">{t("screensA.settings.autoMessages")}</h2>
             {/* The comp made each row one big <button> with a switch-shaped
               * span inside it — a control nested in a control. The switch is
               * the control; the row is just its label. */}
@@ -140,12 +156,12 @@ export default function AdminSettings() {
                 return (
                   <li className="set-msg" key={m.key}>
                     <span className="set-msg__text">
-                      <span className="set-msg__label">{m.label}</span>
-                      <span className="set-msg__sub">{m.sub}</span>
+                      <span className="set-msg__label">{t(m.labelKey)}</span>
+                      <span className="set-msg__sub">{t(m.subKey)}</span>
                     </span>
                     <Toggle
                       checked={on}
-                      label={m.label}
+                      label={t(m.labelKey)}
                       onChange={() => set({ setMsg: { ...setMsg, [m.key]: !on } })}
                     />
                   </li>
@@ -157,9 +173,9 @@ export default function AdminSettings() {
           <Button
             icon="check"
             className="set-save"
-            onClick={() => showToast("Studio settings saved", "ok")}
+            onClick={() => showToast(t("screensA.settings.saved"), "ok")}
           >
-            Save settings
+            {t("screensA.settings.save")}
           </Button>
         </div>
       </div>

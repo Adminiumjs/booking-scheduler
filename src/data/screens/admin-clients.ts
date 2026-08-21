@@ -9,6 +9,9 @@
  * so the "usually with" column follows `demo.ts`, not the comp.
  */
 
+import type { MessageKey, TFunction } from "../../i18n/index.tsx";
+import { formatMediumISO } from "../../lib/format.ts";
+
 export type ClientSegment = "regular" | "new" | "lapsed";
 
 export interface AdminClient {
@@ -21,14 +24,25 @@ export interface AdminClient {
   visits: number;
   /** Lifetime spend, in whole dollars. */
   spend: number;
-  /** Human date of the last visit. */
-  last: string;
+  /** `YYYY-MM-DD` of the last visit, or `null` when it was today. */
+  lastISO: string | null;
   /** Specialist they usually book with. */
   staff: string;
   seg: ClientSegment;
   tags: readonly string[];
   /** Seeded team note; `store.notes[id]` overlays this once edited. */
   note: string;
+}
+
+/**
+ * The "last seen" cell.
+ *
+ * `null` means today, which the chrome already has a word for — the seed used
+ * to carry the literal `'Today'`, which is a fact about English sitting in a
+ * data file.
+ */
+export function lastVisitLabel(t: TFunction, lastISO: string | null): string {
+  return lastISO === null ? t("chrome.day.today") : formatMediumISO(lastISO);
 }
 
 export const ADMIN_CLIENTS: readonly AdminClient[] = [
@@ -40,7 +54,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#b07d9a",
     visits: 12,
     spend: 973,
-    last: "Jul 14",
+    lastISO: "2026-07-14",
     staff: "Elin",
     seg: "regular",
     tags: ["Circle member", "Prefers 2 PM"],
@@ -54,7 +68,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#9a7fb0",
     visits: 8,
     spend: 1240,
-    last: "Jul 12",
+    lastISO: "2026-07-12",
     staff: "Elin",
     seg: "regular",
     tags: ["Colour every 6 weeks"],
@@ -68,7 +82,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#6f8bb0",
     visits: 6,
     spend: 690,
-    last: "Jun 28",
+    lastISO: "2026-06-28",
     staff: "Noor",
     seg: "regular",
     tags: ["Deep-tissue only"],
@@ -82,7 +96,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#b0836a",
     visits: 14,
     spend: 812,
-    last: "Jul 8",
+    lastISO: "2026-07-08",
     staff: "Ivy",
     seg: "regular",
     tags: ["Books three ahead"],
@@ -96,7 +110,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#7d9166",
     visits: 1,
     spend: 78,
-    last: "Today",
+    lastISO: null,
     staff: "Elin",
     seg: "new",
     tags: ["First visit"],
@@ -110,7 +124,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#c08a6a",
     visits: 4,
     spend: 288,
-    last: "Jun 2",
+    lastISO: "2026-06-02",
     staff: "Ivy",
     seg: "regular",
     tags: [],
@@ -124,7 +138,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#6a86ab",
     visits: 22,
     spend: 940,
-    last: "Jul 21",
+    lastISO: "2026-07-21",
     staff: "Marco",
     seg: "regular",
     tags: ["Ten-pack holder"],
@@ -138,7 +152,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#b58a6a",
     visits: 2,
     spend: 120,
-    last: "Apr 4",
+    lastISO: "2026-04-04",
     staff: "Elin",
     seg: "lapsed",
     tags: ["Not seen in 3 months"],
@@ -152,7 +166,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#8a9a6a",
     visits: 9,
     spend: 1105,
-    last: "Jul 20",
+    lastISO: "2026-07-20",
     staff: "Noor",
     seg: "regular",
     tags: ["Barrier repair plan"],
@@ -166,7 +180,7 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
     tint: "#a8846f",
     visits: 3,
     spend: 210,
-    last: "May 30",
+    lastISO: "2026-05-30",
     staff: "Ivy",
     seg: "lapsed",
     tags: ["Gift card balance $40"],
@@ -176,20 +190,21 @@ export const ADMIN_CLIENTS: readonly AdminClient[] = [
 
 export interface ClientSegmentOption {
   id: ClientSegment | "all";
-  label: string;
+  labelKey: MessageKey;
 }
 
 export const CLIENT_SEGMENTS: readonly ClientSegmentOption[] = [
-  { id: "all", label: "Everyone" },
-  { id: "regular", label: "Regulars" },
-  { id: "new", label: "New" },
-  { id: "lapsed", label: "Lapsed" },
+  { id: "all", labelKey: "data.clients.segAll" },
+  { id: "regular", labelKey: "data.clients.segRegular" },
+  { id: "new", labelKey: "data.clients.segNew" },
+  { id: "lapsed", labelKey: "data.clients.segLapsed" },
 ];
 
 export interface ClientVisit {
   /** Service name as it should read in the record, not a service id. */
   svc: string;
-  date: string;
+  /** `YYYY-MM-DD`; render through `formatMediumISO()`. */
+  dateISO: string;
   staff: string;
   /** Charged amount, in whole dollars. */
   amount: number;
@@ -200,8 +215,8 @@ export interface ClientVisit {
  * for every client rather than per-client rows — demo fiction, kept as-is.
  */
 export const CLIENT_HISTORY: readonly ClientVisit[] = [
-  { svc: "Gloss & Tone", date: "Jul 14", staff: "Elin", amount: 60 },
-  { svc: "Signature Facial", date: "Jun 30", staff: "Noor", amount: 110 },
-  { svc: "Gel Manicure", date: "Jun 2", staff: "Ivy", amount: 58 },
-  { svc: "Balayage", date: "May 12", staff: "Elin", amount: 190 },
+  { svc: "Gloss & Tone", dateISO: "2026-07-14", staff: "Elin", amount: 60 },
+  { svc: "Signature Facial", dateISO: "2026-06-30", staff: "Noor", amount: 110 },
+  { svc: "Gel Manicure", dateISO: "2026-06-02", staff: "Ivy", amount: 58 },
+  { svc: "Balayage", dateISO: "2026-05-12", staff: "Elin", amount: 190 },
 ];

@@ -6,10 +6,12 @@
 
 import { Chip, ServiceCard } from "../components/index.ts";
 import { data } from "../data/source.ts";
+import { useT } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 import "../styles/screen-services.css";
 
 export default function Services() {
+  const t = useT();
   const sCat = useStore((s) => s.sCat);
   const setSCat = useStore((s) => s.setSCat);
   const startBooking = useStore((s) => s.startBooking);
@@ -21,16 +23,17 @@ export default function Services() {
   return (
     <main className="bk-screen bk-page bk-services">
       <div className="bk-services-head">
-        <h1 className="bk-services-title">Services</h1>
-        <p className="bk-services-sub">
-          Pick what you're in the mood for. Every booking is confirmed instantly — pick a
-          specialist and a time next.
-        </p>
+        <h1 className="bk-services-title">{t("screensB.services.title")}</h1>
+        <p className="bk-services-sub">{t("screensB.services.sub")}</p>
       </div>
 
-      <div className="bk-services-chips" role="group" aria-label="Filter by category">
+      <div
+        className="bk-services-chips"
+        role="group"
+        aria-label={t("screensB.services.filterLabel")}
+      >
         <Chip
-          label="All"
+          label={t("screensB.common.all")}
           active={sCat === "all"}
           count={counts.all}
           onClick={() => setSCat("all")}
@@ -38,7 +41,7 @@ export default function Services() {
         {categories.map((c) => (
           <Chip
             key={c.slug}
-            label={c.name}
+            label={t(c.nameKey)}
             icon={c.icon}
             iconSize={15}
             count={counts[c.slug]}

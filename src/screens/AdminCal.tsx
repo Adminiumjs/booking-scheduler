@@ -45,22 +45,19 @@ import {
   ROOMS,
 } from "../data/screens/admin-cal.ts";
 import {
-  DOW_LONG,
-  DOW_SHORT,
-  MONTH_SHORT,
+  durationLabel,
+  formatMediumISO,
+  formatWeekdayDate,
   minutesToTime,
-  plural,
+  monthName,
+  weekdayName,
 } from "../lib/format.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-cal.css";
 
 type CalMode = "day" | "week";
-
-const MODES: readonly { value: CalMode; label: string }[] = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-];
 
 /** A drag in flight: which block, and how many minutes it has moved. */
 interface Drag {
@@ -108,7 +105,16 @@ export default function AdminCal() {
   const set = useStore((s) => s.set);
   const showToast = useStore((s) => s.showToast);
 
+  const { locale, t, number } = useI18n();
   const [drag, setDrag] = useState<Drag | null>(null);
+
+  const modes: readonly { value: CalMode; label: string }[] = useMemo(
+    () => [
+      { value: "day", label: t("screensA.cal.day") },
+      { value: "week", label: t("screensA.cal.week") },
+    ],
+    [t],
+  );
 
   const staff = data.getStaff();
   const mode: CalMode = calMode === "week" ? "week" : "day";
@@ -124,11 +130,11 @@ export default function AdminCal() {
     return d;
   }, [dayOff]);
 
-  const dayLabel = `${DOW_LONG[day.getDay()]}, ${MONTH_SHORT[day.getMonth()]} ${day.getDate()}`;
+  const dayLabel = formatWeekdayDate(day);
   const headLabel = week
-    ? `Week of ${dayLabel}`
+    ? t("screensA.cal.weekOf", { date: dayLabel })
     : dayOff === 0
-      ? `Today · ${dayLabel}`
+      ? t("screensA.cal.todayDate", { date: dayLabel })
       : dayLabel;
 
   /* Read once per mount: a "now" line that moved between renders would be
@@ -146,7 +152,8 @@ export default function AdminCal() {
 
   const cols: CalCol[] = useMemo(() => {
     const durOf = (id: string) => data.getService(id)?.dur ?? 60;
-    const nameOf = (id: string) => data.getService(id)?.name ?? "Appointment";
+    const nameOf = (id: string) =>
+      data.getService(id)?.name ?? t("screensA.cal.appointment");
     const staffOf = (id: string) => staff.find((s) => s.id === id);
 
     /* Another day carries a hashed two-thirds of the book, so paging around
@@ -165,9 +172,9 @@ export default function AdminCal() {
         d.setDate(base.getDate() + i);
         return {
           id: `d${i}`,
-          name: DOW_SHORT[d.getDay()],
+          name: weekdayName(d.getDay(), "short"),
           initials: String(d.getDate()),
-          sub: MONTH_SHORT[d.getMonth()],
+          sub: monthName(d.getMonth(), "short"),
           tint: null,
           isToday: d.toDateString() === new Date().toDateString(),
           items: STUDIO_BOOK.filter(
@@ -180,7 +187,7 @@ export default function AdminCal() {
     } else if (rooms) {
       src = ROOMS.map((r) => ({
         id: r.id,
-        name: r.name,
+        name: t(r.nameKey, r.n === undefined ? undefined : { n: number(r.n) }),
         initials: r.initials,
         sub: "room",
         tint: r.tint,
@@ -253,7 +260,10 @@ export default function AdminCal() {
         }),
       };
     });
-  }, [apptState, apptTime, day, dayOff, drag, rooms, staff, staffFilter, week]);
+  /* `locale` is a dependency of every memo that formats: the formatters
+   * read it from the ambient bridge, so a switch that did not invalidate
+   * these would leave the last locale’s text cached on screen. */
+  }, [apptState, apptTime, day, dayOff, drag, rooms, staff, staffFilter, week, locale, t]);
 
   /* ---------------- moving a block ---------------- */
 
@@ -266,7 +276,10 @@ export default function AdminCal() {
     /* Clamped against the end of the day, a drag can end where it started. */
     if (to === from) return;
     set({ apptTime: { ...apptTime, [id]: to }, selAppt: id });
-    showToast(`${a.client} moved to ${minutesToTime(to)} · guest notified`, "ok");
+    showToast(
+      t("screensA.cal.moved", { client: a.client, time: minutesToTime(to) }),
+      "ok",
+    );
   }
 
   function onBlockDown(e: PointerEvent<HTMLButtonElement>, id: string): void {
@@ -316,7 +329,7 @@ export default function AdminCal() {
               type="button"
               className="bk-gi scr-admin-cal__navbtn"
               onClick={() => set({ dayOff: dayOff - 1 })}
-              aria-label={week ? "Previous week" : "Previous day"}
+              aria-label={t(week ? "screensA.cal.prevWeek" : "screensA.cal.prevDay")}
             >
               <Icon name="chevron-left" size={16} />
             </button>
@@ -325,13 +338,13 @@ export default function AdminCal() {
               className="bk-gi scr-admin-cal__today"
               onClick={() => set({ dayOff: 0 })}
             >
-              Today
+              {t("screensA.cal.today")}
             </button>
             <button
               type="button"
               className="bk-gi scr-admin-cal__navbtn"
               onClick={() => set({ dayOff: dayOff + 1 })}
-              aria-label={week ? "Next week" : "Next day"}
+              aria-label={t(week ? "screensA.cal.nextWeek" : "screensA.cal.nextDay")}
             >
               <Icon name="chevron-right" size={16} />
             </button>
@@ -340,10 +353,10 @@ export default function AdminCal() {
           <h2 className="scr-admin-cal__daylabel">{headLabel}</h2>
 
           <Segmented<CalMode>
-            options={MODES}
+            options={modes}
             value={mode}
             onChange={(v) => set({ calMode: v })}
-            label="Calendar range"
+            label={t("screensA.cal.range")}
             className="scr-admin-cal__modes"
           />
 
@@ -355,12 +368,12 @@ export default function AdminCal() {
             onClick={() => set({ rooms: !rooms })}
           >
             <Icon name="door-open" size={15} />
-            Rooms
+            {t("screensA.cal.rooms")}
           </button>
 
           <div className="scr-admin-cal__chips">
             <Chip
-              label="Everyone"
+              label={t("screensA.cal.everyone")}
               active={staffFilter === "all"}
               onClick={() => set({ staffFilter: "all" })}
               className="scr-admin-cal__chip"
@@ -479,6 +492,7 @@ export default function AdminCal() {
  * ------------------------------------------------------------------ */
 
 function SelectedPanel({ appt }: { appt: StudioAppt }) {
+  const t = useT();
   const apptState = useStore((s) => s.apptState);
   const apptTime = useStore((s) => s.apptTime);
   const set = useStore((s) => s.set);
@@ -493,21 +507,40 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
 
   function moveStatus(next: ApptStatus, kind: "ok" | "warn" = "ok"): void {
     set({ apptState: { ...apptState, [appt.id]: next } });
-    showToast(`${appt.client} · ${STATUS_META[next].label}`, kind);
+    showToast(
+      t("screensA.cal.statusToast", {
+        client: appt.client,
+        status: t(STATUS_META[next].labelKey),
+      }),
+      kind,
+    );
   }
 
   const rows = [
-    { icon: "sparkles", label: "Service", value: svc?.name ?? "—", mono: false },
+    {
+      icon: "sparkles",
+      label: t("screensA.cal.rowService"),
+      value: svc?.name ?? "—",
+      mono: false,
+    },
     {
       icon: "clock",
-      label: "Time",
-      value: `${minutesToTime(effStart(appt, apptTime))} · ${svc?.dur ?? 0} min`,
+      label: t("screensA.cal.rowTime"),
+      value: t("screensA.cal.timeValue", {
+        time: minutesToTime(effStart(appt, apptTime)),
+        duration: durationLabel(svc?.dur ?? 0),
+      }),
       mono: true,
     },
-    { icon: "user", label: "With", value: member?.name ?? "—", mono: false },
+    {
+      icon: "user",
+      label: t("screensA.cal.rowWith"),
+      value: member?.name ?? "—",
+      mono: false,
+    },
     {
       icon: "credit-card",
-      label: "Price",
+      label: t("screensA.cal.rowPrice"),
       value: dollars(svc?.price ?? 0),
       mono: true,
     },
@@ -515,21 +548,26 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
      * rename. */
     {
       icon: "hash",
-      label: "Reference",
+      label: t("screensA.cal.rowRef"),
       value: `LMN-1${appt.id.replace("A", "0")}`,
       mono: true,
     },
   ];
 
   return (
-    <aside className="scr-admin-cal__panel" aria-label="Appointment">
+    <aside
+      className="scr-admin-cal__panel"
+      aria-label={t("screensA.cal.appointment")}
+    >
       <div className="scr-admin-cal__panelhead">
-        <h2 className="scr-admin-cal__paneltitle">Appointment</h2>
+        <h2 className="scr-admin-cal__paneltitle">
+          {t("screensA.cal.appointment")}
+        </h2>
         <button
           type="button"
           className="bk-gi scr-admin-cal__close"
           onClick={() => set({ selAppt: null })}
-          aria-label="Close appointment details"
+          aria-label={t("screensA.cal.close")}
         >
           <Icon name="x" size={15} />
         </button>
@@ -548,12 +586,15 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
             <span className="scr-admin-cal__guestname">{appt.client}</span>
             <span className="scr-admin-cal__guestmeta">
               {ledger
-                ? `${plural(ledger.visits, "visit")} · ${dollars(ledger.spend)} lifetime`
-                : "New guest · first visit"}
+                ? t("screensA.cal.guestMeta", {
+                    visits: t("count.visit", {}, ledger.visits),
+                    spend: dollars(ledger.spend),
+                  })
+                : t("screensA.cal.newGuest")}
             </span>
           </span>
           <span className="scr-admin-cal__pill" data-tone={meta.tone}>
-            {meta.label}
+            {t(meta.labelKey)}
           </span>
         </div>
 
@@ -584,23 +625,23 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
             onClick={() => moveStatus(NEXT_STATUS[status])}
           >
             <Icon name={primary.icon} size={15} />
-            {primary.label}
+            {t(primary.labelKey)}
           </button>
           <button
             type="button"
             className="bk-gi scr-admin-cal__action"
-            onClick={() => showToast("Retail added to the bill", "ok")}
+            onClick={() => showToast(t("screensA.cal.addProductToast"), "ok")}
           >
             <Icon name="plus" size={15} />
-            Add a product to the bill
+            {t("screensA.cal.addProduct")}
           </button>
           <button
             type="button"
             className="bk-gi scr-admin-cal__action"
-            onClick={() => showToast("Pick a new slot in the diary", "warn")}
+            onClick={() => showToast(t("screensA.cal.rescheduleToast"), "warn")}
           >
             <Icon name="calendar-clock" size={15} />
-            Reschedule
+            {t("screensA.cal.reschedule")}
           </button>
           <button
             type="button"
@@ -608,16 +649,18 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
             data-kind="danger"
             onClick={() => {
               set({ apptState: { ...apptState, [appt.id]: "cancelled" } });
-              showToast("Cancelled · guest notified", "warn");
+              showToast(t("screensA.cal.cancelledToast"), "warn");
             }}
           >
             <Icon name="x" size={15} />
-            Cancel booking
+            {t("screensA.cal.cancelBooking")}
           </button>
         </div>
 
         <div>
-          <span className="scr-admin-cal__eyebrow">Recent visits</span>
+          <span className="scr-admin-cal__eyebrow">
+            {t("screensA.cal.recentVisits")}
+          </span>
           {/* The comp listed the same three visits under every guest, first-
               timers included. A guest with no history now says so. */}
           {ledger && ledger.visits > 1 ? (
@@ -625,7 +668,9 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
               {RECENT_VISITS.slice(0, 3).map((h) => (
                 <li key={h.svc} className="scr-admin-cal__visit">
                   <span className="scr-admin-cal__visitsvc">{h.svc}</span>
-                  <span className="scr-admin-cal__visitdate">{h.date}</span>
+                  <span className="scr-admin-cal__visitdate">
+                    {formatMediumISO(h.dateISO)}
+                  </span>
                   <span className="bk-mono scr-admin-cal__visitamt">
                     {dollars(h.amount)}
                   </span>
@@ -634,7 +679,7 @@ function SelectedPanel({ appt }: { appt: StudioAppt }) {
             </ul>
           ) : (
             <p className="scr-admin-cal__nohistory">
-              First visit — nothing on file yet.
+              {t("screensA.cal.noHistory")}
             </p>
           )}
         </div>

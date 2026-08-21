@@ -7,6 +7,7 @@
  * `setDataSource()` before the app mounts.
  */
 
+import type { MessageKey, TFunction } from "../i18n/index.tsx";
 import type {
   Appointment,
   Booking,
@@ -40,6 +41,7 @@ import {
   GIFT_THEMES,
   INTAKE_CONCERNS,
   INTAKE_PRESSURES,
+  LOYALTY_EARN_PER,
   LOYALTY_HISTORY,
   LOYALTY_HOW_IT_WORKS,
   LOYALTY_START_POINTS,
@@ -47,7 +49,7 @@ import {
   PLANS,
   POPULAR_SERVICE_IDS,
   REFERRAL,
-  REVIEW_COUNT_LABEL,
+  REVIEW_COUNT_BASE,
   REVIEWS,
   REWARDS,
   SEEDED_GIFT_CARDS,
@@ -59,6 +61,7 @@ import {
   PACKAGES,
 } from "./demo.ts";
 import { FIRST_CODE_NUMBER } from "../lib/codes.ts";
+import { formatNumber, wholeMoney } from "../lib/format.ts";
 
 /** Counts for the services-screen chip row, keyed by filter value. */
 export type CategoryCounts = Record<CategoryFilter, number>;
@@ -78,7 +81,11 @@ export interface DataSource {
   getStaffMember(id: string | null | undefined): StaffMember | undefined;
   /** Staff who perform a service, in the service's declared order. */
   getStaffForService(serviceId: string): StaffMember[];
-  /** `'Elin / Noor'` — the meta line on a full service card. */
+  /**
+   * `'Elin / Noor'` — the meta line on a full service card. Staff names are
+   * the salon's own, so this joins them rather than translating them; the
+   * separator is punctuation, not a word.
+   */
   getStaffNames(serviceId: string): string;
 
   /* social proof */
@@ -95,10 +102,14 @@ export interface DataSource {
   getLoyaltyLedger(): LoyaltyLedgerRow[];
   getLoyaltyStartPoints(): number;
   getLoyaltyThreshold(): number;
-  getLoyaltyHowItWorks(): readonly string[];
+  /** Dollars spent per point earned — fills `{amount}` in the first rule. */
+  getLoyaltyEarnPer(): number;
+  /** Message keys, in order — the screen resolves each through `t()`. */
+  getLoyaltyHowItWorks(): readonly MessageKey[];
 
   /* intake */
-  getIntakeConcerns(): readonly string[];
+  /** Message keys; also the identity `IntakeState.concerns` is keyed by. */
+  getIntakeConcerns(): readonly MessageKey[];
   getIntakePressures(): readonly IntakeOption[];
 
   /* gift cards */
@@ -204,9 +215,8 @@ class DemoDataSource implements DataSource {
     const average = REVIEWS.length ? total / REVIEWS.length : 0;
     return {
       average,
-      averageLabel: average.toFixed(1),
       count: REVIEWS.length,
-      countLabel: REVIEW_COUNT_LABEL,
+      countBase: REVIEW_COUNT_BASE,
     };
   }
 
@@ -244,11 +254,15 @@ class DemoDataSource implements DataSource {
     return LOYALTY_THRESHOLD;
   }
 
-  getLoyaltyHowItWorks(): readonly string[] {
+  getLoyaltyEarnPer(): number {
+    return LOYALTY_EARN_PER;
+  }
+
+  getLoyaltyHowItWorks(): readonly MessageKey[] {
     return LOYALTY_HOW_IT_WORKS;
   }
 
-  getIntakeConcerns(): readonly string[] {
+  getIntakeConcerns(): readonly MessageKey[] {
     return INTAKE_CONCERNS;
   }
 
@@ -340,6 +354,74 @@ export const data: DataSource = new Proxy({} as DataSource, {
     return typeof value === "function" ? value.bind(src) : value;
   },
 });
+
+/**
+ * The holes a keyed seed sentence can carry.
+ *
+ * Seed rows store ids and figures, never phrases — `{service}` is a service id
+ * so it reads as the studio wrote it, `{amount}` is whole dollars so the reader
+ * gets their own currency shape, `{count}` is a number so it selects the
+ * locale's plural. Anything absent is simply not substituted.
+ */
+export interface SeedParams {
+  /** Service id → `{service}`. */
+  svc?: string;
+  /** Staff id → `{staff}`. */
+  staff?: string;
+  /** Whole dollars → `{amount}`. */
+  amount?: number;
+  /** Salon fiction (a guest, a package) → `{name}`. Already display text. */
+  name?: string;
+  /** → `{count}`, and the plural category it selects. */
+  count?: number;
+}
+
+/**
+ * Resolve one keyed seed sentence.
+ *
+ * The dashboard's activity feed, the loyalty ledger, the rewards catalogue and
+ * the referral steps all interpolate the same handful of holes; doing it once
+ * here is what stops four screens disagreeing about whether `{amount}` is
+ * `wholeMoney` or a bare number.
+ */
+export function seedText(
+  t: TFunction,
+  key: MessageKey,
+  params: SeedParams = {},
+): string {
+  return t(
+    key,
+    {
+      ...(params.svc === undefined
+        ? null
+        : { service: data.getService(params.svc)?.name ?? params.svc }),
+      ...(params.staff === undefined
+        ? null
+        : { staff: data.getStaffMember(params.staff)?.name ?? params.staff }),
+      ...(params.amount === undefined
+        ? null
+        : { amount: wholeMoney(params.amount) }),
+      ...(params.name === undefined ? null : { name: params.name }),
+      ...(params.count === undefined
+        ? null
+        : { count: formatNumber(params.count) }),
+    },
+    params.count,
+  );
+}
+
+/**
+ * The translated display name of a category, by slug.
+ *
+ * Half a dozen screens print a service's category next to its name, and every
+ * one of them had the same `getCategory(slug)?.name ?? slug` shape before the
+ * name became a key. Keeping the lookup-plus-fallback in one place stops the
+ * next screen inventing a seventh spelling of it.
+ */
+export function categoryName(t: TFunction, slug: string): string {
+  const cat = data.getCategory(slug);
+  return cat ? t(cat.nameKey) : slug;
+}
 
 /** Re-exported for screens that render a category chip row. */
 export type { CategoryFilter, CategorySlug };

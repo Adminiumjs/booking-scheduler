@@ -10,6 +10,14 @@
  * Screens are pure views: they call actions and read fields, never touch
  * `demo.ts`, and never compute availability themselves — use the `useSlots*`
  * hooks at the bottom of this file.
+ *
+ * Copy the store owns — its toasts and its validation messages — is resolved
+ * through `i18n/ambient`, the same module-level bridge `lib/format.ts` uses.
+ * The alternative, parking a message key in state, would put a dotted key on
+ * screen for every caller that renders `errs.email` or `toast.msg` verbatim,
+ * and `showToast` is public API: screens pass text they have already
+ * translated, so the field has to hold text. Actions only ever run from a
+ * React event, long after `<App>` has published the live locale.
  */
 
 import { useMemo } from "react";
@@ -42,7 +50,9 @@ import type {
   WaitlistEntry,
 } from "../data/types.ts";
 import { bookingCode, giftCode, groupCode } from "../lib/codes.ts";
-import { isoOf, isValidEmail, isValidPhone } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { t } from "../i18n/ambient.ts";
+import { isoOf, isValidEmail, isValidPhone, money } from "../lib/format.ts";
 import type { DaySummary, Slot, SlotContext, SlotGroup } from "../lib/slots.ts";
 import {
   daySummaries,
@@ -70,13 +80,25 @@ export const SKELETON_MS = 560;
 export function personaOf(view: View): Persona {
   return view.startsWith("admin-") ? "studio" : "guest";
 }
+/** The smallest gift card the demo will sell, in whole dollars. */
+export const GIFT_MIN_AMOUNT = 10;
 /** Toast lifetime, in ms (spec §6.13). */
 export const TOAST_MS = 2600;
 /** Where a "smooth scroll to section" lands: 66px header + 16px. */
 export const SCROLL_OFFSET = 82;
 
-/** The four booking-step labels. */
-export const STEP_LABELS = ["Service", "Staff", "Date & time", "Your details"] as const;
+/**
+ * The four booking-step labels, as message keys — `<Stepper>` resolves them.
+ * Keys rather than text because this is module scope: it is evaluated once at
+ * import, before any provider exists, so text here could never follow a
+ * language switch.
+ */
+export const STEP_LABELS = [
+  "chrome.step.service",
+  "chrome.step.staff",
+  "chrome.step.datetime",
+  "chrome.step.details",
+] as const;
 
 /** Sections on the home screen the header/footer can scroll to. */
 export type HomeAnchor = "team" | "visit";
@@ -611,7 +633,10 @@ export const useStore = create<Store>()((set, get) => {
       name: "Ava Reyes",
       email: "ava@example.com",
       phone: "(415) 555-0142",
-      bday: "Mar 12",
+      /* Empty on purpose: the seeded `'Mar 12'` was an English date sitting in
+       * state, and a non-empty value hid the one hint that *is* translated —
+       * `screensA.account.phBday`, which each locale writes its own way. */
+      bday: "",
       /*
        * A real id from the shipped roster (elin/noor/ivy/marco). The comp
        * seeded "selma" because its roster had a stylist by that name; after
@@ -918,12 +943,12 @@ export const useStore = create<Store>()((set, get) => {
     confirmBooking: () => {
       const s = get();
       const errs: FormErrors = {};
-      if (!s.form.name.trim()) errs.name = "Please enter your name";
-      if (!isValidEmail(s.form.email)) errs.email = "Enter a valid email address";
-      if (!isValidPhone(s.form.phone)) errs.phone = "Enter a valid phone number";
+      if (!s.form.name.trim()) errs.name = t("chrome.err.name");
+      if (!isValidEmail(s.form.email)) errs.email = t("chrome.err.email");
+      if (!isValidPhone(s.form.phone)) errs.phone = t("chrome.err.phone");
       if (Object.keys(errs).length > 0) {
         set({ errs });
-        toast("Please fix the highlighted fields", "warn");
+        toast(t("chrome.toast.fixFields"), "warn");
         return;
       }
 
@@ -993,10 +1018,7 @@ export const useStore = create<Store>()((set, get) => {
       if (b && b.email.toLowerCase() === (s.mgEmail || "").toLowerCase().trim()) {
         set({ foundCode: code, mgErr: "" });
       } else {
-        set({
-          mgErr:
-            "We couldn’t find a booking with that code and email. Double-check and try again.",
-        });
+        set({ mgErr: t("chrome.err.notFound") });
       }
     },
 
@@ -1080,7 +1102,7 @@ export const useStore = create<Store>()((set, get) => {
         time: null,
         slotStaff: null,
       });
-      toast("Booking rescheduled", "ok");
+      toast(t("chrome.toast.rescheduled"), "ok");
       scrollTop();
     },
 
@@ -1105,7 +1127,7 @@ export const useStore = create<Store>()((set, get) => {
         bookings: { ...s.bookings, [code]: { ...b, status: "cancelled" } },
         cancelCode: null,
       });
-      toast("Appointment cancelled", "ok");
+      toast(t("chrome.toast.cancelled"), "ok");
     },
 
     /* ---------------- waitlist ---------------- */
@@ -1117,31 +1139,31 @@ export const useStore = create<Store>()((set, get) => {
       set({
         waitlist: { ...s.waitlist, [key]: { key, staff, svc: s.svcId, iso } },
       });
-      toast("You're on the waitlist — we'll text you", "ok");
+      toast(t("chrome.toast.waitlistJoined"), "ok");
     },
 
     leaveWaitlist: (key) => {
       const next = { ...get().waitlist };
       delete next[key];
       set({ waitlist: next });
-      toast("Left the waitlist", "ok");
+      toast(t("chrome.toast.waitlistLeft"), "ok");
     },
 
     /* ---------------- loyalty ---------------- */
 
     loyaltyJoin: () => {
       set({ member: true });
-      toast("Welcome to Studio Circle ✨", "ok");
+      toast(t("chrome.toast.loyaltyJoined"), "ok");
     },
 
     loyaltyRedeem: (cost, label) => {
       const s = get();
       if (s.points < cost) {
-        toast("Not enough points yet", "warn");
+        toast(t("chrome.toast.notEnoughPoints"), "warn");
         return;
       }
       set({ points: s.points - cost });
-      toast(`Redeemed: ${label}`, "ok");
+      toast(t("chrome.toast.redeemed", { label }), "ok");
     },
 
     /* ---------------- gift cards ---------------- */
@@ -1156,14 +1178,14 @@ export const useStore = create<Store>()((set, get) => {
     gcNext: () => {
       const s = get();
       if (s.gcStep === "design") {
-        if (giftAmountValue(s) < 10) {
-          set({ gcErr: "Choose an amount of at least $10." });
+        if (giftAmountValue(s) < GIFT_MIN_AMOUNT) {
+          set({ gcErr: t("chrome.err.giftMin", { amount: money(GIFT_MIN_AMOUNT) }) });
           return;
         }
         set({ gcStep: "details", gcErr: "" });
       } else if (s.gcStep === "details") {
         if (!s.gcTo.trim() || !s.gcFrom.trim() || !isValidEmail(s.gcToEmail)) {
-          set({ gcErr: "Add the recipient’s name, a valid email, and your name." });
+          set({ gcErr: t("chrome.err.giftDetails") });
           return;
         }
         set({ gcStep: "pay", gcErr: "" });
@@ -1187,7 +1209,7 @@ export const useStore = create<Store>()((set, get) => {
         s.gcCvc.replace(/\D/g, "").length < 3 ||
         !s.gcName.trim()
       ) {
-        set({ gcErr: "Enter valid demo card details to continue." });
+        set({ gcErr: t("chrome.err.giftCard") });
         return;
       }
       const amount = giftAmountValue(s);
@@ -1198,10 +1220,10 @@ export const useStore = create<Store>()((set, get) => {
       const card: GiftCard = {
         code,
         amount,
-        to: s.gcTo || "A friend",
+        to: s.gcTo || t("chrome.gift.aFriend"),
         toEmail: s.gcToEmail,
         status: "sent",
-        date: "Just now",
+        dateISO: null,
       };
       set({
         gifts: [card, ...s.gifts],
@@ -1255,7 +1277,7 @@ export const useStore = create<Store>()((set, get) => {
     grpSubmit: () => {
       const s = get();
       if (s.groupGuests.some((g) => !g.name.trim())) {
-        set({ grpErr: "Give every guest a name." });
+        set({ grpErr: t("chrome.err.guestNames") });
         return;
       }
       if (
@@ -1263,9 +1285,7 @@ export const useStore = create<Store>()((set, get) => {
         !isValidEmail(s.grpEmail) ||
         !isValidPhone(s.grpPhone)
       ) {
-        set({
-          grpErr: "Add your name, a valid email, and phone so we can confirm.",
-        });
+        set({ grpErr: t("chrome.err.groupContact") });
         return;
       }
       set({ grpCode: groupCode(s.nextNum), nextNum: s.nextNum + 1, grpErr: "" });
@@ -1300,11 +1320,11 @@ export const useStore = create<Store>()((set, get) => {
     intakeSubmit: () => {
       const s = get();
       if (!s.intake.consent) {
-        toast("Please agree to the consent notice first", "warn");
+        toast(t("chrome.toast.consentFirst"), "warn");
         return;
       }
       set({ intakeDone: true });
-      toast("Intake form saved", "ok");
+      toast(t("chrome.toast.intakeSaved"), "ok");
       scrollTop();
     },
 
@@ -1329,7 +1349,11 @@ export function giftAmountValue(
 export function selectUpcoming(state: StoreState): Booking[] {
   return Object.values(state.bookings)
     .filter((b) => b.status === "confirmed")
-    .sort((a, b) => a.dateISO.localeCompare(b.dateISO) || a.time - b.time);
+    /* `YYYY-MM-DD` sorts correctly byte-for-byte; `localeCompare` would hand
+     * a machine key to a collation table that has opinions about it. */
+    .sort((a, b) =>
+      a.dateISO < b.dateISO ? -1 : a.dateISO > b.dateISO ? 1 : a.time - b.time,
+    );
 }
 
 export function selectWaitlist(state: StoreState): WaitlistEntry[] {
@@ -1367,13 +1391,23 @@ export function useBookingSlots(): Slot[] {
   const svcId = useStore((s) => s.svcId);
   const staffSel = useStore((s) => s.staffSel);
   const date = useSelectedDate();
+  /* `locale` is in the deps because each slot carries a `label` built by
+   * `minutesToTime`, which reads the active locale — a 12-hour clock in
+   * en-US, 24-hour in de-DE. Without it the grid keeps the old language's
+   * times until some other input happens to change. */
+  const { locale } = useI18n();
   return useMemo(
     () => slotsFor(ctx, svcId, staffSel, date),
-    [ctx, svcId, staffSel, date],
+    [ctx, svcId, staffSel, date, locale],
   );
 }
 
-/** Those slots bucketed into Morning / Afternoon / Evening. */
+/**
+ * Those slots bucketed into Morning / Afternoon / Evening.
+ *
+ * No `locale` dep of its own: `useBookingSlots` already returns a fresh array
+ * on a language switch, so this memo is invalidated through `slots`.
+ */
 export function useSlotGroups(): SlotGroup[] {
   const slots = useBookingSlots();
   return useMemo(() => groupSlots(slots), [slots]);
@@ -1385,9 +1419,12 @@ export function useDaySummaries(): DaySummary[] {
   const svcId = useStore((s) => s.svcId);
   const staffSel = useStore((s) => s.staffSel);
   const week = useStore((s) => s.week);
+  /* `locale` is in the deps because `daySummaries` builds the weekday
+   * abbreviations through `lib/format`, which reads the active locale. */
+  const { locale } = useI18n();
   return useMemo(
     () => daySummaries(ctx, svcId, staffSel, week),
-    [ctx, svcId, staffSel, week],
+    [ctx, svcId, staffSel, week, locale],
   );
 }
 

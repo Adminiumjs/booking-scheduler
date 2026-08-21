@@ -6,11 +6,17 @@
  * (service + staff are frozen).
  */
 
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
 import { Icon } from "./Icon.tsx";
 
 export interface StepperProps {
-  /** e.g. `STEP_LABELS` from the store. */
-  steps: readonly string[];
+  /**
+   * `STEP_LABELS` from the store — message keys, resolved here. A caller that
+   * passes ready-made text instead still works: an unknown key resolves to
+   * itself, so already-translated labels pass straight through.
+   */
+  steps: readonly MessageKey[];
   current: number;
   /** Highest index the user may jump to. */
   maxReachable: number;
@@ -28,11 +34,12 @@ export function Stepper({
   onGo,
   className,
 }: StepperProps) {
+  const t = useT();
   const limit = Math.max(maxReachable, current);
   return (
     <nav
       className={["bk-scroll", "bk-stepper", className].filter(Boolean).join(" ")}
-      aria-label="Booking steps"
+      aria-label={t("chrome.stepper.booking")}
     >
       {steps.map((label, i) => {
         const done = i < current;
@@ -52,7 +59,7 @@ export function Stepper({
               <span className="bk-stepper__bubble">
                 {done ? <Icon name="check" size={14} /> : i + 1}
               </span>
-              <span className="bk-stepper__label">{label}</span>
+              <span className="bk-stepper__label">{t(label)}</span>
             </button>
             {i < steps.length - 1 ? <span className="bk-stepper__bar" /> : null}
           </div>
@@ -64,17 +71,18 @@ export function Stepper({
 
 export interface GiftStepperProps {
   /** e.g. `['Design', 'Message', 'Payment']`. */
-  steps: readonly string[];
+  steps: readonly MessageKey[];
   current: number;
   className?: string;
 }
 
 /** Read-only 26px-dot variant used by the gift-card flow (spec §4.8). */
 export function GiftStepper({ steps, current, className }: GiftStepperProps) {
+  const t = useT();
   return (
     <div
       className={["bk-gift-stepper", className].filter(Boolean).join(" ")}
-      aria-label="Gift card steps"
+      aria-label={t("chrome.stepper.gift")}
       role="group"
     >
       {steps.map((label, i) => (
@@ -86,7 +94,7 @@ export function GiftStepper({ steps, current, className }: GiftStepperProps) {
           >
             {i < current ? <Icon name="check" size={13} /> : i + 1}
           </span>
-          <span className="bk-gift-stepper__label">{label}</span>
+          <span className="bk-gift-stepper__label">{t(label)}</span>
           {i < steps.length - 1 ? <span className="bk-gift-stepper__bar" /> : null}
         </div>
       ))}

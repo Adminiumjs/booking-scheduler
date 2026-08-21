@@ -6,21 +6,39 @@
  * behind `DataSource` would widen that interface for one screen.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export type CampaignStatus = "live" | "scheduled" | "draft";
+
+/** A status is a machine token; this is what a reader sees instead. */
+export const CAMPAIGN_STATUS_KEY: Record<CampaignStatus, MessageKey> = {
+  live: "data.marketing.statusLive",
+  scheduled: "data.marketing.statusScheduled",
+  draft: "data.marketing.statusDraft",
+};
 
 export interface Campaign {
   id: string;
+  /** The campaign's own name — the studio wrote it, so it stays as written. */
   name: string;
   /** Lucide glyph for the tinted tile — also the channel cue. */
   icon: string;
   /** Per-record tint; the one value that legitimately bypasses the tokens. */
   tint: string;
   status: CampaignStatus;
-  /** The grey line under the name: when it went, to whom, how many. */
-  meta: string;
+  /**
+   * The grey line under the name: when it went, to whom, how many. A key plus
+   * its parts — the audience size needs the reader's digits and plural, and
+   * the date needs their calendar.
+   */
+  metaKey: MessageKey;
+  /** Fills `{date}` in the meta line, when it carries one. */
+  metaDateISO?: string;
+  /** Fills `{count}` — the audience size — and selects the plural. */
+  metaCount?: number;
   sent: number;
-  /** Open rate, pre-formatted — an em dash before anything has gone out. */
-  open: string;
+  /** Open rate as a fraction, or `null` before anything has gone out. */
+  open: number | null;
   booked: number;
 }
 
@@ -31,9 +49,11 @@ export const CAMPAIGNS: readonly Campaign[] = [
     icon: "mail",
     tint: "#b07d9a",
     status: "live",
-    meta: "Sent Jul 21 · 1,240 guests · Circle members first",
+    metaKey: "data.marketing.metaSent",
+    metaDateISO: "2026-07-21",
+    metaCount: 1240,
     sent: 1240,
-    open: "62%",
+    open: 0.62,
     booked: 38,
   },
   {
@@ -42,9 +62,9 @@ export const CAMPAIGNS: readonly Campaign[] = [
     icon: "message-square",
     tint: "#c08a6a",
     status: "live",
-    meta: "Sending daily · lapsed guests only",
+    metaKey: "data.marketing.metaDaily",
     sent: 410,
-    open: "94%",
+    open: 0.94,
     booked: 22,
   },
   {
@@ -53,9 +73,10 @@ export const CAMPAIGNS: readonly Campaign[] = [
     icon: "user-round-x",
     tint: "#6f8bb0",
     status: "draft",
-    meta: "Audience 86 guests · not scheduled",
+    metaKey: "data.marketing.metaUnscheduled",
+    metaCount: 86,
     sent: 0,
-    open: "—",
+    open: null,
     booked: 0,
   },
   {
@@ -64,22 +85,54 @@ export const CAMPAIGNS: readonly Campaign[] = [
     icon: "gift",
     tint: "#7d9166",
     status: "scheduled",
-    meta: "Goes out Nov 14 · everyone opted in",
+    metaKey: "data.marketing.metaGoesOut",
+    metaDateISO: "2026-11-14",
     sent: 0,
-    open: "—",
+    open: null,
     booked: 0,
   },
 ];
 
+/** How a KPI's bare `value` should be spelled. */
+export type KpiFormat = "count" | "percent";
+
 export interface MarketingKpi {
-  label: string;
-  value: string;
-  sub: string;
+  labelKey: MessageKey;
+  /** The figure itself — formatted at render, never pre-grouped here. */
+  value: number;
+  format: KpiFormat;
+  subKey: MessageKey;
+  /** Fills `{count}` in the caption, where it has one. */
+  subCount?: number;
+  /** Fills `{amount}` in the caption, in whole dollars. */
+  subAmount?: number;
 }
 
 export const MARKETING_KPIS: readonly MarketingKpi[] = [
-  { label: "Sent this month", value: "1,650", sub: "across 2 live campaigns" },
-  { label: "Open rate", value: "71%", sub: "email + text combined" },
-  { label: "Bookings driven", value: "60", sub: "$4,980 in revenue" },
-  { label: "Opted in", value: "86%", sub: "of active guests" },
+  {
+    labelKey: "data.marketing.kpiSent",
+    value: 1650,
+    format: "count",
+    subKey: "data.marketing.kpiSentSub",
+    subCount: 2,
+  },
+  {
+    labelKey: "data.marketing.kpiOpenRate",
+    value: 0.71,
+    format: "percent",
+    subKey: "data.marketing.kpiOpenRateSub",
+  },
+  {
+    labelKey: "data.marketing.kpiBooked",
+    value: 60,
+    format: "count",
+    subKey: "data.marketing.kpiBookedSub",
+    subAmount: 4980,
+  },
+  {
+    labelKey: "data.marketing.kpiOptedIn",
+    value: 0.86,
+    format: "percent",
+    subKey: "data.marketing.kpiOptedInSub",
+  },
 ];

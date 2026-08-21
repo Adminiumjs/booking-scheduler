@@ -6,14 +6,19 @@
  * flow already pointed at the thing the offer is about.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export interface SeasonalOffer {
   code: string;
   title: string;
   /** The headline saving, e.g. `'20% off before noon'`. */
   deal: string;
-  ends: string;
+  /** Last day the code works, `YYYY-MM-DD` — the screen spells the date. */
+  endsISO: string;
   /** Scarcity line — claimed count, remaining count, or an audience. */
-  left: string;
+  leftKey: MessageKey;
+  /** Fills `{count}` in the scarcity line, where it has one. */
+  leftCount?: number;
   icon: string;
   /** Per-record tint — the one place a raw hex is allowed. */
   tint: string;
@@ -24,7 +29,7 @@ export interface SeasonalOffer {
 /** The banner offer at the top of the screen; it has no card of its own. */
 export const FEATURED_OFFER = {
   code: "PAIRUP25",
-  ends: "Nov 2",
+  endsISO: "2026-11-02",
   title: "Two treatments, one afternoon, 25% off",
   blurb:
     "Pair any hair service with a spa treatment on the same day and take a quarter off the second one.",
@@ -35,8 +40,9 @@ export const OFFERS: readonly SeasonalOffer[] = [
     code: "MORNING20",
     title: "Midweek mornings",
     deal: "20% off before noon",
-    ends: "Ends Oct 31",
-    left: "18 claimed",
+    endsISO: "2026-10-31",
+    leftKey: "data.offer.claimed",
+    leftCount: 18,
     icon: "sunrise",
     tint: "#b58a6a",
     svc: "cut",
@@ -47,8 +53,9 @@ export const OFFERS: readonly SeasonalOffer[] = [
     code: "DUONAILS",
     title: "Bring a friend",
     deal: "Second manicure half price",
-    ends: "Ends Nov 15",
-    left: "32 claimed",
+    endsISO: "2026-11-15",
+    leftKey: "data.offer.claimed",
+    leftCount: 32,
     icon: "users",
     tint: "#c08a6a",
     svc: "gel",
@@ -59,8 +66,9 @@ export const OFFERS: readonly SeasonalOffer[] = [
     code: "SKIN3FOR2",
     title: "Autumn skin reset",
     deal: "Three facials for two",
-    ends: "Ends Dec 20",
-    left: "9 left",
+    endsISO: "2026-12-20",
+    leftKey: "data.offer.left",
+    leftCount: 9,
     icon: "flower-2",
     tint: "#6f8bb0",
     svc: "facial",
@@ -71,8 +79,8 @@ export const OFFERS: readonly SeasonalOffer[] = [
     code: "MOVEFIRST",
     title: "Movement starter",
     deal: "First reformer free",
-    ends: "Ends Sep 30",
-    left: "New guests",
+    endsISO: "2026-09-30",
+    leftKey: "data.offer.newGuests",
     icon: "activity",
     tint: "#7d9166",
     svc: "reformer",

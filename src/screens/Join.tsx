@@ -29,21 +29,24 @@ import {
   PRO_RATA_SHARE,
   type MembershipTier,
 } from "../data/screens/join.ts";
+import { useT, type MessageKey, type TFunction } from "../i18n/index.tsx";
 import { hash } from "../lib/codes.ts";
-import { money } from "../lib/format.ts";
+import { money, wholeMoney } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-join.css";
 
-const CYCLES = [
-  { value: "month", label: "Monthly" },
-  { value: "year", label: "Annual · 2 months free" },
-] as const;
+/* Module scope has no hook, so the options carry keys and the render site
+ * translates them. */
+const CYCLES: { value: "month" | "year"; labelKey: MessageKey }[] = [
+  { value: "month", labelKey: "screensB.join.cycleMonthly" },
+  { value: "year", labelKey: "screensB.join.cycleAnnual" },
+];
 
-const STARTS = [
-  { value: "today", label: "Start today" },
-  { value: "next", label: "Start on the 1st" },
-] as const;
+const STARTS: { value: "today" | "next"; labelKey: MessageKey }[] = [
+  { value: "today", labelKey: "screensB.join.startToday" },
+  { value: "next", labelKey: "screensB.join.startFirst" },
+];
 
 interface Quote {
   /** The selected tier, falling back to the featured one. */
@@ -64,6 +67,14 @@ function quote(planSel: string, planCycle: string, planStart: string): Quote {
   const prorata =
     planStart === "today" ? 0 : -Math.round(base * PRO_RATA_SHARE);
   return { tier, annual, base, prorata, due: base + prorata };
+}
+
+/** Both money rows read the same way; the sentence lives in one message. */
+function billingLine(t: TFunction, annual: boolean, amount: string): string {
+  return t(
+    annual ? "screensB.join.billingAnnually" : "screensB.join.billingMonthly",
+    { amount },
+  );
 }
 
 export default function Join() {
@@ -90,24 +101,23 @@ export default function Join() {
  * ------------------------------------------------------------------ */
 
 function PickMode() {
+  const t = useT();
   const planSel = useStore((s) => s.planSel);
   const planCycle = useStore((s) => s.planCycle);
   const set = useStore((s) => s.set);
 
   const annual = planCycle === "year";
+  const cycles = CYCLES.map((c) => ({ value: c.value, label: t(c.labelKey) }));
 
   return (
     <>
       <header className="scr-join__intro">
-        <h1 className="scr-join__h1">Join the Circle</h1>
-        <p className="scr-join__sub">
-          A monthly treatment, ten per cent off everything else, and first
-          refusal on cancellations. Cancel whenever — no notice period.
-        </p>
+        <h1 className="scr-join__h1">{t("screensB.join.title")}</h1>
+        <p className="scr-join__sub">{t("screensB.join.sub")}</p>
         <Segmented
           className="scr-join__cycle"
-          label="Billing cycle"
-          options={CYCLES}
+          label={t("screensB.join.billingCycle")}
+          options={cycles}
           value={annual ? "year" : "month"}
           onChange={(v) => set({ planCycle: v })}
         />
@@ -128,15 +138,19 @@ function PickMode() {
               }
             >
               {p.featured ? (
-                <span className="scr-join-plan__badge">Most joined</span>
+                <span className="scr-join-plan__badge">
+                  {t("screensB.join.mostJoined")}
+                </span>
               ) : null}
               <span className="scr-join-plan__name">{p.name}</span>
               <span className="scr-join-plan__pricerow">
+                {/* The comp wrote `$` by hand, which puts the symbol on the
+                    wrong side in fr-FR and uses the wrong digits in ar-EG. */}
                 <span className="bk-mono scr-join-plan__price">
-                  ${annual ? p.y : p.m}
+                  {wholeMoney(annual ? p.y : p.m)}
                 </span>
                 <span className="scr-join-plan__cadence">
-                  {annual ? "/year" : "/month"}
+                  {t(annual ? "screensB.join.perYear" : "screensB.join.perMonth")}
                 </span>
               </span>
               <span className="scr-join-plan__blurb">{p.blurb}</span>
@@ -153,7 +167,9 @@ function PickMode() {
                 ))}
               </span>
               <span className="scr-join-plan__cta">
-                {sel ? "Selected · continue" : `Choose ${p.name}`}
+                {sel
+                  ? t("screensB.join.selected")
+                  : t("screensB.join.choose", { name: p.name })}
               </span>
             </button>
           );
@@ -162,10 +178,7 @@ function PickMode() {
 
       <p className="scr-join__note">
         <Icon name="info" size={17} className="scr-join__noteicon" />
-        <span>
-          Membership pays for itself in one visit a month. Unused monthly
-          treatments roll over once. Demo signup — no card is charged.
-        </span>
+        <span>{t("screensB.join.note")}</span>
       </p>
     </>
   );
@@ -176,6 +189,7 @@ function PickMode() {
  * ------------------------------------------------------------------ */
 
 function PayMode() {
+  const t = useT();
   const planSel = useStore((s) => s.planSel);
   const planCycle = useStore((s) => s.planCycle);
   const planStart = useStore((s) => s.planStart);
@@ -193,59 +207,78 @@ function PayMode() {
 
   const totals = [
     {
-      label: `${tier.name}${annual ? " · 12 months" : " · first month"}`,
+      label: t(
+        annual ? "screensB.join.lineAnnual" : "screensB.join.lineFirstMonth",
+        { name: tier.name },
+      ),
       value: money(base),
       accent: false,
     },
     {
-      label: planStart === "today" ? "Starts today" : "Pro-rata credit",
+      label: t(
+        planStart === "today"
+          ? "screensB.join.startsToday"
+          : "screensB.join.prorata",
+      ),
       value: prorata ? `−${money(-prorata)}` : "—",
       accent: false,
     },
-    { label: "Joining fee", value: "Waived", accent: true },
+    {
+      label: t("screensB.join.joiningFee"),
+      value: t("screensB.join.waived"),
+      accent: true,
+    },
   ];
 
   const confirm = (): void => {
     if (!planEmail.trim()) {
-      showToast("Add an email so we can send the card", "warn");
+      showToast(t("screensB.join.errEmail"), "warn");
       return;
     }
     set({ planStep: "done", member: true });
-    showToast("Welcome to the Circle");
+    showToast(t("screensB.join.welcome"));
   };
 
   return (
     <>
-      <BackLink onClick={() => set({ planStep: "pick" })}>Other plans</BackLink>
-      <h1 className="scr-join__payh1">Confirm your membership</h1>
+      <BackLink onClick={() => set({ planStep: "pick" })}>
+        {t("screensB.join.otherPlans")}
+      </BackLink>
+      <h1 className="scr-join__payh1">{t("screensB.join.payTitle")}</h1>
 
       <div className="scr-join__pay">
         <div className="scr-join__details">
-          <h2 className="scr-join__panellabel">Your details</h2>
+          <h2 className="scr-join__panellabel">
+            {t("screensB.join.yourDetails")}
+          </h2>
           <div className="scr-join__fields">
-            <Field label="Full name" className="scr-join__field--wide">
+            <Field
+              label={t("screensB.common.fullName")}
+              className="scr-join__field--wide"
+            >
               {(control) => (
                 <TextInput
                   {...control}
                   value={planName}
+                  /* The demo client's own name — fiction, not chrome. */
                   placeholder="Ava Reyes"
                   onChange={(v) => set({ planName: v })}
                 />
               )}
             </Field>
-            <Field label="Email">
+            <Field label={t("screensB.common.email")}>
               {(control) => (
                 <TextInput
                   {...control}
                   type="email"
                   inputMode="email"
                   value={planEmail}
-                  placeholder="you@email.com"
+                  placeholder={t("screensB.common.phEmail")}
                   onChange={(v) => set({ planEmail: v })}
                 />
               )}
             </Field>
-            <Field label="Mobile">
+            <Field label={t("screensB.join.mobile")}>
               {(control) => (
                 <TextInput
                   {...control}
@@ -259,12 +292,12 @@ function PayMode() {
             </Field>
           </div>
 
-          <h2 className="scr-join__panellabel">Starts</h2>
+          <h2 className="scr-join__panellabel">{t("screensB.join.starts")}</h2>
           <div className="scr-join__starts">
             {STARTS.map((s) => (
               <Chip
                 key={s.value}
-                label={s.label}
+                label={t(s.labelKey)}
                 active={planStart === s.value}
                 onClick={() => set({ planStart: s.value })}
               />
@@ -274,32 +307,37 @@ function PayMode() {
 
         <div className="scr-join__summary">
           <h2 className="scr-join__summaryname">
-            {tier.name} · {annual ? "annual" : "monthly"}
+            {t(
+              annual
+                ? "screensB.join.summaryAnnual"
+                : "screensB.join.summaryMonthly",
+              { name: tier.name },
+            )}
           </h2>
           <dl className="scr-join__totals">
-            {totals.map((t) => (
-              <div className="scr-join__total" key={t.label}>
-                <dt className="scr-join__totallabel">{t.label}</dt>
+            {totals.map((row) => (
+              <div className="scr-join__total" key={row.label}>
+                <dt className="scr-join__totallabel">{row.label}</dt>
                 <dd
                   className="bk-mono scr-join__totalvalue"
-                  data-accent={t.accent ? "true" : "false"}
+                  data-accent={row.accent ? "true" : "false"}
                 >
-                  {t.value}
+                  {row.value}
                 </dd>
               </div>
             ))}
           </dl>
           <div className="scr-join__rule" />
           <div className="scr-join__due">
-            <span className="scr-join__duelabel">Due today</span>
+            <span className="scr-join__duelabel">
+              {t("screensB.join.dueToday")}
+            </span>
             <span className="bk-mono scr-join__duevalue">{money(due)}</span>
           </div>
           <Button icon="gem" iconSize={17} size="lg" full onClick={confirm}>
-            Start my membership
+            {t("screensB.join.startMembership")}
           </Button>
-          <p className="scr-join__fine">
-            Cancel any time from your account. Demo only — nothing is charged.
-          </p>
+          <p className="scr-join__fine">{t("screensB.join.fine")}</p>
         </div>
       </div>
     </>
@@ -311,6 +349,7 @@ function PayMode() {
  * ------------------------------------------------------------------ */
 
 function DoneMode() {
+  const t = useT();
   const planSel = useStore((s) => s.planSel);
   const planCycle = useStore((s) => s.planCycle);
   const planStart = useStore((s) => s.planStart);
@@ -324,13 +363,13 @@ function DoneMode() {
   }`;
 
   const rows = [
-    { label: "Plan", value: tier.name, mono: false },
+    { label: t("screensB.join.rowPlan"), value: tier.name, mono: false },
     {
-      label: "Billing",
-      value: `${annual ? "Annually" : "Monthly"} · ${money(base)}`,
+      label: t("screensB.join.rowBilling"),
+      value: billingLine(t, annual, money(base)),
       mono: true,
     },
-    { label: "Member number", value: memberNo, mono: true },
+    { label: t("screensB.join.rowMemberNo"), value: memberNo, mono: true },
   ];
 
   return (
@@ -338,11 +377,8 @@ function DoneMode() {
       <span className="scr-join__gem">
         <Icon name="gem" size={32} />
       </span>
-      <h1 className="scr-join__doneh1">You're in the Circle</h1>
-      <p className="scr-join__donesub">
-        Your first treatment credit is already sitting in your account, and
-        every booking from now takes ten per cent off automatically.
-      </p>
+      <h1 className="scr-join__doneh1">{t("screensB.join.doneTitle")}</h1>
+      <p className="scr-join__donesub">{t("screensB.join.doneSub")}</p>
 
       <dl className="scr-join__donecard">
         {rows.map((r) => (
@@ -362,9 +398,11 @@ function DoneMode() {
       </dl>
 
       <div className="scr-join__doneactions">
-        <Button onClick={() => go("rewards")}>See your rewards</Button>
+        <Button onClick={() => go("rewards")}>
+          {t("screensB.join.seeRewards")}
+        </Button>
         <Button variant="ghost" onClick={() => startBooking(null)}>
-          Use my credit
+          {t("screensB.join.useCredit")}
         </Button>
       </div>
     </div>

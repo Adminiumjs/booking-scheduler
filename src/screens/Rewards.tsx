@@ -13,7 +13,7 @@
 import { useMemo } from "react";
 
 import { Button, Icon, PlaceholderTile } from "../components/index.ts";
-import { data } from "../data/source.ts";
+import { seedText } from "../data/source.ts";
 import {
   EARNED_THIS_YEAR,
   NEXT_REWARD_COST,
@@ -22,24 +22,17 @@ import {
   REWARD_RULES,
   type RewardCard,
 } from "../data/screens/rewards.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { formatMediumISO, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-rewards.css";
 
-/** Copy in the seed names specialists as `{staff}`; the roster fills it in. */
-function fillStaff(text: string, staffId?: string): string {
-  if (!staffId) return text;
-  const name = data.getStaffMember(staffId)?.name ?? "your specialist";
-  return text.replace("{staff}", name);
-}
-
-function redeemLabel(reward: RewardCard, balance: number, done: boolean): string {
-  if (done) return "Redeemed · in your account";
-  if (balance >= reward.cost) return "Redeem";
-  return `${reward.cost - balance} points to go`;
-}
+/** What the milestone reward is worth — the figure the progress copy quotes. */
+const NEXT_REWARD_VALUE = 25;
 
 export default function Rewards() {
+  const { t, number } = useI18n();
   const rwPoints = useStore((s) => s.rwPoints);
   const rwRedeemed = useStore((s) => s.rwRedeemed);
   const member = useStore((s) => s.member);
@@ -51,23 +44,47 @@ export default function Rewards() {
     [rwRedeemed],
   );
   const balance = Math.max(0, rwPoints - spent);
+  const rewardValue = money(NEXT_REWARD_VALUE);
 
   const pct = Math.min(100, Math.round((balance / NEXT_REWARD_COST) * 100));
   const toGo =
     balance >= NEXT_REWARD_COST
-      ? "You can redeem the $25 reward now."
-      : `${NEXT_REWARD_COST - balance} points to your next $25 reward`;
+      ? t("screensB.rewards.canRedeem", { amount: rewardValue })
+      : t(
+          "screensB.rewards.toGo",
+          { amount: rewardValue, count: number(NEXT_REWARD_COST - balance) },
+          NEXT_REWARD_COST - balance,
+        );
+
+  const redeemLabel = (reward: RewardCard, done: boolean): string => {
+    if (done) return t("screensB.rewards.redeemed");
+    if (balance >= reward.cost) return t("screensB.rewards.redeem");
+    return t(
+      "screensB.rewards.pointsToGo",
+      { count: number(reward.cost - balance) },
+      reward.cost - balance,
+    );
+  };
 
   const facts = [
-    { label: "Earned this year", value: EARNED_THIS_YEAR },
-    { label: "Redeemed", value: String(spent) },
-    { label: "Tier", value: member ? "Circle" : "Guest" },
+    { label: t("screensB.rewards.factEarned"), value: number(EARNED_THIS_YEAR) },
+    { label: t("screensB.rewards.factRedeemed"), value: number(spent) },
+    {
+      label: t("screensB.rewards.factTier"),
+      value: t(
+        member ? "screensB.rewards.tierCircle" : "screensB.rewards.tierGuest",
+      ),
+    },
   ];
 
   const redeem = (reward: RewardCard): void => {
     if (rwRedeemed[reward.id] !== undefined || balance < reward.cost) return;
     set({ rwRedeemed: { ...rwRedeemed, [reward.id]: reward.cost } });
-    showToast(`${reward.name} · added to your account`);
+    showToast(
+      t("screensB.rewards.toastRedeemed", {
+        name: seedText(t, reward.nameKey, { amount: reward.amount }),
+      }),
+    );
   };
 
   return (
@@ -75,14 +92,20 @@ export default function Rewards() {
       {/* The comp opens straight on the balance panel with no page heading at
           all. The design is right — a second title above the hero would be
           noise — so the heading exists for screen readers only. */}
-      <h1 className="bk-sr-only">Loyalty rewards</h1>
+      <h1 className="bk-sr-only">{t("screensB.rewards.srTitle")}</h1>
 
       <div className="scr-rewards__hero">
         <div className="scr-rewards__balance">
-          <span className="scr-rewards__herolabel">Your balance</span>
+          <span className="scr-rewards__herolabel">
+            {t("screensB.rewards.yourBalance")}
+          </span>
           <div className="scr-rewards__figure">
-            <span className="bk-mono scr-rewards__points">{balance}</span>
-            <span className="scr-rewards__unit">points</span>
+            <span className="bk-mono scr-rewards__points">
+              {number(balance)}
+            </span>
+            <span className="scr-rewards__unit">
+              {t("screensB.common.pointsUnit", {}, balance)}
+            </span>
           </div>
           <div
             className="scr-rewards__track"
@@ -90,7 +113,9 @@ export default function Rewards() {
             aria-valuemin={0}
             aria-valuemax={NEXT_REWARD_COST}
             aria-valuenow={Math.min(balance, NEXT_REWARD_COST)}
-            aria-label="Progress to your next $25 reward"
+            aria-label={t("screensB.rewards.progressLabel", {
+              amount: rewardValue,
+            })}
           >
             <div
               className="scr-rewards__fill"
@@ -110,7 +135,7 @@ export default function Rewards() {
         </dl>
       </div>
 
-      <h2 className="scr-rewards__label">Spend your points</h2>
+      <h2 className="scr-rewards__label">{t("screensB.rewards.spendTitle")}</h2>
       <div className="scr-rewards__grid">
         {REWARD_CARDS.map((r) => {
           const done = rwRedeemed[r.id] !== undefined;
@@ -128,11 +153,19 @@ export default function Rewards() {
                 minHeight={96}
               />
               <div className="scr-rw-card__body">
-                <h3 className="scr-rw-card__name">{r.name}</h3>
-                <p className="scr-rw-card__blurb">{fillStaff(r.blurb, r.staff)}</p>
+                <h3 className="scr-rw-card__name">
+                  {seedText(t, r.nameKey, { amount: r.amount })}
+                </h3>
+                <p className="scr-rw-card__blurb">
+                  {seedText(t, r.blurbKey, { staff: r.staff })}
+                </p>
                 <div className="scr-rw-card__meta">
-                  <span className="bk-mono scr-rw-card__cost">{r.cost} pts</span>
-                  <span className="scr-rw-card__note">{r.note}</span>
+                  <span className="bk-mono scr-rw-card__cost">
+                    {t("screensB.common.ptsCount", { count: number(r.cost) }, r.cost)}
+                  </span>
+                  <span className="scr-rw-card__note">
+                    {seedText(t, r.noteKey, { amount: r.worth })}
+                  </span>
                 </div>
                 {/*
                  * The comp left the locked button focusable with a no-op
@@ -146,7 +179,7 @@ export default function Rewards() {
                   className="scr-rw-card__btn"
                   onClick={() => redeem(r)}
                 >
-                  {redeemLabel(r, balance, done)}
+                  {redeemLabel(r, done)}
                 </Button>
               </div>
             </article>
@@ -156,26 +189,39 @@ export default function Rewards() {
 
       <div className="scr-rewards__foot">
         <div className="scr-rewards__ledger">
-          <h2 className="scr-rewards__panelhead">Recent points</h2>
+          <h2 className="scr-rewards__panelhead">
+            {t("screensB.rewards.recentPoints")}
+          </h2>
           {REWARD_LEDGER.map((l) => (
-            <div className="scr-rewards__row" key={`${l.label}${l.date}`}>
+            <div className="scr-rewards__row" key={`${l.labelKey}${l.dateISO}`}>
               <span className="scr-rewards__rowid">
                 <span className="scr-rewards__rowlabel">
-                  {fillStaff(l.label, l.staff)}
+                  {seedText(t, l.labelKey, {
+                    svc: l.svc,
+                    staff: l.staff,
+                    name: l.name,
+                  })}
                 </span>
-                <span className="scr-rewards__rowdate">{l.date}</span>
+                <span className="scr-rewards__rowdate">
+                  {formatMediumISO(l.dateISO)}
+                </span>
               </span>
-              <span className="bk-mono scr-rewards__rowamount">+{l.amount}</span>
+              {/* The sign comes from Intl, not a hand-typed '+'. */}
+              <span className="bk-mono scr-rewards__rowamount">
+                {number(l.amount, { signDisplay: "always" })}
+              </span>
             </div>
           ))}
         </div>
 
         <div className="scr-rewards__rules">
-          <h2 className="scr-rewards__ruleshead">How points work</h2>
+          <h2 className="scr-rewards__ruleshead">
+            {t("screensB.rewards.howPointsWork")}
+          </h2>
           {REWARD_RULES.map((r) => (
-            <p className="scr-rewards__rule" key={r.text}>
+            <p className="scr-rewards__rule" key={r.textKey}>
               <Icon name={r.icon} size={15} className="scr-rewards__ruleicon" />
-              {r.text}
+              {t(r.textKey)}
             </p>
           ))}
         </div>

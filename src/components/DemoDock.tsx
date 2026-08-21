@@ -15,14 +15,17 @@ import { screensFor } from "./chrome.ts";
 import { Icon } from "./Icon.tsx";
 import type { IconName } from "./Icon.tsx";
 import type { Persona } from "../data/types.ts";
+import { LOCALES, LOCALE_TAGS, useI18n } from "../i18n/index.tsx";
+import type { LocaleTag, MessageKey } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 
-const PERSONAS: { id: Persona; label: string; icon: IconName }[] = [
-  { id: "guest", label: "Guest", icon: "user-round" },
-  { id: "studio", label: "Studio", icon: "scissors" },
+const PERSONAS: { id: Persona; labelKey: MessageKey; icon: IconName }[] = [
+  { id: "guest", labelKey: "chrome.dock.guest", icon: "user-round" },
+  { id: "studio", labelKey: "chrome.dock.studio", icon: "scissors" },
 ];
 
 export default function DemoDock() {
+  const { locale, setLocale, t } = useI18n();
   const view = useStore((s) => s.view);
   const persona = useStore((s) => s.persona);
   const theme = useStore((s) => s.theme);
@@ -36,10 +39,10 @@ export default function DemoDock() {
         <div className="bk-dock__top">
           <span className="bk-dock__label">
             <Icon name="app-window" size={14} />
-            Demo
+            {t("chrome.dock.label")}
           </span>
 
-          <div className="bk-dock__seg" role="group" aria-label="Persona">
+          <div className="bk-dock__seg" role="group" aria-label={t("chrome.dock.persona")}>
             {PERSONAS.map((p) => (
               <button
                 key={p.id}
@@ -49,23 +52,39 @@ export default function DemoDock() {
                 aria-pressed={p.id === persona}
               >
                 <Icon name={p.icon} size={14} />
-                {p.label}
+                {t(p.labelKey)}
               </button>
             ))}
           </div>
 
           <span className="bk-dock__hint">
             {persona === "guest"
-              ? "What a client sees"
-              : "What the people running the salon see"}
+              ? t("chrome.dock.hintGuest")
+              : t("chrome.dock.hintStudio")}
           </span>
+
+          {/* Languages are listed by endonym — a reader looking for their own
+              language cannot be expected to recognise its English name. */}
+          <select
+            className="bk-dock__lang"
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as LocaleTag)}
+            aria-label={t("dock.language")}
+            title={t("dock.language")}
+          >
+            {LOCALE_TAGS.map((tag) => (
+              <option key={tag} value={tag}>
+                {LOCALES[tag].native}
+              </option>
+            ))}
+          </select>
 
           <button
             type="button"
             className="bk-gi bk-dock__theme"
             onClick={toggleTheme}
-            aria-label="Toggle theme"
-            title="Toggle theme"
+            aria-label={t("chrome.theme.toggle")}
+            title={t("chrome.theme.toggle")}
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
           </button>
@@ -82,7 +101,7 @@ export default function DemoDock() {
                 aria-pressed={view === s.view}
               >
                 <Icon name={s.icon as IconName} size={14} />
-                {s.label}
+                {t(s.labelKey)}
               </button>
             ))}
           </div>

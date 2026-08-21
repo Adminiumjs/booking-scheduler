@@ -31,11 +31,14 @@ import {
   PERKS,
   ROLES,
 } from "../data/screens/careers.ts";
+import { useT } from "../i18n/index.tsx";
+import { formatNumber, wholeMoney } from "../lib/format.ts";
 import { SCROLL_OFFSET, useStore } from "../state/store.ts";
 
 import "../styles/screen-careers.css";
 
 export default function Careers() {
+  const t = useT();
   const carRole = useStore((s) => s.carRole);
   const carName = useStore((s) => s.carName);
   const carEmail = useStore((s) => s.carEmail);
@@ -60,17 +63,17 @@ export default function Careers() {
 
   const apply = (id: string): void => {
     set({ carRole: id });
-    showToast("The form below is ready for you", "ok");
+    showToast(t("screensA.careers.applyReady"), "ok");
     scrollToForm();
   };
 
   const submit = (): void => {
     if (!carName.trim() || !carEmail.trim()) {
-      showToast("Name and email, then you’re done", "warn");
+      showToast(t("screensA.careers.needNameEmail"), "warn");
       return;
     }
     set({ carSent: true });
-    showToast("Application sent · demo only", "ok");
+    showToast(t("screensA.careers.sent"), "ok");
   };
 
   return (
@@ -90,29 +93,32 @@ export default function Careers() {
       <div className="scr-careers__intro">
         <span className="scr-careers__count">
           <Icon name="briefcase" size={14} />
-          {ROLES.length} open roles
+          {t("screensA.careers.openRoles", {}, ROLES.length)}
         </span>
-        <h1 className="scr-careers__h1">Work at Lumen Studio</h1>
-        <p className="scr-careers__lede">
-          We’re a small team that runs on time, splits tips evenly, and closes on
-          Sundays for real. If you’d rather do fewer clients properly than more of
-          them badly, we’ll get on.
-        </p>
+        <h1 className="scr-careers__h1">{t("screensA.careers.title")}</h1>
+        <p className="scr-careers__lede">{t("screensA.careers.lede")}</p>
       </div>
 
       <div className="scr-careers__perks">
         {PERKS.map((p) => (
-          <div key={p.label} className="scr-careers__perk">
+          <div key={p.labelKey} className="scr-careers__perk">
             <span className="scr-careers__perk-icon">
               <Icon name={p.icon} size={17} />
             </span>
-            <span className="scr-careers__perk-label">{p.label}</span>
-            <span className="scr-careers__perk-sub">{p.sub}</span>
+            <span className="scr-careers__perk-label">{t(p.labelKey)}</span>
+            <span className="scr-careers__perk-sub">
+              {t(
+                p.subKey,
+                p.amount === undefined ? undefined : { amount: wholeMoney(p.amount) },
+              )}
+            </span>
           </div>
         ))}
       </div>
 
-      <Eyebrow className="scr-careers__eyebrow">Open roles</Eyebrow>
+      <Eyebrow className="scr-careers__eyebrow">
+        {t("screensA.careers.rolesEyebrow")}
+      </Eyebrow>
 
       <div className="scr-careers__roles">
         {ROLES.map((r) => {
@@ -130,10 +136,31 @@ export default function Careers() {
                 <span className="scr-careers__role-id">
                   <span className="scr-careers__role-title">{r.title}</span>
                   <span className="scr-careers__role-tags">
-                    <span className="scr-careers__tag">{r.type}</span>
-                    <span className="scr-careers__tag">{r.team}</span>
+                    <span className="scr-careers__tag">
+                      {t(
+                        r.typeKey,
+                        r.typeCount === undefined
+                          ? undefined
+                          : { count: formatNumber(r.typeCount) },
+                        r.typeCount,
+                      )}
+                    </span>
+                    <span className="scr-careers__tag">{t(r.teamKey)}</span>
                     <span className="scr-careers__tag scr-careers__tag--pay bk-mono">
-                      {r.pay}
+                      {t(r.payKey, {
+                        from: wholeMoney(r.payFrom),
+                        ...(r.payTo === undefined
+                          ? null
+                          : { to: wholeMoney(r.payTo) }),
+                        ...(r.payShare === undefined
+                          ? null
+                          : {
+                              share: formatNumber(r.payShare, {
+                                style: "percent",
+                                maximumFractionDigits: 0,
+                              }),
+                            }),
+                      })}
                     </span>
                   </span>
                 </span>
@@ -153,7 +180,7 @@ export default function Careers() {
                     ))}
                   </div>
                   <Button icon="send" size="lg" onClick={() => apply(r.id)}>
-                    Apply for this role
+                    {t("screensA.careers.apply")}
                   </Button>
                 </div>
               ) : null}
@@ -165,23 +192,23 @@ export default function Careers() {
       <div className="scr-careers__form" ref={formRef}>
         <div>
           <span className="scr-careers__form-title">
-            {selected ? `Apply · ${selected.title}` : "Send an open application"}
+            {selected
+              ? t("screensA.careers.formTitleRole", { role: selected.title })
+              : t("screensA.careers.formTitleOpen")}
           </span>
           <span className="scr-careers__form-sub">
-            No cover letter needed. Tell us what you’re good at and where you’ve
-            worked.
+            {t("screensA.careers.formSub")}
           </span>
         </div>
 
         {carSent ? (
           <Banner tone="pos" icon="check-circle-2">
-            Application received. Selma reads every one herself and usually replies
-            within a week — demo only, so nothing was really sent.
+            {t("screensA.careers.received")}
           </Banner>
         ) : (
           <>
             <div className="scr-careers__fields">
-              <Field label="Your name">
+              <Field label={t("screensA.common.yourName")}>
                 {(control) => (
                   <TextInput
                     {...control}
@@ -191,7 +218,7 @@ export default function Careers() {
                   />
                 )}
               </Field>
-              <Field label="Email">
+              <Field label={t("screensA.common.email")}>
                 {(control) => (
                   <TextInput
                     {...control}
@@ -205,14 +232,14 @@ export default function Careers() {
               </Field>
             </div>
 
-            <Field label="Anything you’d like us to know">
+            <Field label={t("screensA.careers.noteLabel")}>
               {(control) => (
                 <TextArea
                   {...control}
                   value={carNote}
                   onChange={(v) => set({ carNote: v })}
                   rows={4}
-                  placeholder="Where you’ve worked, what you love doing, when you could start."
+                  placeholder={t("screensA.careers.notePlaceholder")}
                   className="scr-careers__note"
                 />
               )}
@@ -228,8 +255,8 @@ export default function Careers() {
                   closest names carry the same before/after meaning. */}
               <Icon name={carFile ? "clipboard-check" : "file-text"} size={17} />
               {carFile
-                ? `${CAREERS_ATTACHMENT} · attached`
-                : "Attach a CV or portfolio (optional)"}
+                ? t("screensA.careers.attached", { file: CAREERS_ATTACHMENT })
+                : t("screensA.careers.attach")}
             </button>
 
             <Button
@@ -238,7 +265,7 @@ export default function Careers() {
               onClick={submit}
               className="scr-careers__submit"
             >
-              Send application
+              {t("screensA.careers.submit")}
             </Button>
           </>
         )}

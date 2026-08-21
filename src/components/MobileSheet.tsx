@@ -5,6 +5,8 @@
  */
 
 import type { View } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 import type { HomeAnchor } from "../state/store.ts";
 import { Button, IconButton } from "./Button.tsx";
@@ -12,20 +14,21 @@ import { Icon } from "./Icon.tsx";
 import { useFocusTrap } from "./useFocusTrap.ts";
 
 interface SheetItem {
-  label: string;
+  labelKey: MessageKey;
   icon: string;
   view?: View;
   anchor?: HomeAnchor;
 }
 
 const ITEMS: SheetItem[] = [
-  { label: "Services", icon: "sparkles", view: "services" },
-  { label: "Membership", icon: "gem", view: "loyalty" },
-  { label: "Team", icon: "users", anchor: "team" },
-  { label: "Visit us", icon: "map-pin", anchor: "visit" },
+  { labelKey: "chrome.menu.services", icon: "sparkles", view: "services" },
+  { labelKey: "chrome.menu.membership", icon: "gem", view: "loyalty" },
+  { labelKey: "chrome.menu.team", icon: "users", anchor: "team" },
+  { labelKey: "chrome.menu.visit", icon: "map-pin", anchor: "visit" },
 ];
 
 export function MobileSheet() {
+  const t = useT();
   const open = useStore((s) => s.menuOpen);
   const setMenu = useStore((s) => s.setMenu);
   const go = useStore((s) => s.go);
@@ -48,18 +51,18 @@ export function MobileSheet() {
         className="bk-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="Menu"
+        aria-label={t("chrome.sheet.title")}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bk-sheet__head">
-          <span className="bk-sheet__title">Menu</span>
-          <IconButton icon="x" label="Close menu" size={36} onClick={close} />
+          <span className="bk-sheet__title">{t("chrome.sheet.title")}</span>
+          <IconButton icon="x" label={t("chrome.sheet.close")} size={36} onClick={close} />
         </div>
-        <nav className="bk-sheet__nav" aria-label="Mobile">
+        <nav className="bk-sheet__nav" aria-label={t("chrome.sheet.nav")}>
           {ITEMS.map((item) => (
             <button
-              key={item.label}
+              key={item.labelKey}
               type="button"
               className="bk-gi bk-sheet__item"
               onClick={() =>
@@ -67,7 +70,7 @@ export function MobileSheet() {
               }
             >
               <Icon name={item.icon} size={18} />
-              {item.label}
+              {t(item.labelKey)}
             </button>
           ))}
         </nav>
@@ -78,7 +81,7 @@ export function MobileSheet() {
           onClick={() => startBooking(null)}
           style={{ marginBlockStart: "12px" }}
         >
-          Book now
+          {t("chrome.header.book")}
         </Button>
       </div>
     </div>

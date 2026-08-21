@@ -23,18 +23,29 @@ import {
   ACCOUNT_FIELDS,
   ACCOUNT_TINT,
   CONTACT_OPTIONS,
-  MEMBER_SINCE,
+  MEMBER_SINCE_ISO,
   SAVED_CARD,
 } from "../data/screens/account.ts";
 import type { AccountTextKey } from "../data/screens/account.ts";
 import { data } from "../data/source.ts";
 import type { AccountProfile } from "../data/types.ts";
-import { initialsOf } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { initialsOf, parseISO } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-account.css";
 
 export default function Account() {
+  const { t, date } = useI18n();
+  /* Month + year, spelled the reader's way: "Mar 2024", "März 2024", "٣‏/٢٠٢٤". */
+  const memberSince = date(parseISO(MEMBER_SINCE_ISO), {
+    month: "short",
+    year: "numeric",
+  });
+  const contactOptions = CONTACT_OPTIONS.map((o) => ({
+    value: o.value,
+    label: t(o.labelKey),
+  }));
   const acct = useStore((s) => s.acct);
   const set = useStore((s) => s.set);
   const go = useStore((s) => s.go);
@@ -52,7 +63,7 @@ export default function Account() {
   };
 
   const prefOptions: SegmentedOption<string>[] = [
-    { value: "any", label: "No preference" },
+    { value: "any", label: t("screensA.account.noPreference") },
     ...data.getStaff().map((s) => ({ value: s.id, label: s.name })),
   ];
   /*
@@ -68,18 +79,20 @@ export default function Account() {
   const onTwofa = (next: boolean): void => {
     patch({ twofa: next });
     showToast(
-      next ? "Two-step sign-in turned on" : "Two-step sign-in turned off",
+      t(next ? "screensA.account.twofaOn" : "screensA.account.twofaOff"),
       "ok",
     );
   };
 
   return (
     <section className="bk-screen bk-page scr-account">
-      <BackLink onClick={() => go("dash")}>Back to dashboard</BackLink>
+      <BackLink onClick={() => go("dash")}>
+        {t("screensA.common.backToDashboard")}
+      </BackLink>
 
       <header className="scr-account__head">
-        <h1 className="bk-h1">Account settings</h1>
-        <p className="bk-sub">Your details, how we reach you, and how you pay.</p>
+        <h1 className="bk-h1">{t("screensA.account.title")}</h1>
+        <p className="bk-sub">{t("screensA.account.sub")}</p>
       </header>
 
       <Card padding="18px 20px" className="scr-account__identity">
@@ -98,42 +111,52 @@ export default function Account() {
         </div>
         <span className="scr-account__member">
           <Icon name="gem" size={12} />
-          {MEMBER_SINCE}
+          {t("screensA.account.memberSince", { date: memberSince })}
         </span>
       </Card>
 
-      <Eyebrow className="scr-account__eyebrow">Personal details</Eyebrow>
+      <Eyebrow className="scr-account__eyebrow">
+        {t("screensA.account.personal")}
+      </Eyebrow>
       <div className="scr-account__fields">
         {ACCOUNT_FIELDS.map((f) => (
-          <Field key={f.key} label={f.label}>
+          <Field key={f.key} label={t(f.labelKey)}>
             {(control) => (
               <TextInput
                 {...control}
                 value={acct[f.key]}
                 onChange={(v) => setText(f.key, v)}
-                placeholder={f.placeholder}
+                placeholder={
+                  f.placeholderKey ? t(f.placeholderKey) : f.placeholder
+                }
               />
             )}
           </Field>
         ))}
       </div>
 
-      <Eyebrow className="scr-account__eyebrow">Preferences</Eyebrow>
+      <Eyebrow className="scr-account__eyebrow">
+        {t("screensA.account.preferences")}
+      </Eyebrow>
       <Card padding="18px 20px" className="scr-account__prefs">
         <div className="scr-account__prefblock">
-          <span className="scr-account__preflabel">Preferred specialist</span>
+          <span className="scr-account__preflabel">
+            {t("screensA.account.preferredSpecialist")}
+          </span>
           <Segmented
-            label="Preferred specialist"
+            label={t("screensA.account.preferredSpecialist")}
             options={prefOptions}
             value={prefValue}
             onChange={(v) => patch({ pref: v })}
           />
         </div>
         <div className="scr-account__prefblock">
-          <span className="scr-account__preflabel">How we reach you first</span>
+          <span className="scr-account__preflabel">
+            {t("screensA.account.contactFirst")}
+          </span>
           <Segmented
-            label="How we reach you first"
-            options={CONTACT_OPTIONS}
+            label={t("screensA.account.contactFirst")}
+            options={contactOptions}
             value={acct.contact}
             onChange={(v) => patch({ contact: v })}
           />
@@ -144,23 +167,27 @@ export default function Account() {
         <Button
           icon="check"
           size="lg"
-          onClick={() => showToast("Account details saved", "ok")}
+          onClick={() => showToast(t("screensA.account.saved"), "ok")}
         >
-          Save changes
+          {t("screensA.common.saveChanges")}
         </Button>
         <span className="scr-account__savenote">
-          Demo only — nothing leaves this page.
+          {t("screensA.account.saveNote")}
         </span>
       </div>
 
-      <Eyebrow className="scr-account__eyebrow">Sign-in &amp; security</Eyebrow>
+      <Eyebrow className="scr-account__eyebrow">
+        {t("screensA.account.security")}
+      </Eyebrow>
       <Card clip className="scr-account__sec">
         <div className="scr-account__secrow">
           <span className="scr-account__secicon">
             <Icon name="lock" size={16} />
           </span>
           <span className="scr-account__sectext">
-            <span className="scr-account__sectitle">Password</span>
+            <span className="scr-account__sectitle">
+              {t("screensA.account.password")}
+            </span>
             <span className="scr-account__secdots bk-mono">••••••••••</span>
           </span>
           <Button
@@ -168,10 +195,13 @@ export default function Account() {
             size="sm"
             className="scr-account__change"
             onClick={() =>
-              showToast(`Password reset link sent to ${acct.email}`, "ok")
+              showToast(
+                t("screensA.account.resetSent", { email: acct.email }),
+                "ok",
+              )
             }
           >
-            Change
+            {t("screensA.account.change")}
           </Button>
         </div>
         <div className="scr-account__secrow scr-account__secrow--last">
@@ -179,29 +209,38 @@ export default function Account() {
             <Icon name="shield-check" size={16} />
           </span>
           <span className="scr-account__sectext">
-            <span className="scr-account__sectitle">Two-step sign-in</span>
+            <span className="scr-account__sectitle">{t("screensA.account.twofa")}</span>
             <span className="scr-account__secsub">
-              Text a code when signing in on a new device.
+              {t("screensA.account.twofaSub")}
             </span>
           </span>
           <Toggle
             checked={acct.twofa}
             onChange={onTwofa}
-            label="Two-step sign-in"
+            label={t("screensA.account.twofa")}
           />
         </div>
       </Card>
 
-      <Eyebrow className="scr-account__eyebrow">Payment method</Eyebrow>
+      <Eyebrow className="scr-account__eyebrow">
+        {t("screensA.account.payment")}
+      </Eyebrow>
       <Card padding="16px 18px" className="scr-account__pay">
         <span className="scr-account__paytile">
           <Icon name="credit-card" size={18} />
         </span>
         <span className="scr-account__sectext">
-          <span className="scr-account__sectitle">{SAVED_CARD.label}</span>
-          <span className="scr-account__secsub">{SAVED_CARD.meta}</span>
+          <span className="scr-account__sectitle">
+            {t("screensA.account.cardLabel", {
+              brand: SAVED_CARD.brand,
+              last4: SAVED_CARD.last4,
+            })}
+          </span>
+          <span className="scr-account__secsub">
+            {t("screensA.account.cardMeta", { exp: SAVED_CARD.expires })}
+          </span>
         </span>
-        <span className="scr-account__default">Default</span>
+        <span className="scr-account__default">{t("screensA.account.default")}</span>
       </Card>
 
       <div className="scr-account__addrow">
@@ -210,18 +249,19 @@ export default function Account() {
           icon="plus"
           iconSize={15}
           className="scr-account__add"
-          onClick={() => showToast("Card entry is demo-only", "warn")}
+          onClick={() => showToast(t("screensA.account.cardDemo"), "warn")}
         >
-          Add a payment method
+          {t("screensA.account.addPayment")}
         </Button>
       </div>
 
       <div className="scr-account__danger">
         <div className="scr-account__dangertext">
-          <div className="scr-account__dangertitle">Close your account</div>
+          <div className="scr-account__dangertitle">
+            {t("screensA.account.closeTitle")}
+          </div>
           <div className="scr-account__dangerbody">
-            Removes your profile, points and saved cards. Upcoming visits are
-            cancelled.
+            {t("screensA.account.closeBody")}
           </div>
         </div>
         {/* `danger` rather than `ghost` so it gets the `.bk-btn` press
@@ -230,10 +270,10 @@ export default function Account() {
           variant="danger"
           className="scr-account__delete"
           onClick={() =>
-            showToast("Account deletion is disabled in the demo", "warn")
+            showToast(t("screensA.account.deleteDisabled"), "warn")
           }
         >
-          Delete account
+          {t("screensA.account.delete")}
         </Button>
       </div>
     </section>

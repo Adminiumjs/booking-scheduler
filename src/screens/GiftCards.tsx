@@ -29,12 +29,18 @@ import {
 } from "../components/index.ts";
 import { data } from "../data/source.ts";
 import type { GiftSend } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey, TFunction } from "../i18n/index.tsx";
 import { formatMediumISO, money } from "../lib/format.ts";
 import { giftAmountValue, useStore } from "../state/store.ts";
 
 import "../styles/screen-giftcards.css";
 
-const GC_STEPS = ["Design", "Message", "Payment"] as const;
+const GC_STEP_KEYS = [
+  "screensA.gift.stepDesign",
+  "screensA.gift.stepMessage",
+  "screensA.gift.stepPayment",
+] as const;
 
 const STEP_INDEX: Record<string, number> = {
   design: 0,
@@ -43,9 +49,9 @@ const STEP_INDEX: Record<string, number> = {
   done: 2,
 };
 
-const SEND_OPTIONS: readonly { value: GiftSend; label: string }[] = [
-  { value: "now", label: "Send now" },
-  { value: "schedule", label: "Schedule" },
+const SEND_KEYS: readonly { value: GiftSend; key: MessageKey }[] = [
+  { value: "now", key: "screensA.gift.sendNow" },
+  { value: "schedule", key: "screensA.gift.schedule" },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -60,6 +66,7 @@ interface GiftPreviewProps {
 }
 
 function GiftPreview({ tint, amount, to, className }: GiftPreviewProps) {
+  const t = useT();
   const dark = useIsDark();
   return (
     <div
@@ -72,10 +79,12 @@ function GiftPreview({ tint, amount, to, className }: GiftPreviewProps) {
       </div>
       <div>
         <div className="bk-mono bk-gift-preview__amount">{money(amount)}</div>
-        <div className="bk-gift-preview__caption">Studio gift card</div>
+        <div className="bk-gift-preview__caption">
+          {t("screensA.gift.caption")}
+        </div>
       </div>
       <div className="bk-gift-preview__to">
-        {to ? `To ${to}` : "To someone lovely"}
+        {to ? t("screensA.gift.to", { name: to }) : t("screensA.gift.toAnyone")}
       </div>
     </div>
   );
@@ -86,6 +95,7 @@ function GiftPreview({ tint, amount, to, className }: GiftPreviewProps) {
  * ------------------------------------------------------------------ */
 
 export default function GiftCards() {
+  const t = useT();
   const amountLabelId = useId();
   const themeLabelId = useId();
 
@@ -125,16 +135,20 @@ export default function GiftCards() {
   if (gcStep === "done") {
     const doneSub =
       gcSend === "schedule" && gcDate
-        ? `Scheduled to send on ${formatMediumISO(gcDate)}.`
-        : "Delivered to their inbox the moment you’re done.";
+        ? t("screensA.gift.doneScheduled", { date: formatMediumISO(gcDate) })
+        : t("screensA.gift.doneNow");
 
     return (
       <main className="bk-screen bk-page bk-gift-page">
         <div className="bk-gift-done">
           <SuccessTile icon="gift" iconSize={36} />
-          <h1 className="bk-h1">Your gift is on its way!</h1>
+          <h1 className="bk-h1">{t("screensA.gift.doneTitle")}</h1>
           <p className="bk-gift-done__sub">{doneSub}</p>
-          <CodePill label="Gift code" code={gcCode ?? ""} codeSize={20} />
+          <CodePill
+            label={t("screensA.gift.codeLabel")}
+            code={gcCode ?? ""}
+            codeSize={20}
+          />
           <GiftPreview
             className="bk-gift-preview--done"
             tint={theme.tint}
@@ -142,7 +156,7 @@ export default function GiftCards() {
             to={gcTo}
           />
           <Banner tone="info" className="bk-gift-done__banner">
-            This is a demo — no card was charged and nothing was emailed.
+            {t("screensA.gift.banner")}
           </Banner>
           <div className="bk-gift-done__actions">
             <Button
@@ -152,7 +166,7 @@ export default function GiftCards() {
               className="bk-gift-done__btn"
               onClick={gcReset}
             >
-              Buy another
+              {t("screensA.gift.buyAnother")}
             </Button>
             <Button
               size="lg"
@@ -160,7 +174,7 @@ export default function GiftCards() {
               className="bk-gift-done__btn"
               onClick={() => go("home")}
             >
-              Back home
+              {t("screensA.common.backHome")}
             </Button>
           </div>
         </div>
@@ -170,23 +184,26 @@ export default function GiftCards() {
 
   /* ---------------- flow ---------------- */
 
-  const ctaLabel = gcStep === "pay" ? `Pay ${money(amount)}` : "Continue";
+  const ctaLabel =
+    gcStep === "pay"
+      ? t("screensA.gift.pay", { amount: money(amount) })
+      : t("screensA.common.continue");
 
   return (
     <main className="bk-screen bk-page bk-gift-page">
       <BackLink onClick={gcBack}>
-        {gcStep === "design" ? "Back home" : "Back"}
+        {t(
+          gcStep === "design" ? "screensA.common.backHome" : "screensA.common.back",
+        )}
       </BackLink>
 
       <div className="bk-gift-head">
-        <h1 className="bk-h1">Gift a little calm.</h1>
-        <p className="bk-sub">
-          A Lumen gift card never expires and works on any service.
-        </p>
+        <h1 className="bk-h1">{t("screensA.gift.title")}</h1>
+        <p className="bk-sub">{t("screensA.gift.sub")}</p>
       </div>
 
       <GiftStepper
-        steps={GC_STEPS}
+        steps={GC_STEP_KEYS}
         current={STEP_INDEX[gcStep] ?? 0}
         className="bk-gift-steps"
       />
@@ -197,7 +214,7 @@ export default function GiftCards() {
             <>
               <div className="bk-gift-block">
                 <span className="bk-label bk-label--strong" id={amountLabelId}>
-                  Amount
+                  {t("screensA.gift.amount")}
                 </span>
                 <div
                   className="bk-gift-chips"
@@ -213,7 +230,7 @@ export default function GiftCards() {
                     />
                   ))}
                   <Chip
-                    label="Custom"
+                    label={t("screensA.gift.custom")}
                     active={gcAmount === "custom"}
                     onClick={() => setGiftAmount("custom")}
                   />
@@ -228,7 +245,7 @@ export default function GiftCards() {
                       placeholder="120"
                       mono
                       inputMode="decimal"
-                      ariaLabel="Custom amount"
+                      ariaLabel={t("screensA.gift.customAria")}
                     />
                   </div>
                 ) : null}
@@ -236,20 +253,20 @@ export default function GiftCards() {
 
               <div className="bk-gift-block">
                 <span className="bk-label bk-label--strong" id={themeLabelId}>
-                  Card design
+                  {t("screensA.gift.design")}
                 </span>
                 <div
                   className="bk-gift-swatches"
                   role="group"
                   aria-labelledby={themeLabelId}
                 >
-                  {themes.map((t) => (
+                  {themes.map((swatch) => (
                     <ThemeSwatch
-                      key={t.id}
-                      name={t.name}
-                      tint={t.tint}
-                      active={gcTheme === t.id}
-                      onSelect={() => setGift({ gcTheme: t.id })}
+                      key={swatch.id}
+                      name={t(swatch.nameKey)}
+                      tint={swatch.tint}
+                      active={gcTheme === swatch.id}
+                      onSelect={() => setGift({ gcTheme: swatch.id })}
                     />
                   ))}
                 </div>
@@ -259,7 +276,7 @@ export default function GiftCards() {
 
           {gcStep === "details" ? (
             <>
-              <Field label="To (recipient name)">
+              <Field label={t("screensA.gift.toLabel")}>
                 {(c) => (
                   <TextInput
                     {...c}
@@ -269,7 +286,7 @@ export default function GiftCards() {
                   />
                 )}
               </Field>
-              <Field label="Their email">
+              <Field label={t("screensA.gift.theirEmail")}>
                 {(c) => (
                   <TextInput
                     {...c}
@@ -281,34 +298,37 @@ export default function GiftCards() {
                   />
                 )}
               </Field>
-              <Field label="From">
+              <Field label={t("screensA.gift.from")}>
                 {(c) => (
                   <TextInput
                     {...c}
                     value={gcFrom}
                     onChange={(v) => setGift({ gcFrom: v })}
-                    placeholder="Your name"
+                    placeholder={t("screensA.common.yourName")}
                   />
                 )}
               </Field>
-              <Field label="Message" hint="(optional)">
+              <Field
+                label={t("screensA.gift.message")}
+                hint={t("screensA.common.optional")}
+              >
                 {(c) => (
                   <TextArea
                     {...c}
                     value={gcMsg}
                     onChange={(v) => setGift({ gcMsg: v })}
                     rows={3}
-                    placeholder="Treat yourself — you've earned it."
+                    placeholder={t("screensA.gift.messagePlaceholder")}
                   />
                 )}
               </Field>
               <div className="bk-gift-block">
-                <span className="bk-label">Delivery</span>
+                <span className="bk-label">{t("screensA.gift.delivery")}</span>
                 <Segmented
-                  label="Delivery"
+                  label={t("screensA.gift.delivery")}
                   value={gcSend}
                   onChange={(v) => setGift({ gcSend: v })}
-                  options={SEND_OPTIONS}
+                  options={sendOptions(t)}
                 />
                 {gcSend === "schedule" ? (
                   <TextInput
@@ -316,7 +336,7 @@ export default function GiftCards() {
                     type="date"
                     value={gcDate}
                     onChange={(v) => setGift({ gcDate: v })}
-                    ariaLabel="Delivery date"
+                    ariaLabel={t("screensA.gift.deliveryDate")}
                   />
                 ) : null}
               </div>
@@ -325,7 +345,7 @@ export default function GiftCards() {
 
           {gcStep === "pay" ? (
             <>
-              <Field label="Card number">
+              <Field label={t("screensA.gift.cardNumber")}>
                 {(c) => (
                   <TextInput
                     {...c}
@@ -338,7 +358,7 @@ export default function GiftCards() {
                 )}
               </Field>
               <div className="bk-gift-pair">
-                <Field label="Expiry">
+                <Field label={t("screensA.gift.expiry")}>
                   {(c) => (
                     <TextInput
                       {...c}
@@ -349,7 +369,7 @@ export default function GiftCards() {
                     />
                   )}
                 </Field>
-                <Field label="CVC">
+                <Field label={t("screensA.gift.cvc")}>
                   {(c) => (
                     <TextInput
                       {...c}
@@ -362,13 +382,13 @@ export default function GiftCards() {
                   )}
                 </Field>
               </div>
-              <Field label="Name on card">
+              <Field label={t("screensA.gift.nameOnCard")}>
                 {(c) => (
                   <TextInput
                     {...c}
                     value={gcName}
                     onChange={(v) => setGift({ gcName: v })}
-                    placeholder="Your name"
+                    placeholder={t("screensA.common.yourName")}
                   />
                 )}
               </Field>
@@ -391,12 +411,16 @@ export default function GiftCards() {
         <div className="bk-gift-aside">
           <GiftPreview tint={theme.tint} amount={amount} to={gcTo} />
           <div className="bk-gift-aside__caption">
-            Preview · updates as you choose
+            {t("screensA.gift.previewCaption")}
           </div>
         </div>
       </div>
     </main>
   );
+}
+
+function sendOptions(t: TFunction): readonly { value: GiftSend; label: string }[] {
+  return SEND_KEYS.map((o) => ({ value: o.value, label: t(o.key) }));
 }
 
 /* ------------------------------------------------------------------ *

@@ -9,7 +9,9 @@
 import type { CSSProperties } from "react";
 
 import { Button, Icon, IconTile } from "../components/index.ts";
-import { data } from "../data/source.ts";
+import { data, seedText } from "../data/source.ts";
+import { wholeMoney } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 import "../styles/screen-loyalty.css";
 
@@ -37,6 +39,7 @@ const JOIN_BTN: CSSProperties = {
 };
 
 export default function Loyalty() {
+  const { t, number } = useI18n();
   const points = useStore((s) => s.points);
   const member = useStore((s) => s.member);
   const loyaltyJoin = useStore((s) => s.loyaltyJoin);
@@ -48,39 +51,44 @@ export default function Loyalty() {
   const threshold = data.getLoyaltyThreshold();
 
   const pct = Math.min(100, Math.round((points / threshold) * 100));
+  const remaining = Math.max(0, threshold - points);
   const toGo =
     points >= threshold
-      ? "You’ve unlocked a free service — redeem below."
-      : `${Math.max(0, threshold - points)} pts until your next free service`;
+      ? t("screensB.loyalty.unlocked")
+      : t("screensB.loyalty.toGo", { count: number(remaining) }, remaining);
 
   return (
     <main className="bk-screen bk-page bk-loyalty">
       <div className="bk-loyalty__intro">
         <span className="bk-loyalty__eyebrow">
           <Icon name="gem" size={14} />
+          {/* "Studio Circle" is the in-demo brand — never translated. */}
           Studio Circle
         </span>
-        <h1 className="bk-loyalty__h1">A little glow with every visit.</h1>
-        <p className="bk-loyalty__sub">
-          Earn a point for every dollar, redeem for services you love, and unlock
-          more as a member. It's free to join.
-        </p>
+        <h1 className="bk-loyalty__h1">{t("screensB.loyalty.h1")}</h1>
+        <p className="bk-loyalty__sub">{t("screensB.loyalty.sub")}</p>
       </div>
 
       <div className="bk-loyalty__cards">
         <div className="bk-loyalty-points">
           <div className="bk-loyalty-points__head">
-            <span className="bk-loyalty-points__label">Your points</span>
+            <span className="bk-loyalty-points__label">
+              {t("screensB.loyalty.yourPoints")}
+            </span>
             {member ? (
               <span className="bk-loyalty-points__member">
                 <Icon name="gem" size={12} />
-                Member
+                {t("screensB.loyalty.member")}
               </span>
             ) : null}
           </div>
           <div className="bk-loyalty-points__figure">
-            <span className="bk-mono bk-loyalty-points__value">{points}</span>
-            <span className="bk-loyalty-points__unit">pts</span>
+            <span className="bk-mono bk-loyalty-points__value">
+              {number(points)}
+            </span>
+            <span className="bk-loyalty-points__unit">
+              {t("screensB.common.ptsUnit", {}, points)}
+            </span>
           </div>
           <div
             className="bk-loyalty-points__track"
@@ -88,7 +96,7 @@ export default function Loyalty() {
             aria-valuemin={0}
             aria-valuemax={threshold}
             aria-valuenow={Math.min(points, threshold)}
-            aria-label="Progress to your next free service"
+            aria-label={t("screensB.loyalty.progressLabel")}
           >
             <div className="bk-loyalty-points__fill" style={{ inlineSize: `${pct}%` }} />
           </div>
@@ -96,47 +104,58 @@ export default function Loyalty() {
         </div>
 
         <div className="bk-loyalty-how">
-          <span className="bk-loyalty-how__label">How it works</span>
-          {howItWorks.map((line, i) => (
-            <div className="bk-loyalty-how__row" key={line}>
+          <span className="bk-loyalty-how__label">
+            {t("screensB.common.howItWorks")}
+          </span>
+          {howItWorks.map((key, i) => (
+            <div className="bk-loyalty-how__row" key={key}>
               <span className="bk-loyalty-how__glyph">
                 <Icon name={HOW_ICONS[i] ?? "sparkles"} size={16} />
               </span>
-              <span className="bk-loyalty-how__text">{line}</span>
+              {/* These are message keys, not lines — the seam hands over the
+                * three rules and only `{amount}` (dollars per point) is data. */}
+              <span className="bk-loyalty-how__text">
+                {t(key, { amount: wholeMoney(data.getLoyaltyEarnPer()) })}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      <h2 className="bk-loyalty__h2">Redeem your points</h2>
+      <h2 className="bk-loyalty__h2">{t("screensB.loyalty.redeemTitle")}</h2>
       <div className="bk-loyalty__rewards">
         {rewards.map((r) => {
           const locked = points < r.cost;
+          const label = seedText(t, r.labelKey, { svc: r.svc, amount: r.amount });
           return (
-            <div className="bk-card bk-loyalty-reward" key={r.label}>
+            <div className="bk-card bk-loyalty-reward" key={r.labelKey + r.cost}>
               <IconTile icon={r.icon} tint={r.tint} size={44} iconSize={20} radius={12} />
               <div className="bk-loyalty-reward__body">
-                <div className="bk-loyalty-reward__name">{r.label}</div>
-                <div className="bk-mono bk-loyalty-reward__cost">{r.cost} pts</div>
+                <div className="bk-loyalty-reward__name">{label}</div>
+                <div className="bk-mono bk-loyalty-reward__cost">
+                  {t("screensB.common.ptsCount", { count: number(r.cost) }, r.cost)}
+                </div>
               </div>
               <Button
                 variant="primary"
                 size="sm"
                 style={REDEEM_BTN}
                 disabled={locked}
-                onClick={() => loyaltyRedeem(r.cost, r.label)}
+                onClick={() => loyaltyRedeem(r.cost, label)}
               >
-                {locked ? "Locked" : "Redeem"}
+                {t(
+                  locked
+                    ? "screensB.loyalty.locked"
+                    : "screensB.loyalty.redeem",
+                )}
               </Button>
             </div>
           );
         })}
       </div>
 
-      <h2 className="bk-loyalty__h2">Become a member</h2>
-      <p className="bk-loyalty__h2sub">
-        Go further with Studio Circle membership — cancel anytime.
-      </p>
+      <h2 className="bk-loyalty__h2">{t("screensB.loyalty.becomeMember")}</h2>
+      <p className="bk-loyalty__h2sub">{t("screensB.loyalty.becomeSub")}</p>
       <div className="bk-loyalty__plans">
         {plans.map((p) => (
           <div
@@ -145,13 +164,17 @@ export default function Loyalty() {
             key={p.name}
           >
             {p.featured ? (
-              <span className="bk-loyalty-plan__ribbon">Most loved</span>
+              <span className="bk-loyalty-plan__ribbon">
+                {t("screensB.loyalty.mostLoved")}
+              </span>
             ) : null}
             <div>
               <div className="bk-loyalty-plan__name">{p.name}</div>
               <div className="bk-loyalty-plan__pricerow">
-                <span className="bk-mono bk-loyalty-plan__price">{p.price}</span>
-                <span className="bk-loyalty-plan__cadence">{p.cadence}</span>
+                <span className="bk-mono bk-loyalty-plan__price">
+                  {wholeMoney(p.price)}
+                </span>
+                <span className="bk-loyalty-plan__cadence">{t(p.cadenceKey)}</span>
               </div>
             </div>
             <div className="bk-loyalty-plan__perks">
@@ -170,7 +193,9 @@ export default function Loyalty() {
               style={JOIN_BTN}
               onClick={loyaltyJoin}
             >
-              {member ? "You’re a member ✓" : `Join ${p.name}`}
+              {member
+                ? t("screensB.loyalty.youreMember")
+                : t("screensB.loyalty.joinPlan", { name: p.name })}
             </Button>
           </div>
         ))}

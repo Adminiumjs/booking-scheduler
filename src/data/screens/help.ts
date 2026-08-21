@@ -3,6 +3,8 @@
  * the three "reach a human" tiles above it.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export interface Faq {
   /** Also the accordion key — `store.helpOpen` holds the open question. */
   q: string;
@@ -46,29 +48,43 @@ export const FAQS: readonly Faq[] = [
 
 export interface HelpContact {
   icon: string;
-  label: string;
-  sub: string;
+  labelKey: MessageKey;
+  subKey: MessageKey;
+  /** Phone or address filled into `{contact}`; the studio's own, so literal. */
+  contact?: string;
+  /** Opening and closing time, minutes from midnight, for the phone line. */
+  from?: number;
+  to?: number;
+  /** First and last trading day, `Date.getDay()` — spelled by `weekdayName()`. */
+  fromDay?: number;
+  toDay?: number;
   /** Nothing leaves the demo — each tile just says so. */
-  toast: string;
+  toastKey: MessageKey;
 }
 
 export const HELP_CONTACTS: readonly HelpContact[] = [
   {
     icon: "message-square",
-    label: "Text the studio",
-    sub: "(415) 555-0148 · replies in minutes",
-    toast: "Opening messages — demo only",
+    labelKey: "data.help.text",
+    subKey: "data.help.textSub",
+    contact: "(415) 555-0148",
+    toastKey: "data.help.textToast",
   },
   {
     icon: "phone",
-    label: "Call reception",
-    sub: "Open 9 AM to 6 PM, Tue–Sat",
-    toast: "Dialling — demo only",
+    labelKey: "data.help.call",
+    subKey: "data.help.callSub",
+    from: 540,
+    to: 1080,
+    fromDay: 2,
+    toDay: 6,
+    toastKey: "data.help.callToast",
   },
   {
     icon: "mail",
-    label: "Email us",
-    sub: "hello@lumenstudio.demo",
-    toast: "Draft started — demo only",
+    labelKey: "data.help.email",
+    subKey: "data.help.emailSub",
+    contact: "hello@lumenstudio.demo",
+    toastKey: "data.help.emailToast",
   },
 ];

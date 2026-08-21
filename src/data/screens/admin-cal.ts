@@ -6,10 +6,20 @@
  * with Today and live in `admin-today.ts`.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export interface StudioRoom {
   id: string;
-  name: string;
-  /** Column-header initials, pre-computed so nothing derives them at render. */
+  /** Message key — a room is a column heading on the rooms view. */
+  nameKey: MessageKey;
+  /** Fills `{n}` where a room is one of a numbered pair. */
+  n?: number;
+  /**
+   * Column-header initials. Left as the comp authored them rather than sliced
+   * off the translated name: two letters cut out of `Farbraum` or `غرفة الصبغة`
+   * are not what those languages abbreviate to, and the glyph only has to be
+   * stable, not meaningful.
+   */
   initials: string;
   tint: string;
   /** Service ids performed in this room. */
@@ -18,11 +28,43 @@ export interface StudioRoom {
 
 /** Five treatment spaces. A booking lands in the room its service needs. */
 export const ROOMS: readonly StudioRoom[] = [
-  { id: "colour1", name: "Colour room 1", initials: "CO", tint: "#b07d9a", svcs: ["balayage", "gloss"] },
-  { id: "colour2", name: "Colour room 2", initials: "CO", tint: "#9a7fb0", svcs: ["cut"] },
-  { id: "treat", name: "Treatment room", initials: "TR", tint: "#6f8bb0", svcs: ["facial", "deep"] },
-  { id: "nail", name: "Nail bar", initials: "NA", tint: "#c08a6a", svcs: ["gel", "pedi"] },
-  { id: "loft", name: "Studio loft", initials: "ST", tint: "#7d9166", svcs: ["reformer"] },
+  {
+    id: "colour1",
+    nameKey: "data.room.colour",
+    n: 1,
+    initials: "CO",
+    tint: "#b07d9a",
+    svcs: ["balayage", "gloss"],
+  },
+  {
+    id: "colour2",
+    nameKey: "data.room.colour",
+    n: 2,
+    initials: "CO",
+    tint: "#9a7fb0",
+    svcs: ["cut"],
+  },
+  {
+    id: "treat",
+    nameKey: "data.room.treatment",
+    initials: "TR",
+    tint: "#6f8bb0",
+    svcs: ["facial", "deep"],
+  },
+  {
+    id: "nail",
+    nameKey: "data.room.nailBar",
+    initials: "NA",
+    tint: "#c08a6a",
+    svcs: ["gel", "pedi"],
+  },
+  {
+    id: "loft",
+    nameKey: "data.room.loft",
+    initials: "ST",
+    tint: "#7d9166",
+    svcs: ["reformer"],
+  },
 ];
 
 /** What the studio has on file for a guest, keyed by the name on the booking. */
@@ -47,7 +89,8 @@ export const CLIENT_LEDGER: Record<string, ClientLedger> = {
 
 export interface VisitRow {
   svc: string;
-  date: string;
+  /** `YYYY-MM-DD`; render through `formatMediumISO()`. */
+  dateISO: string;
   /** Whole dollars. */
   amount: number;
 }
@@ -60,10 +103,10 @@ export interface VisitRow {
  * `AdminCal.tsx`.
  */
 export const RECENT_VISITS: readonly VisitRow[] = [
-  { svc: "Gloss & Tone", date: "Jul 14", amount: 60 },
-  { svc: "Signature Facial", date: "Jun 30", amount: 110 },
-  { svc: "Gel Manicure", date: "Jun 2", amount: 58 },
-  { svc: "Balayage", date: "May 12", amount: 190 },
+  { svc: "Gloss & Tone", dateISO: "2026-07-14", amount: 60 },
+  { svc: "Signature Facial", dateISO: "2026-06-30", amount: 110 },
+  { svc: "Gel Manicure", dateISO: "2026-06-02", amount: 58 },
+  { svc: "Balayage", dateISO: "2026-05-12", amount: 190 },
 ];
 
 /**

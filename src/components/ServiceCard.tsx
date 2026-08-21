@@ -6,6 +6,7 @@
 
 import { data } from "../data/source.ts";
 import type { Service } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
 import { durationLabel, money } from "../lib/format.ts";
 import { Button } from "./Button.tsx";
 import { Icon } from "./Icon.tsx";
@@ -25,6 +26,7 @@ export function ServiceCard({
   variant = "preview",
   className,
 }: ServiceCardProps) {
+  const t = useT();
   const cat = data.getCategory(s.cat);
   const staffNames = data.getStaffNames(s.id);
 
@@ -40,7 +42,7 @@ export function ServiceCard({
       <div className="bk-svc-card__body">
         <div className="bk-svc-card__titlerow">
           <h3 className="bk-svc-card__name">{s.name}</h3>
-          <span className="bk-badge">{cat?.name ?? s.cat}</span>
+          <span className="bk-badge">{cat ? t(cat.nameKey) : s.cat}</span>
         </div>
         <p className="bk-svc-card__blurb">{s.blurb}</p>
 
@@ -54,7 +56,7 @@ export function ServiceCard({
               <span className="bk-mono bk-svc-card__price">{money(s.price)}</span>
             </div>
             <Button icon="calendar-plus" full onClick={() => onBook(s.id)}>
-              Book
+              {t("chrome.serviceCard.book")}
             </Button>
           </>
         ) : (
@@ -73,7 +75,7 @@ export function ServiceCard({
               <span className="bk-mono bk-svc-card__price bk-svc-card__price--lg">
                 {money(s.price)}
               </span>
-              <Button onClick={() => onBook(s.id)}>Book</Button>
+              <Button onClick={() => onBook(s.id)}>{t("chrome.serviceCard.book")}</Button>
             </div>
           </>
         )}

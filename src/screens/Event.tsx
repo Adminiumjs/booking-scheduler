@@ -13,7 +13,9 @@ import {
   PlaceholderTile,
 } from "../components/index.ts";
 import { data } from "../data/source.ts";
-import { plural } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
+import { formatLongDate, minutesToTime, monthName, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-event.css";
@@ -29,30 +31,42 @@ const ALREADY_TAKEN = 42;
  */
 const EVENT_TINT = "#b07d9a";
 
-const INCLUDED: readonly string[] = [
-  "Fifteen-minute mini treatments on rotation — hands, scalp, or shoulders.",
-  "A color clinic with Elin: bring a photo, leave with a plan.",
-  "First look at the autumn menu, with tasting-size versions to try.",
-  "Something warm in a glass and a 15% code for anything booked that night.",
+const INCLUDED_KEYS: readonly MessageKey[] = [
+  "screensA.event.inc1",
+  "screensA.event.inc2",
+  "screensA.event.inc3",
+  "screensA.event.inc4",
 ];
 
-const UPCOMING: readonly { day: string; mon: string; title: string; sub: string }[] =
-  [
-    {
-      day: "14",
-      mon: "Nov",
-      title: "Color theory workshop",
-      sub: "Two hours with Elin · 12 seats",
-    },
-    {
-      day: "05",
-      mon: "Dec",
-      title: "Slow morning: breath & mobility",
-      sub: "Sunday 9 AM with Marco · free",
-    },
-  ];
+/* The evening itself, as real dates rather than pre-rendered English: the
+ * weekday, the month and the clock all belong to the reader's locale. */
+const EVENT_DATE = new Date(2026, 9, 9);
+const EVENT_OPENS = 18 * 60;
+const EVENT_CLOSES = 21 * 60;
+const EVENT_GUEST_PRICE = 15;
+
+const UPCOMING: readonly {
+  day: number;
+  month: number;
+  titleKey: MessageKey;
+  subKey: MessageKey;
+}[] = [
+  {
+    day: 14,
+    month: 10,
+    titleKey: "screensA.event.up1Title",
+    subKey: "screensA.event.up1Sub",
+  },
+  {
+    day: 5,
+    month: 11,
+    titleKey: "screensA.event.up2Title",
+    subKey: "screensA.event.up2Sub",
+  },
+];
 
 export default function Event() {
+  const { t, number } = useI18n();
   const evtGuests = useStore((s) => s.evtGuests);
   const evtRsvp = useStore((s) => s.evtRsvp);
   const go = useStore((s) => s.go);
@@ -61,18 +75,39 @@ export default function Event() {
 
   const taken = ALREADY_TAKEN + (evtRsvp ? evtGuests : 0);
   const pct = Math.round((taken / CAPACITY) * 100);
-  const guestsLabel = plural(evtGuests, "guest");
+  const guestsLabel = t("count.guest", {}, evtGuests);
 
   const meta = [
-    { icon: "calendar", label: "Date", value: "Friday, October 9" },
-    { icon: "clock", label: "Time", value: "6:00 – 9:00 PM" },
-    { icon: "map-pin", label: "Where", value: data.getLocation().addressLine1 },
-    { icon: "users", label: "Size", value: "Sixty guests, come and go" },
+    {
+      icon: "calendar",
+      label: t("screensA.event.metaDate"),
+      value: formatLongDate(EVENT_DATE),
+    },
+    {
+      icon: "clock",
+      label: t("screensA.event.metaTime"),
+      value: t("screensA.event.timeRange", {
+        start: minutesToTime(EVENT_OPENS),
+        end: minutesToTime(EVENT_CLOSES),
+      }),
+    },
+    {
+      icon: "map-pin",
+      label: t("screensA.event.metaWhere"),
+      value: data.getLocation().addressLine1,
+    },
+    {
+      icon: "users",
+      label: t("screensA.event.metaSize"),
+      value: t("screensA.event.sizeValue"),
+    },
   ];
 
   return (
     <section className="bk-screen bk-page scr-event">
-      <BackLink onClick={() => go("home")}>Back home</BackLink>
+      <BackLink onClick={() => go("home")}>
+        {t("screensA.common.backHome")}
+      </BackLink>
 
       <PlaceholderTile
         tint={EVENT_TINT}
@@ -90,15 +125,11 @@ export default function Event() {
         <div>
           <span className="scr-event__eyebrow">
             <Icon name="sparkles" size={14} />
-            Studio event
+            {t("screensA.event.eyebrow")}
           </span>
 
-          <h1 className="bk-h1 scr-event__title">Autumn Open House</h1>
-          <p className="scr-event__lede">
-            An evening in the studio with the whole team. Mini treatments on
-            rotation, a color clinic with Elin, and the new autumn menu tasted
-            early — plus something warm in a glass.
-          </p>
+          <h1 className="bk-h1 scr-event__title">{t("screensA.event.title")}</h1>
+          <p className="scr-event__lede">{t("screensA.event.lede")}</p>
 
           <div className="scr-event__meta">
             {meta.map((m) => (
@@ -114,12 +145,12 @@ export default function Event() {
             ))}
           </div>
 
-          <h2 className="scr-event__section">What’s included</h2>
+          <h2 className="scr-event__section">{t("screensA.event.included")}</h2>
           <ul className="scr-event__includes">
-            {INCLUDED.map((text) => (
-              <li key={text} className="scr-event__include">
+            {INCLUDED_KEYS.map((key) => (
+              <li key={key} className="scr-event__include">
                 <Icon name="check" size={16} />
-                {text}
+                {t(key)}
               </li>
             ))}
           </ul>
@@ -128,9 +159,13 @@ export default function Event() {
         <aside className="scr-event__side">
           <div className="bk-panel scr-event__rsvp">
             <div className="scr-event__price">
-              <span className="scr-event__pricefig bk-mono">Free</span>
+              <span className="scr-event__pricefig bk-mono">
+                {t("screensA.event.free")}
+              </span>
               <span className="scr-event__pricenote">
-                for members · $15 otherwise
+                {t("screensA.event.priceNote", {
+                  amount: money(EVENT_GUEST_PRICE),
+                })}
               </span>
             </div>
 
@@ -143,9 +178,14 @@ export default function Event() {
               </div>
               <div className="scr-event__capacity">
                 <span>
-                  {taken} of {CAPACITY} spots taken
+                  {t("screensA.event.taken", {
+                    taken: number(taken),
+                    total: number(CAPACITY),
+                  })}
                 </span>
-                <span>{CAPACITY - taken} left</span>
+                <span>
+                  {t("screensA.event.left", { count: number(CAPACITY - taken) })}
+                </span>
               </div>
             </div>
 
@@ -154,9 +194,7 @@ export default function Event() {
                 <div className="scr-event__confirmed">
                   <Icon name="check-circle-2" size={20} />
                   <span>
-                    You’re on the list for{" "}
-                    <span className="scr-event__strong">{guestsLabel}</span>.
-                    We’ll text a reminder that afternoon.
+                    {t("screensA.event.onList", { guests: guestsLabel })}
                   </span>
                 </div>
                 <Button
@@ -164,23 +202,25 @@ export default function Event() {
                   full
                   onClick={() => {
                     set({ evtRsvp: false });
-                    showToast("RSVP cancelled", "warn");
+                    showToast(t("screensA.event.rsvpCancelled"), "warn");
                   }}
                 >
-                  Cancel my RSVP
+                  {t("screensA.event.cancelRsvp")}
                 </Button>
               </>
             ) : (
               <>
                 <div>
-                  <span className="scr-event__steplabel">How many of you?</span>
+                  <span className="scr-event__steplabel">
+                    {t("screensA.event.howMany")}
+                  </span>
                   <NumberStepper
                     value={evtGuests}
                     onChange={(n) => set({ evtGuests: n })}
                     min={1}
                     max={4}
-                    label="guests"
-                    format={(v) => plural(v, "guest")}
+                    label={t("screensA.event.guestsLabel")}
+                    format={(v) => t("count.guest", {}, v)}
                   />
                 </div>
                 <Button
@@ -190,41 +230,48 @@ export default function Event() {
                   full
                   onClick={() => {
                     set({ evtRsvp: true });
-                    showToast("You’re on the list — see you October 9", "ok");
+                    showToast(
+                      t("screensA.event.savedToast", {
+                        date: formatLongDate(EVENT_DATE),
+                      }),
+                      "ok",
+                    );
                   }}
                 >
-                  Save my spot
+                  {t("screensA.event.save")}
                 </Button>
               </>
             )}
 
             <span className="scr-event__disclaimer">
-              Demo event — nothing is booked and nobody is charged.
+              {t("screensA.event.disclaimer")}
             </span>
           </div>
 
           <div className="bk-panel scr-event__upcoming">
             <div className="bk-eyebrow scr-event__upcominghead">
-              Also coming up
+              {t("screensA.event.alsoComing")}
             </div>
             {UPCOMING.map((u) => (
-              <div key={u.title} className="scr-event__uprow">
+              <div key={u.titleKey} className="scr-event__uprow">
                 <span className="scr-event__update">
-                  <span className="scr-event__upday bk-mono">{u.day}</span>
-                  <span className="scr-event__upmon">{u.mon}</span>
+                  <span className="scr-event__upday bk-mono">
+                    {number(u.day)}
+                  </span>
+                  <span className="scr-event__upmon">
+                    {monthName(u.month, "short")}
+                  </span>
                 </span>
                 <span className="scr-event__uptext">
-                  <span className="scr-event__uptitle">{u.title}</span>
-                  <span className="scr-event__upsub">{u.sub}</span>
+                  <span className="scr-event__uptitle">{t(u.titleKey)}</span>
+                  <span className="scr-event__upsub">{t(u.subKey)}</span>
                 </span>
                 <button
                   type="button"
                   className="bk-gi scr-event__notify"
-                  onClick={() =>
-                    showToast("We’ll text you when tickets open", "ok")
-                  }
+                  onClick={() => showToast(t("screensA.event.notifyToast"), "ok")}
                 >
-                  Notify me
+                  {t("screensA.event.notify")}
                 </button>
               </div>
             ))}

@@ -16,13 +16,21 @@ import {
   PlaceholderTile,
 } from "../components/index.ts";
 import { data } from "../data/source.ts";
-import { journalPost, relatedPosts, type JournalPost } from "../data/screens/blog.ts";
-import { firstName } from "../lib/format.ts";
+import {
+  journalCategoryLabel,
+  journalPost,
+  journalReadLabel,
+  relatedPosts,
+  type JournalPost,
+} from "../data/screens/blog.ts";
+import { useT } from "../i18n/index.tsx";
+import { firstName, formatMediumISO } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-post.css";
 
 export default function Post() {
+  const t = useT();
   const postId = useStore((s) => s.post);
   const set = useStore((s) => s.set);
   const go = useStore((s) => s.go);
@@ -38,12 +46,18 @@ export default function Post() {
   if (!post) {
     return (
       <main className="bk-screen bk-page scr-post">
-        <BackLink onClick={() => go("blog")}>Back to journal</BackLink>
+        <BackLink onClick={() => go("blog")}>
+          {t("screensB.post.back")}
+        </BackLink>
         <EmptyState
           icon="book-open"
-          title="That post isn’t here"
-          body="It may have been unpublished. Everything we’ve written is on the journal index."
-          action={<Button onClick={() => go("blog")}>Browse the journal</Button>}
+          title={t("screensB.post.emptyTitle")}
+          body={t("screensB.post.emptyBody")}
+          action={
+            <Button onClick={() => go("blog")}>
+              {t("screensB.post.browse")}
+            </Button>
+          }
         />
       </main>
     );
@@ -55,11 +69,11 @@ export default function Post() {
   return (
     <main className="bk-screen bk-page scr-post">
       <BackLink onClick={() => go("blog")} className="scr-post__back">
-        Back to journal
+        {t("screensB.post.back")}
       </BackLink>
 
       <div>
-        <span className="bk-badge">{post.cat}</span>
+        <span className="bk-badge">{journalCategoryLabel(t, post.cat)}</span>
       </div>
       <h1 className="scr-post__title">{post.title}</h1>
 
@@ -74,7 +88,10 @@ export default function Post() {
         <div>
           <div className="scr-post__byline-name">{author?.name}</div>
           <div className="scr-post__byline-meta">
-            {post.date} · {post.read}
+            {t("screensB.post.byline", {
+              date: formatMediumISO(post.dateISO),
+              read: journalReadLabel(t, post.readMin),
+            })}
           </div>
         </div>
       </div>
@@ -117,12 +134,12 @@ export default function Post() {
             <div className="scr-post__author-bio">{author.bio}</div>
           </div>
           <Button icon="calendar-plus" iconSize={15} onClick={() => startBooking(null)}>
-            Book with {firstName(author.name)}
+            {t("screensB.common.bookWith", { name: firstName(author.name) })}
           </Button>
         </aside>
       ) : null}
 
-      <h2 className="scr-post__more">More from the journal</h2>
+      <h2 className="scr-post__more">{t("screensB.post.more")}</h2>
       <div className="scr-post__related">
         {related.map((r) => (
           <RelatedCard key={r.id} post={r} onOpen={openPost} />
@@ -144,17 +161,22 @@ interface RelatedCardProps {
 /* Same stretched-title pattern as the index: one focusable control per card,
  * named by the headline rather than by the whole card's text. */
 function RelatedCard({ post, onOpen }: RelatedCardProps) {
+  const t = useT();
   return (
     <article className="bk-card scr-post__rel">
       <IconTile icon={post.icon} tint={post.tint} size={44} iconSize={20} radius={15} />
       <div className="scr-post__rel-copy">
-        <span className="scr-post__rel-cat">{post.cat}</span>
+        <span className="scr-post__rel-cat">
+          {journalCategoryLabel(t, post.cat)}
+        </span>
         <h3 className="scr-post__rel-title">
           <button type="button" className="scr-post__open" onClick={() => onOpen(post.id)}>
             {post.title}
           </button>
         </h3>
-        <span className="scr-post__rel-read">{post.read}</span>
+        <span className="scr-post__rel-read">
+          {journalReadLabel(t, post.readMin)}
+        </span>
       </div>
     </article>
   );

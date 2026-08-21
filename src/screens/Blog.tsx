@@ -22,21 +22,20 @@ import {
 import { data } from "../data/source.ts";
 import {
   JOURNAL_CATEGORIES,
+  journalCategoryLabel,
+  journalReadLabel,
   POSTS,
   type JournalFilter,
   type JournalPost,
 } from "../data/screens/blog.ts";
+import { useT } from "../i18n/index.tsx";
+import { formatMediumISO } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-blog.css";
 
-/** "All" plus every section, in the comp's order. */
-const FILTERS: readonly { value: JournalFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  ...JOURNAL_CATEGORIES.map((c) => ({ value: c, label: c })),
-];
-
 export default function Blog() {
+  const t = useT();
   const blogCat = useStore((s) => s.blogCat);
   const blogEmail = useStore((s) => s.blogEmail);
   const set = useStore((s) => s.set);
@@ -47,6 +46,15 @@ export default function Blog() {
   const featured = blogCat === "all" ? (matching.find((p) => p.featured) ?? null) : null;
   const rest = featured ? matching.filter((p) => p.id !== featured.id) : matching;
 
+  /** "All" plus every section, in the comp's order. */
+  const filters: readonly { value: JournalFilter; label: string }[] = [
+    { value: "all", label: t("screensA.common.all") },
+    ...JOURNAL_CATEGORIES.map((c) => ({
+      value: c,
+      label: journalCategoryLabel(t, c),
+    })),
+  ];
+
   const openPost = (id: string): void => {
     set({ post: id });
     go("post");
@@ -55,25 +63,22 @@ export default function Blog() {
   const subscribe = (): void => {
     /* The comp's own loose check — a demo newsletter, not a signup form. */
     if (blogEmail.trim().indexOf("@") < 1) {
-      showToast("Enter an email address to subscribe", "warn");
+      showToast(t("screensA.blog.needEmail"), "warn");
       return;
     }
     set({ blogEmail: "" });
-    showToast("Subscribed — see you next month", "ok");
+    showToast(t("screensA.blog.subscribed"), "ok");
   };
 
   return (
     <main className="bk-screen bk-page scr-blog">
       <div className="scr-blog__head">
-        <h1 className="bk-h1">Studio journal</h1>
-        <p className="bk-sub scr-blog__lede">
-          Notes from the chairs and treatment rooms — care that actually holds up
-          between visits.
-        </p>
+        <h1 className="bk-h1">{t("screensA.blog.title")}</h1>
+        <p className="bk-sub scr-blog__lede">{t("screensA.blog.lede")}</p>
       </div>
 
       <div className="scr-blog__filters">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <Chip
             key={f.value}
             label={f.label}
@@ -88,8 +93,8 @@ export default function Blog() {
       {rest.length === 0 ? (
         <EmptyState
           icon="book-open"
-          title="Nothing filed here yet"
-          body="We publish about once a month. Try another section, or subscribe below."
+          title={t("screensA.blog.emptyTitle")}
+          body={t("screensA.blog.emptyBody")}
         />
       ) : (
         <div className="scr-blog__grid">
@@ -101,10 +106,8 @@ export default function Blog() {
 
       <section className="scr-blog__news">
         <div className="scr-blog__news-copy">
-          <div className="scr-blog__news-title">One letter a month</div>
-          <div className="scr-blog__news-sub">
-            Seasonal care notes and a first look at new treatments. No promo spam.
-          </div>
+          <div className="scr-blog__news-title">{t("screensA.blog.newsTitle")}</div>
+          <div className="scr-blog__news-sub">{t("screensA.blog.newsSub")}</div>
         </div>
         <div className="scr-blog__news-form">
           <TextInput
@@ -113,14 +116,14 @@ export default function Blog() {
             type="email"
             inputMode="email"
             placeholder="you@email.com"
-            ariaLabel="Email address for the studio newsletter"
+            ariaLabel={t("screensA.blog.emailAria")}
           />
           <button
             type="button"
             className="bk-btn scr-blog__subscribe"
             onClick={subscribe}
           >
-            Subscribe
+            {t("screensA.blog.subscribe")}
           </button>
         </div>
       </section>
@@ -138,6 +141,7 @@ interface CardProps {
 }
 
 function FeaturedCard({ post, onOpen }: CardProps) {
+  const t = useT();
   const author = data.getStaffMember(post.author);
 
   return (
@@ -151,7 +155,7 @@ function FeaturedCard({ post, onOpen }: CardProps) {
         filename={post.fname}
       />
       <div className="scr-blog__feat-body">
-        <span className="bk-badge">{post.cat}</span>
+        <span className="bk-badge">{journalCategoryLabel(t, post.cat)}</span>
         <h2 className="scr-blog__feat-title">
           <button type="button" className="scr-blog__open" onClick={() => onOpen(post.id)}>
             {post.title}
@@ -170,7 +174,7 @@ function FeaturedCard({ post, onOpen }: CardProps) {
           <span>
             <span className="scr-blog__byline-name">{author?.name}</span>
             <span className="scr-blog__byline-meta">
-              {post.date} · {post.read}
+              {formatMediumISO(post.dateISO)} · {journalReadLabel(t, post.readMin)}
             </span>
           </span>
         </div>
@@ -180,6 +184,7 @@ function FeaturedCard({ post, onOpen }: CardProps) {
 }
 
 function PostCard({ post, onOpen }: CardProps) {
+  const t = useT();
   const author = data.getStaffMember(post.author);
 
   return (
@@ -192,7 +197,7 @@ function PostCard({ post, onOpen }: CardProps) {
         filename={post.fname}
       />
       <div className="scr-blog__post-body">
-        <span className="bk-badge">{post.cat}</span>
+        <span className="bk-badge">{journalCategoryLabel(t, post.cat)}</span>
         <h2 className="scr-blog__post-title">
           <button type="button" className="scr-blog__open" onClick={() => onOpen(post.id)}>
             {post.title}
@@ -209,7 +214,8 @@ function PostCard({ post, onOpen }: CardProps) {
             className="scr-blog__avatar"
           />
           <span className="scr-blog__byline-meta scr-blog__byline-meta--inline">
-            {author?.name} · {post.date} · {post.read}
+            {author?.name} · {formatMediumISO(post.dateISO)} ·{" "}
+            {journalReadLabel(t, post.readMin)}
           </span>
         </div>
       </div>

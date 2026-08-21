@@ -12,8 +12,10 @@
  */
 
 import { Chip, Icon, IconTile, Toggle } from "../components/index.ts";
-import { data } from "../data/source.ts";
+import { categoryName, data } from "../data/source.ts";
+import { useI18n } from "../i18n/index.tsx";
 import { hash } from "../lib/codes.ts";
+import { durationLabel } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-services.css";
@@ -24,6 +26,7 @@ function bookedCount(id: string): number {
 }
 
 export default function AdminServices() {
+  const { t, number } = useI18n();
   const svcCat = useStore((s) => s.svcCat);
   const prices = useStore((s) => s.prices);
   const svcOff = useStore((s) => s.svcOff);
@@ -42,7 +45,7 @@ export default function AdminServices() {
   const toggleBookable = (id: string, name: string, off: boolean): void => {
     set({ svcOff: { ...svcOff, [id]: !off } });
     showToast(
-      off ? `${name} is bookable again` : `${name} hidden from booking`,
+      t(off ? "screensA.services.backOn" : "screensA.services.hidden", { name }),
       off ? "ok" : "warn",
     );
   };
@@ -52,14 +55,14 @@ export default function AdminServices() {
       <div className="bk-panel scr-admin-services__panel">
         <div className="scr-admin-services__bar">
           <Chip
-            label="All"
+            label={t("screensA.common.all")}
             active={svcCat === "all"}
             onClick={() => set({ svcCat: "all" })}
           />
           {categories.map((c) => (
             <Chip
               key={c.slug}
-              label={c.name}
+              label={t(c.nameKey)}
               active={svcCat === c.slug}
               onClick={() => set({ svcCat: c.slug })}
             />
@@ -67,10 +70,10 @@ export default function AdminServices() {
           <button
             type="button"
             className="bk-btn scr-admin-services__new"
-            onClick={() => showToast("New service form — demo only", "warn")}
+            onClick={() => showToast(t("screensA.services.newToast"), "warn")}
           >
             <Icon name="plus" size={15} />
-            New service
+            {t("screensA.services.new")}
           </button>
         </div>
 
@@ -78,13 +81,17 @@ export default function AdminServices() {
           <div className="scr-admin-services__track">
             <div className="scr-admin-services__head">
               <span />
-              <span>Service</span>
-              <span>Duration</span>
-              <span className="scr-admin-services__end">Price</span>
-              <span className="scr-admin-services__end scr-admin-services__booked">
-                Booked 30d
+              <span>{t("screensA.services.colService")}</span>
+              <span>{t("screensA.services.colDuration")}</span>
+              <span className="scr-admin-services__end">
+                {t("screensA.services.colPrice")}
               </span>
-              <span className="scr-admin-services__end">Bookable</span>
+              <span className="scr-admin-services__end scr-admin-services__booked">
+                {t("screensA.services.colBooked")}
+              </span>
+              <span className="scr-admin-services__end">
+                {t("screensA.services.colBookable")}
+              </span>
             </div>
 
             {rows.map((s) => {
@@ -106,28 +113,32 @@ export default function AdminServices() {
                   <span className="scr-admin-services__name">
                     <span className="scr-admin-services__title">{s.name}</span>
                     <span className="scr-admin-services__meta">
-                      {data.getCategory(s.cat)?.name ?? s.cat} ·{" "}
+                      {categoryName(t, s.cat)} ·{" "}
                       {data.getStaffNames(s.id)}
                     </span>
                   </span>
-                  <span className="bk-mono scr-admin-services__dur">{s.dur} min</span>
+                  <span className="bk-mono scr-admin-services__dur">
+                    {durationLabel(s.dur)}
+                  </span>
                   <span className="scr-admin-services__pricecell">
                     <input
                       className="bk-mono scr-admin-services__price"
                       value={price}
                       inputMode="decimal"
-                      aria-label={`Price for ${s.name}, in dollars`}
+                      aria-label={t("screensA.services.priceAria", {
+                        name: s.name,
+                      })}
                       onChange={(e) => setPrice(s.id, e.target.value)}
                     />
                   </span>
                   <span className="bk-mono scr-admin-services__end scr-admin-services__booked">
-                    {bookedCount(s.id)}
+                    {number(bookedCount(s.id))}
                   </span>
                   <span className="scr-admin-services__livecell">
                     <Toggle
                       checked={!off}
                       onChange={() => toggleBookable(s.id, s.name, off)}
-                      label={`${s.name} bookable online`}
+                      label={t("screensA.services.bookableAria", { name: s.name })}
                     />
                   </span>
                 </div>
@@ -139,17 +150,16 @@ export default function AdminServices() {
         <div className="scr-admin-services__foot">
           <Icon name="info" size={15} className="scr-admin-services__footicon" />
           <span className="scr-admin-services__footnote">
-            Price changes apply to new bookings only. Existing bookings keep the
-            price they were made at.
+            {t("screensA.services.footnote")}
           </span>
           <button
             type="button"
             className="bk-gi scr-admin-services__save"
             onClick={() =>
-              showToast("Prices saved · live on the booking page", "ok")
+              showToast(t("screensA.services.saved"), "ok")
             }
           >
-            Save changes
+            {t("screensA.common.saveChanges")}
           </button>
         </div>
       </div>

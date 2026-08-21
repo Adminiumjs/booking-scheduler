@@ -10,15 +10,23 @@ import { useMemo } from "react";
 
 import { Avatar, Chip, Icon, StarBar, TextArea } from "../components/index.ts";
 import {
-  RATING_WORDS,
+  RATING_WORD_KEYS,
   REVIEW_FILTERS,
   STUDIO_REVIEWS,
 } from "../data/screens/reviews.ts";
 import type { StudioReview } from "../data/screens/reviews.ts";
 import { data } from "../data/source.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { parseISO, relativeAgo } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-reviews.css";
+
+/** The rating scale the bars draw against. */
+const STAR_MAX = 5;
+
+/** The demo guest's last visit — a seeded date, spelled the reader's way. */
+const LAST_VISIT_ISO = "2026-07-14";
 
 /** The guest's own review, appended to the seed once they post. */
 function ownReview(stars: number, text: string): StudioReview {
@@ -29,8 +37,12 @@ function ownReview(stars: number, text: string): StudioReview {
     rating: stars,
     svc: "Gloss & Tone",
     staff: "elin",
-    date: "just now",
+    /* Zero seconds ago — `numeric: 'auto'` renders that as "now" in every
+     * locale, so the freshest review needs no message of its own. */
+    ago: 0,
+    agoUnit: "second",
     helpful: 0,
+    /* Review prose is in-fiction demo content and stays English. */
     quote: text || "Lovely as always.",
     reply: "",
     replyBy: "",
@@ -39,6 +51,7 @@ function ownReview(stars: number, text: string): StudioReview {
 }
 
 export default function Reviews() {
+  const { t, number, date } = useI18n();
   const rvFilter = useStore((s) => s.rvFilter);
   const rvStars = useStore((s) => s.rvStars);
   const rvText = useStore((s) => s.rvText);
@@ -47,15 +60,20 @@ export default function Reviews() {
   const set = useStore((s) => s.set);
   const showToast = useStore((s) => s.showToast);
 
+  const justNow = t("screensB.reviews.justNow");
   const all = useMemo(
     () =>
       rvSent
         ? [ownReview(rvStars, rvText), ...STUDIO_REVIEWS]
         : STUDIO_REVIEWS.slice(),
-    [rvSent, rvStars, rvText],
+    [rvSent, rvStars, rvText, justNow],
   );
 
   const average = all.reduce((sum, r) => sum + r.rating, 0) / all.length;
+  const averageLabel = number(average, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
   const counts = [5, 4, 3, 2, 1].map(
     (n) => all.filter((r) => r.rating === n).length,
   );
@@ -69,11 +87,11 @@ export default function Reviews() {
 
   const submit = () => {
     if (!rvText.trim()) {
-      showToast("Add a line or two first", "warn");
+      showToast(t("screensB.reviews.errEmpty"), "warn");
       return;
     }
     set({ rvSent: true });
-    showToast("Review posted · demo only", "ok");
+    showToast(t("screensB.reviews.toastPosted"), "ok");
   };
 
   const toggleHelpful = (key: string) => {
@@ -86,24 +104,32 @@ export default function Reviews() {
       {/* ---- the summary card ---- */}
       <div className="bk-panel scr-reviews__summary">
         <div className="scr-reviews__score">
-          <div className="scr-reviews__avg bk-mono">{average.toFixed(1)}</div>
+          <div className="scr-reviews__avg bk-mono">{averageLabel}</div>
           <div className="scr-reviews__avgstars">
             <StarBar
               value={average}
               size={20}
               gap={3}
-              label={`${average.toFixed(1)} out of 5`}
+              label={t("chrome.stars.rating", {
+                value: averageLabel,
+                max: number(STAR_MAX),
+              })}
             />
           </div>
           <div className="scr-reviews__total">
-            {all.length} reviews · {data.getStaff().length} specialists
+            {t("screensB.reviews.total", {
+              reviews: number(all.length),
+              specialists: number(data.getStaff().length),
+            })}
           </div>
         </div>
 
         <div className="scr-reviews__dist">
           {[5, 4, 3, 2, 1].map((n, i) => (
             <div key={n} className="scr-reviews__distrow">
-              <span className="scr-reviews__distlabel">{n}★</span>
+              <span className="scr-reviews__distlabel">
+                {t("screensB.reviews.starRow", { stars: number(n) })}
+              </span>
               <span className="scr-reviews__disttrack">
                 <span
                   className="scr-reviews__distbar"
@@ -113,7 +139,7 @@ export default function Reviews() {
                 />
               </span>
               <span className="scr-reviews__distcount bk-mono">
-                {counts[i]}
+                {number(counts[i])}
               </span>
             </div>
           ))}
@@ -123,16 +149,17 @@ export default function Reviews() {
       {/* ---- compose ---- */}
       <div className="scr-reviews__compose">
         <span className="scr-reviews__composetitle">
-          {rvSent ? "Your review is up" : "Been in recently? Tell us how it went"}
+          {t(
+            rvSent
+              ? "screensB.reviews.composeSent"
+              : "screensB.reviews.composeTitle",
+          )}
         </span>
 
         {rvSent ? (
           <div className="scr-reviews__thanks">
             <Icon name="check-circle-2" size={20} />
-            <span>
-              Thank you — your review is live at the top of the list. You can
-              edit it for the next 24 hours.
-            </span>
+            <span>{t("screensB.reviews.thanks")}</span>
           </div>
         ) : (
           <>
@@ -144,36 +171,42 @@ export default function Reviews() {
                   className="scr-reviews__star"
                   data-on={n <= rvStars}
                   aria-pressed={n === rvStars}
-                  aria-label={`${n} ${n === 1 ? "star" : "stars"}`}
+                  aria-label={t("screensB.reviews.starsAria", { count: number(n) }, n)}
                   onClick={() => set({ rvStars: n })}
                 >
                   ★
                 </button>
               ))}
               <span className="scr-reviews__starword">
-                {RATING_WORDS[rvStars] ?? ""}
+                {RATING_WORD_KEYS[rvStars] ? t(RATING_WORD_KEYS[rvStars]) : ""}
               </span>
             </div>
 
             <TextArea
               value={rvText}
               onChange={(v) => set({ rvText: v })}
-              placeholder="What was the visit like? Anything the next guest should know?"
+              placeholder={t("screensB.reviews.placeholder")}
               rows={4}
-              ariaLabel="Your review"
+              ariaLabel={t("screensB.reviews.textareaLabel")}
               className="scr-reviews__textarea"
             />
 
             <div className="scr-reviews__composefoot">
               <span className="scr-reviews__posting">
-                Posting as Ava R. · your last visit was Jul 14
+                {t("screensB.reviews.postingAs", {
+                  name: "Ava R.",
+                  date: date(parseISO(LAST_VISIT_ISO), {
+                    month: "short",
+                    day: "numeric",
+                  }),
+                })}
               </span>
               <button
                 type="button"
                 className="bk-btn scr-reviews__post"
                 onClick={submit}
               >
-                Post review
+                {t("screensB.reviews.post")}
               </button>
             </div>
           </>
@@ -186,21 +219,25 @@ export default function Reviews() {
           {REVIEW_FILTERS.map((f) => (
             <Chip
               key={f.id}
-              label={f.label}
+              label={t(f.labelKey, f.stars === undefined ? undefined : { count: number(f.stars) }, f.stars)}
               active={rvFilter === f.id}
               onClick={() => set({ rvFilter: f.id })}
             />
           ))}
         </div>
         <span className="scr-reviews__showing">
-          {filtered.length} of {all.length} shown
+          {t("screensB.reviews.showing", {
+            shown: number(filtered.length),
+            total: number(all.length),
+          })}
         </span>
       </div>
 
       {/* ---- the list ---- */}
       <div className="scr-reviews__list">
         {filtered.map((r, i) => {
-          const key = `${r.name}${r.date}`;
+          const when = relativeAgo(r.ago, r.agoUnit);
+          const key = `${r.name}${r.ago}${r.agoUnit}`;
           const bumped = (rvHelpful[key] ?? 0) > 0;
           const staff = data.getStaffMember(r.staff);
           return (
@@ -215,8 +252,16 @@ export default function Reviews() {
                 <span className="scr-reviews__who">
                   <span className="scr-reviews__name">{r.name}</span>
                   <span className="scr-reviews__meta">
-                    {r.svc} · {staff ? `with ${staff.name}` : "studio"} ·{" "}
-                    {r.date}
+                    {staff
+                      ? t("screensB.reviews.metaStaff", {
+                          service: r.svc,
+                          staff: staff.name,
+                          date: when,
+                        })
+                      : t("screensB.reviews.metaStudio", {
+                          service: r.svc,
+                          date: when,
+                        })}
                   </span>
                 </span>
                 <StarBar value={r.rating} size={14} gap={1} />
@@ -234,7 +279,7 @@ export default function Reviews() {
                   />
                   <span className="scr-reviews__replytext">
                     <span className="scr-reviews__replyby">
-                      {r.replyBy} replied
+                      {t("screensB.reviews.replyBy", { name: r.replyBy })}
                     </span>
                     <span className="scr-reviews__replybody">{r.reply}</span>
                   </span>
@@ -250,14 +295,16 @@ export default function Reviews() {
                   onClick={() => toggleHelpful(key)}
                 >
                   <Icon name="thumbs-up" size={14} />
-                  Helpful · {r.helpful + (bumped ? 1 : 0)}
+                  {t("screensB.reviews.helpful", {
+                    n: number(r.helpful + (bumped ? 1 : 0)),
+                  })}
                 </button>
                 <button
                   type="button"
                   className="bk-nav scr-reviews__report"
-                  onClick={() => showToast("Flagged for the team to read", "ok")}
+                  onClick={() => showToast(t("screensB.reviews.toastFlagged"), "ok")}
                 >
-                  Report
+                  {t("screensB.reviews.report")}
                 </button>
               </div>
             </article>

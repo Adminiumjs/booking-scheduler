@@ -5,22 +5,41 @@
  * the booking `DataSource` seam.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
+/**
+ * An open role.
+ *
+ * `title`, `blurb` and `duties` are the studio's own advert and stay as
+ * written. The contract shape, the team and the pay band are the product's
+ * columns: each is a key, with the numbers passed in so a rate lands in the
+ * reader's currency format rather than an English one.
+ */
 export interface CareerRole {
   id: string;
   title: string;
   /** Contract shape, e.g. "Part-time · 3 days". */
-  type: string;
-  team: string;
+  typeKey: MessageKey;
+  /** Fills `{count}` in the part-time and apprenticeship shapes. */
+  typeCount?: number;
+  teamKey: MessageKey;
   /** Rendered in mono — it is a figure, not prose. */
-  pay: string;
+  payKey: MessageKey;
+  /** Whole dollars an hour. `payTo` is absent on a flat rate. */
+  payFrom: number;
+  payTo?: number;
+  /** Fills `{share}` where the band carries a commission on top. */
+  payShare?: number;
   blurb: string;
   duties: readonly string[];
 }
 
 export interface CareerPerk {
   icon: string;
-  label: string;
-  sub: string;
+  labelKey: MessageKey;
+  subKey: MessageKey;
+  /** Whole dollars a month, for the allowance card. */
+  amount?: number;
 }
 
 /*
@@ -31,9 +50,11 @@ export const ROLES: readonly CareerRole[] = [
   {
     id: "stylist",
     title: "Senior Stylist",
-    type: "Full-time",
-    team: "Hair",
-    pay: "$32–40/hr + tips",
+    typeKey: "data.careers.typeFullTime",
+    teamKey: "data.careers.teamHair",
+    payKey: "data.careers.payBandTips",
+    payFrom: 32,
+    payTo: 40,
     blurb:
       "Your own column, your own regulars, and the freedom to say no to a booking that needs more time than the slot allows.",
     duties: [
@@ -45,9 +66,12 @@ export const ROLES: readonly CareerRole[] = [
   {
     id: "therapist",
     title: "Massage Therapist",
-    type: "Part-time · 3 days",
-    team: "Spa",
-    pay: "$38–45/hr",
+    typeKey: "data.careers.typePartTime",
+    typeCount: 3,
+    teamKey: "data.careers.teamSpa",
+    payKey: "data.careers.payBand",
+    payFrom: 38,
+    payTo: 45,
     blurb:
       "Deep-tissue and recovery work alongside Noor, in a room that is yours for the day.",
     duties: [
@@ -59,9 +83,10 @@ export const ROLES: readonly CareerRole[] = [
   {
     id: "front",
     title: "Front of House",
-    type: "Full-time",
-    team: "Reception",
-    pay: "$26/hr + tip share",
+    typeKey: "data.careers.typeFullTime",
+    teamKey: "data.careers.teamReception",
+    payKey: "data.careers.payFlatTipShare",
+    payFrom: 26,
     blurb:
       "The person who makes the day run. You will know every regular’s name by week three.",
     duties: [
@@ -73,9 +98,11 @@ export const ROLES: readonly CareerRole[] = [
   {
     id: "apprentice",
     title: "Colour Apprentice",
-    type: "Apprenticeship · 18 months",
-    team: "Hair",
-    pay: "$20/hr + training",
+    typeKey: "data.careers.typeApprenticeship",
+    typeCount: 18,
+    teamKey: "data.careers.teamHair",
+    payKey: "data.careers.payFlatTraining",
+    payFrom: 20,
     blurb:
       "Two days on the floor with Selma, one day of structured training, every week for eighteen months.",
     duties: [
@@ -89,23 +116,24 @@ export const ROLES: readonly CareerRole[] = [
 export const PERKS: readonly CareerPerk[] = [
   {
     icon: "calendar-days",
-    label: "Four-day weeks",
-    sub: "Everyone. Sundays and one more day, properly off.",
+    labelKey: "data.careers.perkFourDay",
+    subKey: "data.careers.perkFourDaySub",
   },
   {
     icon: "hand-coins",
-    label: "Tips split evenly",
-    sub: "Front of house included, paid weekly, no pooling games.",
+    labelKey: "data.careers.perkTips",
+    subKey: "data.careers.perkTipsSub",
   },
   {
     icon: "graduation-cap",
-    label: "Paid education",
-    sub: "Two courses a year, your pick, we cover time and cost.",
+    labelKey: "data.careers.perkEducation",
+    subKey: "data.careers.perkEducationSub",
   },
   {
     icon: "package",
-    label: "Product allowance",
-    sub: "$60 a month on the shelf, plus cost price on everything else.",
+    labelKey: "data.careers.perkAllowance",
+    subKey: "data.careers.perkAllowanceSub",
+    amount: 60,
   },
 ];
 

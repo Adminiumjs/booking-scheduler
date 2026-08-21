@@ -8,44 +8,95 @@
 
 import { Button, Chip, IconTile } from "../components/index.ts";
 import { CAMPAIGNS, MARKETING_KPIS } from "../data/screens/admin-marketing.ts";
-import type { Campaign, CampaignStatus } from "../data/screens/admin-marketing.ts";
+import type {
+  Campaign,
+  CampaignStatus,
+  MarketingKpi,
+} from "../data/screens/admin-marketing.ts";
 import type { ToastKind } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey, TFunction } from "../i18n/index.tsx";
+import { formatMediumISO, formatNumber, wholeMoney } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-marketing.css";
 
-const FILTERS = [
-  { id: "all", label: "All" },
-  { id: "live", label: "Live" },
-  { id: "draft", label: "Drafts" },
-] as const;
+const FILTER_IDS = ["all", "live", "draft"] as const;
+
+const FILTER_KEYS: Record<(typeof FILTER_IDS)[number], MessageKey> = {
+  all: "screensA.common.all",
+  live: "screensA.marketing.filterLive",
+  draft: "screensA.marketing.filterDraft",
+};
+
+/** A KPI tile's figure: a grouped count, or a rate spelled as a percentage. */
+function kpiValue(k: MarketingKpi): string {
+  return k.format === "percent"
+    ? formatNumber(k.value, { style: "percent", maximumFractionDigits: 0 })
+    : formatNumber(k.value);
+}
+
+/**
+ * The grey line under a campaign name.
+ *
+ * The audience size and the send date are both holes in a keyed sentence, so
+ * the word order — and whether the date leads or trails — stays the
+ * translator's to decide.
+ */
+function campaignMeta(t: TFunction, c: Campaign): string {
+  return t(
+    c.metaKey,
+    {
+      ...(c.metaDateISO === undefined
+        ? null
+        : { date: formatMediumISO(c.metaDateISO) }),
+      ...(c.metaCount === undefined ? null : { count: formatNumber(c.metaCount) }),
+    },
+    c.metaCount,
+  );
+}
 
 interface StatusMeta {
   label: string;
   /** What the row's trailing button offers for a campaign in this state. */
   action: string;
-  /** Past tense for the toast — "Autumn open house · paused — demo only". */
-  outcome: string;
+  /** The toast this state's own button raises, already interpolated. */
+  toastKey: MessageKey;
   kind: ToastKind;
 }
 
 /*
  * The comp derived the toast from `live ? 'paused' : 'queued'`, so pressing
  * "Edit" on a draft claimed it had been queued. Each state now reports what
- * its own button actually did.
+ * its own button actually did — as a whole sentence per state, so a translator
+ * is never handed a past participle to graft onto a name.
  */
-const STATUS: Record<CampaignStatus, StatusMeta> = {
-  live: { label: "Live", action: "Pause", outcome: "paused", kind: "warn" },
-  scheduled: { label: "Scheduled", action: "Send now", outcome: "queued", kind: "ok" },
-  draft: {
-    label: "Draft",
-    action: "Edit",
-    outcome: "opened in the builder",
-    kind: "ok",
-  },
-};
+function statusMeta(t: TFunction): Record<CampaignStatus, StatusMeta> {
+  return {
+    live: {
+      label: t("screensA.marketing.statusLive"),
+      action: t("screensA.marketing.actionPause"),
+      toastKey: "screensA.marketing.toastPaused",
+      kind: "warn",
+    },
+    scheduled: {
+      label: t("screensA.marketing.statusScheduled"),
+      action: t("screensA.marketing.actionSend"),
+      toastKey: "screensA.marketing.toastQueued",
+      kind: "ok",
+    },
+    draft: {
+      label: t("screensA.marketing.statusDraft"),
+      action: t("screensA.marketing.actionEdit"),
+      toastKey: "screensA.marketing.toastOpened",
+      kind: "ok",
+    },
+  };
+}
 
 export default function AdminMarketing() {
+  const t = useT();
+  const status = statusMeta(t);
   const mkFilter = useStore((s) => s.mkFilter);
   const set = useStore((s) => s.set);
   const showToast = useStore((s) => s.showToast);
@@ -63,21 +114,34 @@ export default function AdminMarketing() {
     <div className="scr-admin-marketing">
       <div className="mk-kpis">
         {MARKETING_KPIS.map((k) => (
-          <div className="mk-kpi" key={k.label}>
-            <span className="mk-kpi__label">{k.label}</span>
-            <span className="mk-kpi__value bk-mono">{k.value}</span>
-            <span className="mk-kpi__sub">{k.sub}</span>
+          <div className="mk-kpi" key={k.labelKey}>
+            <span className="mk-kpi__label">{t(k.labelKey)}</span>
+            <span className="mk-kpi__value bk-mono">{kpiValue(k)}</span>
+            <span className="mk-kpi__sub">
+              {t(
+                k.subKey,
+                {
+                  ...(k.subCount === undefined
+                    ? null
+                    : { count: formatNumber(k.subCount) }),
+                  ...(k.subAmount === undefined
+                    ? null
+                    : { amount: wholeMoney(k.subAmount) }),
+                },
+                k.subCount,
+              )}
+            </span>
           </div>
         ))}
       </div>
 
       <div className="mk-bar">
-        {FILTERS.map((f) => (
+        {FILTER_IDS.map((id) => (
           <Chip
-            key={f.id}
-            label={f.label}
-            active={mkFilter === f.id}
-            onClick={() => set({ mkFilter: f.id })}
+            key={id}
+            label={t(FILTER_KEYS[id])}
+            active={mkFilter === id}
+            onClick={() => set({ mkFilter: id })}
           />
         ))}
         <span className="mk-bar__gap" />
@@ -85,9 +149,9 @@ export default function AdminMarketing() {
           icon="plus"
           iconSize={15}
           size="sm"
-          onClick={() => showToast("Campaign builder — demo only", "warn")}
+          onClick={() => showToast(t("screensA.marketing.builderToast"), "warn")}
         >
-          New campaign
+          {t("screensA.marketing.newCampaign")}
         </Button>
       </div>
 
@@ -96,10 +160,11 @@ export default function AdminMarketing() {
           <CampaignRow
             key={c.id}
             campaign={c}
+            meta={status[c.status]}
             onAction={() =>
               showToast(
-                `${c.name} · ${STATUS[c.status].outcome} — demo only`,
-                STATUS[c.status].kind,
+                t(status[c.status].toastKey, { name: c.name }),
+                status[c.status].kind,
               )
             }
           />
@@ -115,15 +180,30 @@ export default function AdminMarketing() {
 
 interface CampaignRowProps {
   campaign: Campaign;
+  meta: StatusMeta;
   onAction: () => void;
 }
 
-function CampaignRow({ campaign: c, onAction }: CampaignRowProps) {
-  const meta = STATUS[c.status];
+function CampaignRow({ campaign: c, meta, onAction }: CampaignRowProps) {
+  const t = useT();
   const stats = [
-    { label: "Sent", value: c.sent ? c.sent.toLocaleString("en-US") : "—" },
-    { label: "Opened", value: c.open },
-    { label: "Booked", value: c.booked ? String(c.booked) : "—" },
+    {
+      label: t("screensA.marketing.statSent"),
+      value: c.sent ? formatNumber(c.sent) : "—",
+    },
+    {
+      label: t("screensA.marketing.statOpened"),
+      /* A fraction in the seed, a percentage on screen — `Intl` picks the
+       * glyph's side and the digits, which `${n * 100}%` never did. */
+      value:
+        c.open === null
+          ? "—"
+          : formatNumber(c.open, { style: "percent", maximumFractionDigits: 0 }),
+    },
+    {
+      label: t("screensA.marketing.statBooked"),
+      value: c.booked ? formatNumber(c.booked) : "—",
+    },
   ];
 
   return (
@@ -137,7 +217,7 @@ function CampaignRow({ campaign: c, onAction }: CampaignRowProps) {
             {meta.label}
           </span>
         </div>
-        <p className="mk-camp__meta">{c.meta}</p>
+        <p className="mk-camp__meta">{campaignMeta(t, c)}</p>
       </div>
 
       <div className="mk-camp__stats">

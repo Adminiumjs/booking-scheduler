@@ -13,27 +13,60 @@
  * de-branding, so the ids are remapped, not the prose.
  */
 
-/** Journal sections, in the order the filter row shows them. */
+import type { MessageKey, TFunction } from "../../i18n/index.tsx";
+import { formatNumber } from "../../lib/format.ts";
+
+/**
+ * Journal sections, in the order the filter row shows them.
+ *
+ * Machine tokens, not headings: the array used to hold `'Studio news'` and a
+ * post's `cat` was that same string, so the filter row could only ever print
+ * English and a translated label would have stopped matching any post.
+ */
 export const JOURNAL_CATEGORIES = [
-  "Hair",
-  "Skin",
-  "Nails",
-  "Movement",
-  "Studio news",
+  "hair",
+  "skin",
+  "nails",
+  "movement",
+  "news",
 ] as const;
 
 export type JournalCategory = (typeof JOURNAL_CATEGORIES)[number];
 
+/** What a reader sees for each section. */
+export const JOURNAL_CATEGORY_KEY: Record<JournalCategory, MessageKey> = {
+  hair: "data.journal.catHair",
+  skin: "data.journal.catSkin",
+  nails: "data.journal.catNails",
+  movement: "data.journal.catMovement",
+  news: "data.journal.catNews",
+};
+
 /** The filter row's own value: every category, plus "show everything". */
 export type JournalFilter = "all" | JournalCategory;
+
+/** Reading time: `t(JOURNAL_READ_KEY, {}, post.readMin)`. */
+export const JOURNAL_READ_KEY: MessageKey = "data.journal.readMin";
+
+/** The section name a reader sees for a post's machine-token category. */
+export function journalCategoryLabel(t: TFunction, cat: JournalCategory): string {
+  return t(JOURNAL_CATEGORY_KEY[cat]);
+}
+
+/** `'5 min read'` — a plural, so the count goes through `t()`, not a suffix. */
+export function journalReadLabel(t: TFunction, readMin: number): string {
+  return t(JOURNAL_READ_KEY, { count: formatNumber(readMin) }, readMin);
+}
 
 export interface JournalPost {
   id: string;
   cat: JournalCategory;
   /** Staff id — look it up with `data.getStaffMember()`. */
   author: string;
-  date: string;
-  read: string;
+  /** `YYYY-MM-DD` — the byline date, spelled at render. */
+  dateISO: string;
+  /** Reading time in minutes; `data.journal.readMin` carries the words. */
+  readMin: number;
   /** Placeholder-tile tint (hex). Part of the entity palette, not a token. */
   tint: string;
   icon: string;
@@ -52,10 +85,10 @@ export interface JournalPost {
 export const POSTS: readonly JournalPost[] = [
   {
     id: "balayage-summer",
-    cat: "Hair",
+    cat: "hair",
     author: "elin",
-    date: "Jul 18, 2026",
-    read: "5 min read",
+    dateISO: "2026-07-18",
+    readMin: 5,
     tint: "#b58a6a",
     icon: "sun",
     fname: "balayage_summer.jpg",
@@ -72,10 +105,10 @@ export const POSTS: readonly JournalPost[] = [
   },
   {
     id: "evening-routine",
-    cat: "Skin",
+    cat: "skin",
     author: "noor",
-    date: "Jul 9, 2026",
-    read: "4 min read",
+    dateISO: "2026-07-09",
+    readMin: 4,
     tint: "#6f8bb0",
     icon: "moon",
     fname: "evening_routine.jpg",
@@ -91,10 +124,10 @@ export const POSTS: readonly JournalPost[] = [
   },
   {
     id: "gel-or-natural",
-    cat: "Nails",
+    cat: "nails",
     author: "ivy",
-    date: "Jun 28, 2026",
-    read: "6 min read",
+    dateISO: "2026-06-28",
+    readMin: 6,
     tint: "#c08a6a",
     icon: "sparkles",
     fname: "gel_or_natural.jpg",
@@ -110,10 +143,10 @@ export const POSTS: readonly JournalPost[] = [
   },
   {
     id: "five-minute-mobility",
-    cat: "Movement",
+    cat: "movement",
     author: "marco",
-    date: "Jun 15, 2026",
-    read: "3 min read",
+    dateISO: "2026-06-15",
+    readMin: 3,
     tint: "#7d9166",
     icon: "activity",
     fname: "morning_mobility.jpg",
@@ -129,10 +162,10 @@ export const POSTS: readonly JournalPost[] = [
   },
   {
     id: "first-facial",
-    cat: "Skin",
+    cat: "skin",
     author: "noor",
-    date: "Jun 2, 2026",
-    read: "5 min read",
+    dateISO: "2026-06-02",
+    readMin: 5,
     tint: "#6a86ab",
     icon: "flower-2",
     fname: "first_facial.jpg",
@@ -148,10 +181,10 @@ export const POSTS: readonly JournalPost[] = [
   },
   {
     id: "new-rooms",
-    cat: "Studio news",
+    cat: "news",
     author: "elin",
-    date: "May 21, 2026",
-    read: "2 min read",
+    dateISO: "2026-05-21",
+    readMin: 2,
     tint: "#b07d9a",
     icon: "home",
     fname: "new_rooms.jpg",

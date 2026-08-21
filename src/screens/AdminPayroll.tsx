@@ -12,8 +12,14 @@
 import { useMemo } from "react";
 
 import { Avatar, Banner, Button, Chip } from "../components/index.ts";
-import { PAY_PERIODS, PAYROLL } from "../data/screens/admin-payroll.ts";
+import {
+  PAY_PERIODS,
+  PAYROLL,
+  WAGE_TARGET,
+} from "../data/screens/admin-payroll.ts";
 import { data } from "../data/source.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { formatISORange, wholeMoney } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-payroll.css";
@@ -21,12 +27,13 @@ import "../styles/screen-admin-payroll.css";
 /*
  * Whole dollars. `money()` in lib/format is the guest-facing two-decimal
  * formatter (ruling R9); "$4,820.00" in every cell would drown the table.
+ * `wholeMoney()` groups and places the symbol per the active locale — the
+ * `toLocaleString("en-US")` this used to pin was a promise to one reader.
  */
-function dollars(n: number): string {
-  return `$${Math.round(n).toLocaleString("en-US")}`;
-}
+const dollars = wholeMoney;
 
 export default function AdminPayroll() {
+  const { locale, t, number } = useI18n();
   const payPeriod = useStore((s) => s.payPeriod);
   const payRun = useStore((s) => s.payRun);
   const set = useStore((s) => s.set);
@@ -34,6 +41,7 @@ export default function AdminPayroll() {
 
   const period =
     PAY_PERIODS.find((p) => p.id === payPeriod) ?? PAY_PERIODS[0];
+  const periodRange = formatISORange(period.fromISO, period.toISO);
 
   const { rows, kpis } = useMemo(() => {
     let payTotal = 0;
@@ -64,8 +72,14 @@ export default function AdminPayroll() {
           name: staff.name,
           initials: staff.initials,
           tint: staff.tint,
-          rate: p.rate,
-          hours: String(hours),
+          rate: t(p.rateKey, {
+            share:
+              p.share === undefined
+                ? ""
+                : number(p.share, { style: "percent", maximumFractionDigits: 0 }),
+            hourly: p.hourly === undefined ? "" : dollars(p.hourly),
+          }),
+          hours: number(hours),
           services: dollars(services),
           commission: dollars(commission),
           tips: dollars(tips),
@@ -77,25 +91,40 @@ export default function AdminPayroll() {
     return {
       rows: built,
       kpis: [
-        { label: "Total payroll", value: dollars(payTotal), sub: "commission + tips" },
         {
-          label: "Tips collected",
+          label: t("screensA.payroll.kpiTotal"),
+          value: dollars(payTotal),
+          sub: t("screensA.payroll.kpiTotalSub"),
+        },
+        {
+          label: t("screensA.payroll.kpiTips"),
           value: dollars(tipTotal),
-          sub: "pooled, split by hours",
+          sub: t("screensA.payroll.kpiTipsSub"),
         },
         {
-          label: "Hours worked",
-          value: String(hoursTotal),
-          sub: `across ${built.length} specialists`,
+          label: t("screensA.payroll.kpiHours"),
+          value: number(hoursTotal),
+          sub: t("screensA.payroll.kpiHoursSub", {}, built.length),
         },
         {
-          label: "Wage to revenue",
-          value: `${Math.round((payTotal / Math.max(1, svcTotal)) * 100)}%`,
-          sub: "target is under 45%",
+          label: t("screensA.payroll.kpiWage"),
+          value: number(payTotal / Math.max(1, svcTotal), {
+            style: "percent",
+            maximumFractionDigits: 0,
+          }),
+          sub: t("screensA.payroll.kpiWageSub", {
+            target: number(WAGE_TARGET, {
+              style: "percent",
+              maximumFractionDigits: 0,
+            }),
+          }),
         },
       ],
     };
-  }, [period]);
+  /* `locale` is a dependency of every memo that formats: the formatters
+   * read it from the ambient bridge, so a switch that did not invalidate
+   * these would leave the last locale’s text cached on screen. */
+  }, [period, locale, t, number]);
 
   return (
     <div className="scr-admin-payroll">
@@ -103,7 +132,7 @@ export default function AdminPayroll() {
         {PAY_PERIODS.map((p) => (
           <Chip
             key={p.id}
-            label={p.label}
+            label={t(p.labelKey)}
             active={payPeriod === p.id}
             /* Approving one period says nothing about the next, so switching
              * periods drops the approved state — as the comp did. */
@@ -111,7 +140,7 @@ export default function AdminPayroll() {
           />
         ))}
         <span className="pay-bar__gap" />
-        <span className="pay-bar__period">{period.range}</span>
+        <span className="pay-bar__period">{periodRange}</span>
         <Button
           /* No `play` glyph in the registry; `send` is the closest run-it-now
            * affordance it carries. */
@@ -123,10 +152,10 @@ export default function AdminPayroll() {
           className="pay-run"
           onClick={() => {
             set({ payRun: true });
-            showToast("Payroll approved · paid Friday", "ok");
+            showToast(t("screensA.payroll.approvedToast"), "ok");
           }}
         >
-          {payRun ? "Payroll approved" : "Run payroll"}
+          {t(payRun ? "screensA.payroll.approved" : "screensA.payroll.run")}
         </Button>
       </div>
 
@@ -146,18 +175,21 @@ export default function AdminPayroll() {
       <div className="pay-tablewrap bk-panel">
         <table className="pay-table">
           <caption className="pay-table__caption">
-            Pay for {period.label.toLowerCase()}, {period.range}
+            {t("screensA.payroll.caption", {
+              period: t(period.labelKey),
+              range: periodRange,
+            })}
           </caption>
           <thead>
             <tr>
               <th scope="col" className="pay-table__whocol">
-                Specialist
+                {t("screensA.payroll.colStaff")}
               </th>
-              <th scope="col">Hours</th>
-              <th scope="col">Services</th>
-              <th scope="col">Commission</th>
-              <th scope="col">Tips</th>
-              <th scope="col">Total pay</th>
+              <th scope="col">{t("screensA.payroll.colHours")}</th>
+              <th scope="col">{t("screensA.payroll.colServices")}</th>
+              <th scope="col">{t("screensA.payroll.colCommission")}</th>
+              <th scope="col">{t("screensA.payroll.colTips")}</th>
+              <th scope="col">{t("screensA.payroll.colTotal")}</th>
             </tr>
           </thead>
           <tbody>
@@ -190,9 +222,7 @@ export default function AdminPayroll() {
       </div>
 
       <Banner tone="info" icon="info" className="pay-note">
-        Tips are pooled daily and split by hours worked, front of house
-        included. Card tips clear with the next payout; cash tips are logged at
-        close.
+        {t("screensA.payroll.note")}
       </Banner>
     </div>
   );

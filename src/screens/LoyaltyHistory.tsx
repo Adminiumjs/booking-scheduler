@@ -9,8 +9,9 @@
 import type { CSSProperties } from "react";
 
 import { BackLink, Button } from "../components/index.ts";
-import { data } from "../data/source.ts";
-import { pointsDelta } from "../lib/format.ts";
+import { data, seedText } from "../data/source.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { formatMediumISO, pointsDelta } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 import "../styles/screen-lhistory.css";
 
@@ -22,6 +23,7 @@ const REDEEM_CTA: CSSProperties = {
 };
 
 export default function LoyaltyHistory() {
+  const { t, number } = useI18n();
   const points = useStore((s) => s.points);
   const go = useStore((s) => s.go);
 
@@ -29,21 +31,27 @@ export default function LoyaltyHistory() {
 
   return (
     <main className="bk-screen bk-page bk-lhistory">
-      <BackLink onClick={() => go("home")}>Back home</BackLink>
+      <BackLink onClick={() => go("home")}>
+        {t("screensB.common.backHome")}
+      </BackLink>
 
       <div className="bk-lhistory__intro">
-        <h1 className="bk-h1">Loyalty history</h1>
-        <p className="bk-sub bk-lhistory__sub">
-          Every point you've earned and spent with Studio Circle.
-        </p>
+        <h1 className="bk-h1">{t("screensB.lhistory.title")}</h1>
+        <p className="bk-sub bk-lhistory__sub">{t("screensB.lhistory.sub")}</p>
       </div>
 
       <div className="bk-lhistory-balance">
         <div>
-          <div className="bk-lhistory-balance__label">Current balance</div>
+          <div className="bk-lhistory-balance__label">
+            {t("screensB.lhistory.currentBalance")}
+          </div>
           <div className="bk-lhistory-balance__figure">
-            <span className="bk-mono bk-lhistory-balance__value">{points}</span>
-            <span className="bk-lhistory-balance__unit">pts</span>
+            <span className="bk-mono bk-lhistory-balance__value">
+              {number(points)}
+            </span>
+            <span className="bk-lhistory-balance__unit">
+              {t("screensB.common.ptsUnit", {}, points)}
+            </span>
           </div>
         </div>
         <Button
@@ -54,16 +62,24 @@ export default function LoyaltyHistory() {
           style={REDEEM_CTA}
           onClick={() => go("loyalty")}
         >
-          Redeem rewards
+          {t("screensB.lhistory.redeemRewards")}
         </Button>
       </div>
 
       <div className="bk-lhistory-ledger">
         {rows.map((row) => (
-          <div className="bk-lhistory-row" key={row.label}>
+          <div className="bk-lhistory-row" key={row.dateISO}>
             <div className="bk-lhistory-row__text">
-              <div className="bk-lhistory-row__label">{row.label}</div>
-              <div className="bk-lhistory-row__date">{row.date}</div>
+              <div className="bk-lhistory-row__label">
+                {seedText(t, row.labelKey, {
+                  svc: row.svc,
+                  staff: row.staff,
+                  amount: row.amount,
+                })}
+              </div>
+              <div className="bk-lhistory-row__date">
+                {formatMediumISO(row.dateISO)}
+              </div>
             </div>
             <div className="bk-lhistory-row__end">
               <div
@@ -72,7 +88,9 @@ export default function LoyaltyHistory() {
               >
                 {pointsDelta(row.delta)}
               </div>
-              <div className="bk-mono bk-lhistory-row__balance">{row.balance} pts</div>
+              <div className="bk-mono bk-lhistory-row__balance">
+                {t("screensB.common.ptsCount", { count: number(row.balance) }, row.balance)}
+              </div>
             </div>
           </div>
         ))}

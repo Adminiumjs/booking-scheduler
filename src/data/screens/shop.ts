@@ -7,6 +7,9 @@
  * so a cart line and a shelf card can never disagree about a price.
  */
 
+import type { MessageKey, TFunction } from "../../i18n/index.tsx";
+import { formatNumber } from "../../lib/format.ts";
+
 /** Shelf sections. `'all'` is the chip, never a product's own category. */
 export type ShopCategory = "hair" | "skin" | "nails" | "home";
 export type ShopFilter = "all" | ShopCategory;
@@ -17,25 +20,46 @@ export interface ShopProduct {
   cat: ShopCategory;
   /** Whole dollars; render through `money()`. */
   price: number;
-  /** Pack size, e.g. `'200 ml'`. */
-  size: string;
+  /**
+   * Pack size in millilitres, or `null` for the one-size line. The unit is a
+   * message key rather than a suffix baked into the string, so the digits and
+   * the abbreviation both belong to the reader's locale.
+   */
+  ml: number | null;
   /** Placeholder-tile tint (hex) — part of the entity palette, not a token. */
   tint: string;
   icon: string;
-  /** Corner ribbon; empty string means no ribbon. */
-  badge: string;
+  /** Corner ribbon; `null` means no ribbon. */
+  badgeKey: MessageKey | null;
   /** Fake filename for the tile's mono chip. */
   fname: string;
   blurb: string;
 }
 
-export const SHOP_CATS: readonly { slug: ShopFilter; label: string }[] = [
-  { slug: "all", label: "Everything" },
-  { slug: "hair", label: "Hair" },
-  { slug: "skin", label: "Skin" },
-  { slug: "nails", label: "Nails" },
-  { slug: "home", label: "Home" },
+export const SHOP_CATS: readonly { slug: ShopFilter; labelKey: MessageKey }[] = [
+  { slug: "all", labelKey: "data.shop.catAll" },
+  { slug: "hair", labelKey: "data.shop.catHair" },
+  { slug: "skin", labelKey: "data.shop.catSkin" },
+  { slug: "nails", labelKey: "data.shop.catNails" },
+  { slug: "home", labelKey: "data.shop.catHome" },
 ];
+
+/**
+ * How a pack size is spelled. `ml` carries the figure; these carry the unit
+ * and the one-size wording, which are words and so belong in the bundle.
+ */
+export const SIZE_ML_KEY: MessageKey = "data.shop.sizeMl";
+export const SIZE_ONE_KEY: MessageKey = "data.shop.oneSize";
+
+/**
+ * `'200 ml'` / `'One size'` — the shelf, the stock room and the till all print
+ * a pack size, so the choice between the two keys lives here rather than three
+ * times over. The figure goes through `formatNumber()` so it carries the
+ * reader's digits and grouping.
+ */
+export function sizeLabel(t: TFunction, ml: number | null): string {
+  return ml === null ? t(SIZE_ONE_KEY) : t(SIZE_ML_KEY, { n: formatNumber(ml) });
+}
 
 export const PRODUCTS: readonly ShopProduct[] = [
   {
@@ -43,10 +67,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Bond Repair Mask",
     cat: "hair",
     price: 38,
-    size: "200 ml",
+    ml: 200,
     tint: "#b58a6a",
     icon: "droplet",
-    badge: "Bestseller",
+    badgeKey: "data.shop.badgeBestseller",
     fname: "bond_mask.jpg",
     blurb:
       "Ten minutes a week. The one thing that keeps lightened hair from snapping.",
@@ -56,10 +80,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Colour Gloss Shampoo",
     cat: "hair",
     price: 26,
-    size: "300 ml",
+    ml: 300,
     tint: "#b07d9a",
     icon: "flask-conical",
-    badge: "",
+    badgeKey: null,
     fname: "gloss_shampoo.jpg",
     blurb:
       "Tops up tone between glosses without staining your hands or your towels.",
@@ -69,10 +93,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Weightless Scalp Oil",
     cat: "hair",
     price: 32,
-    size: "50 ml",
+    ml: 50,
     tint: "#9a7fb0",
     icon: "sprout",
-    badge: "",
+    badgeKey: null,
     fname: "scalp_oil.jpg",
     blurb: "For itchy winter scalps. Sinks in fast enough to use in the morning.",
   },
@@ -81,10 +105,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Barrier Repair Cream",
     cat: "skin",
     price: 54,
-    size: "50 ml",
+    ml: 50,
     tint: "#6f8bb0",
     icon: "flower-2",
-    badge: "New",
+    badgeKey: "data.shop.badgeNew",
     fname: "barrier_cream.jpg",
     blurb:
       "Noor’s pick when the heating goes on and everything starts feeling tight.",
@@ -94,10 +118,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Everyday SPF 40",
     cat: "skin",
     price: 34,
-    size: "50 ml",
+    ml: 50,
     tint: "#6a86ab",
     icon: "sun",
-    badge: "",
+    badgeKey: null,
     fname: "everyday_spf.jpg",
     blurb: "No white cast, no pilling under makeup. We go through cases of it.",
   },
@@ -106,10 +130,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Cuticle Oil Pen",
     cat: "nails",
     price: 16,
-    size: "3 ml",
+    ml: 3,
     tint: "#c08a6a",
     icon: "pen-tool",
-    badge: "",
+    badgeKey: null,
     fname: "cuticle_pen.jpg",
     blurb:
       "Lives in a coat pocket. The difference between two and three good weeks.",
@@ -119,10 +143,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Studio Hand Balm",
     cat: "nails",
     price: 22,
-    size: "75 ml",
+    ml: 75,
     tint: "#a8846f",
     icon: "hand",
-    badge: "",
+    badgeKey: null,
     fname: "hand_balm.jpg",
     blurb: "The one on every station, in a size you can actually take home.",
   },
@@ -131,10 +155,10 @@ export const PRODUCTS: readonly ShopProduct[] = [
     name: "Fast-Dry Hair Towel",
     cat: "home",
     price: 28,
-    size: "One size",
+    ml: null,
     tint: "#7d9166",
     icon: "waves",
-    badge: "",
+    badgeKey: null,
     fname: "hair_towel.jpg",
     blurb: "Cuts drying time in half and stops the frizz a bath towel causes.",
   },

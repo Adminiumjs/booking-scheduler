@@ -20,10 +20,16 @@ import {
   StarBar,
 } from "../components/index.ts";
 import { data } from "../data/source.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { durationLabel, hoursLabel, weekdayName } from "../lib/format.ts";
 import { SCROLL_OFFSET, useStore } from "../state/store.ts";
 import "../styles/screen-home.css";
 
+/** The rating scale the star bar draws, and the one the label quotes. */
+const STAR_MAX = 5;
+
 export default function Home() {
+  const { t, number } = useI18n();
   const go = useStore((s) => s.go);
   const startBooking = useStore((s) => s.startBooking);
   const setSCat = useStore((s) => s.setSCat);
@@ -55,6 +61,13 @@ export default function Home() {
   const todayIdx = data.getTodayHoursIndex();
   const loc = data.getLocation();
 
+  /* One decimal, in the reader's digits and with their decimal separator —
+   * `4.9` is `4,9` in de-DE and `٤٫٩` in ar-EG. */
+  const averageLabel = number(summary.average, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+
   return (
     <main className="bk-screen bk-home">
       {/* ---------------- A. Hero ---------------- */}
@@ -63,17 +76,15 @@ export default function Home() {
           <div className="bk-home-hero__copy">
             <span className="bk-home-eyebrow">
               <Icon name="sparkles" size={14} />
-              Boutique beauty &amp; wellness
+              {t("screensB.home.eyebrow")}
             </span>
-            <h1 className="bk-home-hero__title">
-              Feel like the
-              <br />
-              best version of you.
-            </h1>
-            <p className="bk-home-hero__lede">
-              Hair, spa, nails, and movement under one calm roof. Book a chair or a
-              treatment room in a few taps — no phone tag, no account needed.
-            </p>
+            {/*
+             * The comp hard-broke this headline after "the". A forced <br/>
+             * only ever lands right for one language, so the line is one
+             * message and wraps where the box says it should.
+             */}
+            <h1 className="bk-home-hero__title">{t("screensB.home.title")}</h1>
+            <p className="bk-home-hero__lede">{t("screensB.home.lede")}</p>
             <div className="bk-home-hero__actions">
               <Button
                 className="bk-home-cta"
@@ -81,7 +92,7 @@ export default function Home() {
                 iconSize={17}
                 onClick={() => startBooking(null)}
               >
-                Book now
+                {t("screensB.home.bookNow")}
               </Button>
               <Button
                 className="bk-home-cta bk-home-cta--ghost"
@@ -89,21 +100,21 @@ export default function Home() {
                 iconEnd="arrow-right"
                 onClick={() => go("services")}
               >
-                View services
+                {t("screensB.home.viewServices")}
               </Button>
             </div>
             <div className="bk-home-trust">
               <span className="bk-home-trust__item">
                 <Icon name="clock" size={15} color="var(--accent)" />
-                Same-week openings
+                {t("screensB.home.trustOpenings")}
               </span>
               <span className="bk-home-trust__item">
                 <Icon name="map-pin" size={15} color="var(--accent)" />
-                Downtown studio
+                {t("screensB.home.trustDowntown")}
               </span>
               <span className="bk-home-trust__item">
                 <Icon name="heart-handshake" size={15} color="var(--accent)" />
-                Walk-ins welcome
+                {t("screensB.home.trustWalkins")}
               </span>
             </div>
           </div>
@@ -128,17 +139,15 @@ export default function Home() {
       <section className="bk-home-section">
         <div className="bk-home-head">
           <div>
-            <h2 className="bk-h2">Popular services</h2>
-            <p className="bk-home-sub">
-              A little something from every corner of the studio.
-            </p>
+            <h2 className="bk-h2">{t("screensB.home.popularTitle")}</h2>
+            <p className="bk-home-sub">{t("screensB.home.popularSub")}</p>
           </div>
           <button
             type="button"
             className="bk-nav bk-home-seeall"
             onClick={() => go("services")}
           >
-            See all
+            {t("screensB.common.seeAll")}
             <Icon name="arrow-right" size={15} />
           </button>
         </div>
@@ -158,9 +167,9 @@ export default function Home() {
         <div className="bk-home-head bk-home-head--stack">
           <div>
             <h2 className="bk-h2" id="bk-home-team-title">
-              Meet the team
+              {t("screensB.home.teamTitle")}
             </h2>
-            <p className="bk-home-sub">Four specialists, one very tidy calendar.</p>
+            <p className="bk-home-sub">{t("screensB.home.teamSub")}</p>
           </div>
         </div>
         <div className="bk-home-grid bk-home-grid--team">
@@ -181,21 +190,24 @@ export default function Home() {
       <section className="bk-home-section">
         <div className="bk-home-head bk-home-head--wrap">
           <div>
-            <h2 className="bk-h2">Loved by regulars</h2>
-            <p className="bk-home-sub">
-              What guests say once they're back in the real world.
-            </p>
+            <h2 className="bk-h2">{t("screensB.home.lovedTitle")}</h2>
+            <p className="bk-home-sub">{t("screensB.home.lovedSub")}</p>
           </div>
           <div className="bk-home-rating">
-            <span className="bk-mono bk-home-rating__avg">{summary.averageLabel}</span>
+            <span className="bk-mono bk-home-rating__avg">{averageLabel}</span>
             <div>
               <StarBar
                 value={summary.average}
                 size={16}
                 gap={2}
-                label={`${summary.averageLabel} out of 5`}
+                label={t("chrome.stars.rating", {
+                  value: averageLabel,
+                  max: number(STAR_MAX),
+                })}
               />
-              <div className="bk-home-rating__caption">from {summary.countLabel}</div>
+              <div className="bk-home-rating__caption">
+                {t("screensB.home.ratingFrom", { count: number(summary.count) }, summary.count)}
+              </div>
             </div>
           </div>
         </div>
@@ -217,7 +229,7 @@ export default function Home() {
             <div className="bk-home-cardhead">
               <Icon name="clock" size={19} color="var(--accent)" />
               <h2 className="bk-home-cardtitle" id="bk-home-hours-title">
-                Weekly hours
+                {t("screensB.home.hoursTitle")}
               </h2>
             </div>
             <div className="bk-home-hours">
@@ -230,9 +242,11 @@ export default function Home() {
                     data-today={isToday ? "true" : "false"}
                   >
                     <span className="bk-home-hours-day">
-                      {h.day}
+                      {weekdayName(h.day)}
                       {isToday ? (
-                        <span className="bk-home-today-pill">Today</span>
+                        <span className="bk-home-today-pill">
+                          {t("chrome.day.today")}
+                        </span>
                       ) : null}
                     </span>
                     <span
@@ -240,7 +254,7 @@ export default function Home() {
                       data-today={isToday ? "true" : "false"}
                       data-closed={h.closed ? "true" : "false"}
                     >
-                      {h.value}
+                      {hoursLabel(h)}
                     </span>
                   </div>
                 );
@@ -248,8 +262,7 @@ export default function Home() {
             </div>
             <p className="bk-home-hours-note">
               <Icon name="info" size={14} />
-              Individual specialists keep their own hours — you'll see live openings when
-              you book.
+              {t("screensB.home.hoursNote")}
             </p>
           </Card>
 
@@ -276,7 +289,9 @@ export default function Home() {
                 </span>
                 <span className="bk-home-trust__item">
                   <Icon name="train-front" size={14} color="var(--accent)" />
-                  {loc.transit}
+                  {t("data.location.transit", {
+                    minutes: durationLabel(loc.transitMinutes),
+                  })}
                 </span>
               </div>
             </div>

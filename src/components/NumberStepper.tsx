@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 
+import { useT } from "../i18n/index.tsx";
 import { Icon } from "./Icon.tsx";
 
 export interface NumberStepperProps {
@@ -29,6 +30,7 @@ export function NumberStepper({
   className,
   style,
 }: NumberStepperProps) {
+  const t = useT();
   const clamp = (n: number) => Math.min(max, Math.max(min, n));
   return (
     <div
@@ -40,7 +42,7 @@ export function NumberStepper({
         className="bk-gi bk-stepper-num__btn"
         onClick={() => onChange(clamp(value - step))}
         disabled={value <= min}
-        aria-label={`Decrease ${label}`}
+        aria-label={t("chrome.stepper.decrease", { label })}
       >
         <Icon name="minus" size={15} />
       </button>
@@ -52,7 +54,7 @@ export function NumberStepper({
         className="bk-gi bk-stepper-num__btn"
         onClick={() => onChange(clamp(value + step))}
         disabled={value >= max}
-        aria-label={`Increase ${label}`}
+        aria-label={t("chrome.stepper.increase", { label })}
       >
         <Icon name="plus" size={15} />
       </button>

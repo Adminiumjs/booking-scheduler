@@ -25,6 +25,7 @@ import {
 } from "../components/index.ts";
 import { data } from "../data/source.ts";
 import type { Booking } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
 import { durationLabel, formatLongISO, minutesToTime, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
@@ -38,6 +39,7 @@ interface DetailRow {
 }
 
 export default function Manage() {
+  const t = useT();
   const mgCode = useStore((s) => s.mgCode);
   const mgEmail = useStore((s) => s.mgEmail);
   const mgErr = useStore((s) => s.mgErr);
@@ -56,10 +58,8 @@ export default function Manage() {
   return (
     <main className="bk-screen bk-page bk-manage">
       <div className="bk-manage__head">
-        <h1 className="bk-h1">Manage booking</h1>
-        <p className="bk-sub">
-          Reschedule or cancel an appointment with your code and email.
-        </p>
+        <h1 className="bk-h1">{t("screensB.manage.title")}</h1>
+        <p className="bk-sub">{t("screensB.manage.sub")}</p>
       </div>
 
       {booking ? (
@@ -78,12 +78,13 @@ export default function Manage() {
               findBooking();
             }}
           >
-            <Field label="Booking code">
+            <Field label={t("screensB.manage.fieldCode")}>
               {(c) => (
                 <TextInput
                   {...c}
                   value={mgCode}
                   onChange={setMgCode}
+                  /* The seeded booking's own code — a demo record, not chrome. */
                   placeholder="LMN-1039"
                   mono
                   className="bk-manage-find__code"
@@ -91,13 +92,13 @@ export default function Manage() {
               )}
             </Field>
 
-            <Field label="Email on the booking">
+            <Field label={t("screensB.manage.fieldEmail")}>
               {(c) => (
                 <TextInput
                   {...c}
                   value={mgEmail}
                   onChange={setMgEmail}
-                  placeholder="you@email.com"
+                  placeholder={t("screensB.common.phEmail")}
                   type="email"
                 />
               )}
@@ -111,13 +112,12 @@ export default function Manage() {
               full
               className="bk-manage-find__cta"
             >
-              Find my booking
+              {t("screensB.manage.find")}
             </Button>
 
             <p className="bk-manage-find__tip">
               <Icon name="lightbulb" size={14} />
-              Demo tip: the fields are pre-filled with a booking that already
-              exists — just hit Find.
+              {t("screensB.manage.tip")}
             </p>
           </form>
         </Card>
@@ -138,6 +138,7 @@ interface ManageCardProps {
 }
 
 function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProps) {
+  const t = useT();
   const svc = data.getService(booking.svc);
   const staff = data.getStaffMember(booking.staff);
   const cancelled = booking.status === "cancelled";
@@ -145,17 +146,31 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
   const rows: DetailRow[] = [
     {
       icon: "user",
-      label: "With",
-      value: staff ? `${staff.name} · ${staff.role}` : "First available",
+      label: t("screensB.common.with"),
+      value: staff
+        ? t("screensB.manage.withRole", { name: staff.name, role: staff.role })
+        : t("screensB.common.firstAvailable"),
     },
-    { icon: "calendar", label: "When", value: formatLongISO(booking.dateISO) },
+    {
+      icon: "calendar",
+      label: t("screensB.common.when"),
+      value: formatLongISO(booking.dateISO),
+    },
     {
       icon: "clock",
-      label: "Time",
-      value: `${minutesToTime(booking.time)} · ${durationLabel(booking.dur)}`,
+      label: t("screensB.common.time"),
+      value: t("screensB.common.timeDur", {
+        time: minutesToTime(booking.time),
+        duration: durationLabel(booking.dur),
+      }),
       mono: true,
     },
-    { icon: "wallet", label: "Total", value: money(booking.price), mono: true },
+    {
+      icon: "wallet",
+      label: t("screensB.common.total"),
+      value: money(booking.price),
+      mono: true,
+    },
   ];
 
   return (
@@ -178,7 +193,11 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
             tone={cancelled ? "muted" : "pos"}
             icon={cancelled ? "x-circle" : "check-circle-2"}
           >
-            {cancelled ? "Cancelled" : "Confirmed"}
+            {t(
+              cancelled
+                ? "screensB.manage.cancelled"
+                : "screensB.manage.confirmed",
+            )}
           </StatusPill>
         </div>
 
@@ -203,8 +222,7 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
         {cancelled ? (
           <p className="bk-manage-card__note">
             <Icon name="info" size={15} />
-            This appointment was cancelled. Book again any time — we’d love to
-            have you.
+            {t("screensB.manage.cancelledNote")}
           </p>
         ) : (
           <div className="bk-manage-card__foot">
@@ -214,7 +232,7 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
               onClick={onReschedule}
               className="bk-manage-card__action"
             >
-              Reschedule
+              {t("screensB.common.reschedule")}
             </Button>
             <Button
               variant="ghost"
@@ -222,14 +240,14 @@ function ManageCard({ booking, onReschedule, onCancel, onReset }: ManageCardProp
               onClick={onCancel}
               className="bk-manage-card__action bk-manage-card__action--danger"
             >
-              Cancel
+              {t("screensB.common.cancel")}
             </Button>
           </div>
         )}
       </div>
 
       <BackLink onClick={onReset} className="bk-manage__another">
-        Find another booking
+        {t("screensB.manage.findAnother")}
       </BackLink>
     </>
   );

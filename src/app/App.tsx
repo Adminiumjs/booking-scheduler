@@ -23,6 +23,8 @@ import {
   ToastLayer,
 } from "../components/index.ts";
 import type { View } from "../data/types.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { setAmbient } from "../i18n/ambient.ts";
 import { useStore } from "../state/store.ts";
 
 import Booking from "../screens/Booking.tsx";
@@ -150,6 +152,18 @@ function CurrentScreen() {
 export default function App() {
   const initTheme = useStore((s) => s.initTheme);
   const escape = useStore((s) => s.escape);
+
+  /*
+   * Publish the live locale to the module-level bridge before anything below
+   * renders. `lib/format.ts` builds its `Intl` instances from it, and the
+   * store, `data/screens/*` and `lib/slots.ts` all call those formatters from
+   * outside React, where no hook can reach the provider. Assigning during
+   * render rather than in an effect matters: children render after this line,
+   * so the first paint after a locale switch is already in the new locale
+   * instead of one frame behind.
+   */
+  const { locale, t, money, number } = useI18n();
+  setAmbient(locale, t, money, number);
 
   useEffect(() => {
     initTheme();

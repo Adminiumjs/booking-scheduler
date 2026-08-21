@@ -1604,8 +1604,25 @@
     display: inline;
   }
 }
-.bk-dock__theme {
+/* The endonym picker. Carries the auto margin that used to sit on the theme
+   toggle, so it and the toggle stay together at the inline end of the row. */
+.bk-dock__lang {
   margin-inline-start: auto;
+  block-size: 32px;
+  max-inline-size: 148px;
+  padding-inline: 8px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.bk-dock__theme {
   inline-size: 32px;
   block-size: 32px;
   border-radius: 9px;

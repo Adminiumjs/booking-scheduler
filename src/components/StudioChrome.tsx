@@ -21,15 +21,18 @@ import {
 import type { StudioNavItem } from "./chrome.ts";
 import { Icon } from "./Icon.tsx";
 import type { IconName } from "./Icon.tsx";
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 
-function NavGroup({ label, items }: { label: string; items: StudioNavItem[] }) {
+function NavGroup({ labelKey, items }: { labelKey: MessageKey; items: StudioNavItem[] }) {
+  const t = useT();
   const view = useStore((s) => s.view);
   const go = useStore((s) => s.go);
 
   return (
     <>
-      <span className="bk-studio__navlabel">{label}</span>
+      <span className="bk-studio__navlabel">{t(labelKey)}</span>
       {items.map((n) => (
         <button
           key={n.view}
@@ -39,7 +42,7 @@ function NavGroup({ label, items }: { label: string; items: StudioNavItem[] }) {
           aria-current={view === n.view ? "page" : undefined}
         >
           <Icon name={n.icon as IconName} size={17} />
-          <span className="bk-studio__navtext">{n.label}</span>
+          <span className="bk-studio__navtext">{t(n.labelKey)}</span>
           {n.badge ? <span className="bk-studio__navbadge">{n.badge}</span> : null}
         </button>
       ))}
@@ -52,6 +55,7 @@ function NavGroup({ label, items }: { label: string; items: StudioNavItem[] }) {
  * lives here rather than in App — the shell differs by persona, not by route.
  */
 export default function StudioChrome({ children }: { children: ReactNode }) {
+  const t = useT();
   const view = useStore((s) => s.view);
   const query = useStore((s) => s.query);
   const set = useStore((s) => s.set);
@@ -60,7 +64,7 @@ export default function StudioChrome({ children }: { children: ReactNode }) {
   const theme = useStore((s) => s.theme);
   const showToast = useStore((s) => s.showToast);
 
-  const meta = STUDIO_PAGE_META[view] ?? { title: "Studio", sub: "" };
+  const meta = STUDIO_PAGE_META[view];
 
   return (
     <div className="bk-studio">
@@ -73,22 +77,22 @@ export default function StudioChrome({ children }: { children: ReactNode }) {
           </span>
         </div>
 
-        <nav className="bk-studio__nav" aria-label="Studio">
-          <NavGroup label="Operations" items={STUDIO_NAV_OPS} />
-          <NavGroup label="Business" items={STUDIO_NAV_BIZ} />
+        <nav className="bk-studio__nav" aria-label={t("chrome.studio.nav")}>
+          <NavGroup labelKey="chrome.studio.ops" items={STUDIO_NAV_OPS} />
+          <NavGroup labelKey="chrome.studio.biz" items={STUDIO_NAV_BIZ} />
         </nav>
 
         <div className="bk-studio__me">
           <span className="bk-studio__avatar">{BRAND.owner.initials}</span>
           <span className="bk-studio__metext">
             <span className="bk-studio__mename">{BRAND.owner.name}</span>
-            <span className="bk-studio__merole">{BRAND.owner.role}</span>
+            <span className="bk-studio__merole">{t(BRAND.owner.roleKey)}</span>
           </span>
           <button
             type="button"
             className="bk-gi bk-studio__themebtn"
             onClick={toggleTheme}
-            aria-label="Toggle theme"
+            aria-label={t("chrome.theme.toggle")}
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} size={15} />
           </button>
@@ -98,8 +102,12 @@ export default function StudioChrome({ children }: { children: ReactNode }) {
       <div className="bk-studio__main">
         <header className="bk-studio__topbar">
           <div className="bk-studio__title">
-            <span className="bk-studio__h1">{meta.title}</span>
-            <span className="bk-studio__sub">{meta.sub}</span>
+            <span className="bk-studio__h1">
+              {t(meta ? meta.titleKey : "chrome.studio.fallbackTitle")}
+            </span>
+            <span className="bk-studio__sub">
+              {meta ? t(meta.subKey) : ""}
+            </span>
           </div>
 
           <label className="bk-studio__search">
@@ -107,16 +115,16 @@ export default function StudioChrome({ children }: { children: ReactNode }) {
             <input
               value={query}
               onChange={(e) => set({ query: e.target.value })}
-              placeholder="Search clients, bookings…"
-              aria-label="Search clients and bookings"
+              placeholder={t("chrome.studio.searchPlaceholder")}
+              aria-label={t("chrome.studio.searchLabel")}
             />
           </label>
 
           <button
             type="button"
             className="bk-gi bk-studio__bell"
-            onClick={() => showToast("Three bookings need confirming.", "warn")}
-            aria-label="Notifications"
+            onClick={() => showToast(t("chrome.studio.notifToast"), "warn")}
+            aria-label={t("chrome.studio.notifications")}
           >
             <Icon name="bell" size={17} />
             <span className="bk-studio__dot" aria-hidden="true" />
@@ -128,7 +136,7 @@ export default function StudioChrome({ children }: { children: ReactNode }) {
             onClick={() => go("admin-cal")}
           >
             <Icon name="plus" size={16} />
-            New booking
+            {t("chrome.studio.newBooking")}
           </button>
         </header>
 

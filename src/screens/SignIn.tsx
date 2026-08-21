@@ -16,6 +16,7 @@ import {
   Icon,
   TextInput,
 } from "../components/index.ts";
+import { useT } from "../i18n/index.tsx";
 import { isValidEmail } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
@@ -25,6 +26,7 @@ import "../styles/screen-signin.css";
 const CODE_LENGTH = 6;
 
 export default function SignIn() {
+  const t = useT();
   const siStep = useStore((s) => s.siStep);
   const siEmail = useStore((s) => s.siEmail);
   const siCode = useStore((s) => s.siCode);
@@ -40,22 +42,29 @@ export default function SignIn() {
     /* The comp hand-rolled a looser check; the app already ships one
      * validator and every other form on the guest half uses it. */
     if (!isValidEmail(siEmail.trim())) {
-      set({ siErr: "Enter a valid email address." });
+      set({ siErr: t("screensB.signin.errEmail") });
       return;
     }
     set({ siStep: "code", siCode: "", siErr: "" });
-    showToast("Code sent · any six digits work", "ok");
+    showToast(t("screensB.signin.toastCodeSent"), "ok");
   };
 
   const verify = (): void => {
     if (siCode.length < CODE_LENGTH) {
-      set({ siErr: "Enter all six digits to continue." });
+      set({ siErr: t("screensB.signin.errCode") });
       return;
     }
     set({ signedIn: true, siStep: "email", siCode: "", siErr: "" });
     go("dash");
-    showToast(`Signed in as ${acctName}`, "ok");
+    showToast(t("screensB.signin.toastSignedIn", { name: acctName }), "ok");
   };
+
+  /*
+   * The echoed address sits inside the sentence, so the message owns the whole
+   * line and the split on its placeholder is what keeps the highlight — a
+   * translator can move `{email}` anywhere the sentence needs it.
+   */
+  const [sentBefore, sentAfter] = t("screensB.signin.sentTo").split("{email}");
 
   return (
     <section className="bk-screen bk-page scr-signin">
@@ -63,15 +72,17 @@ export default function SignIn() {
         <>
           <div className="scr-signin__intro">
             <span className="scr-signin__mark">{BRAND.mark}</span>
-            <h1 className="bk-h1">Welcome back</h1>
+            <h1 className="bk-h1">{t("screensB.signin.welcome")}</h1>
             <p className="bk-sub scr-signin__lede">
-              Enter your email and we’ll send a six-digit code. No passwords to
-              forget.
+              {t("screensB.signin.lede")}
             </p>
           </div>
 
           <Card radius={20} padding={22} className="scr-signin__card">
-            <Field label="Email address" error={siErr || undefined}>
+            <Field
+              label={t("screensB.signin.fieldEmail")}
+              error={siErr || undefined}
+            >
               {(control) => (
                 <TextInput
                   {...control}
@@ -79,7 +90,7 @@ export default function SignIn() {
                   inputMode="email"
                   value={siEmail}
                   onChange={(v) => set({ siEmail: v, siErr: "" })}
-                  placeholder="you@email.com"
+                  placeholder={t("screensB.common.phEmail")}
                 />
               )}
             </Field>
@@ -93,18 +104,18 @@ export default function SignIn() {
             >
               <Checkbox checked={siRemember} />
               <span className="scr-signin__remembertext">
-                Keep me signed in on this device
+                {t("screensB.signin.remember")}
               </span>
             </button>
 
             <Button icon="mail" iconSize={17} size="lg" full onClick={sendCode}>
-              Email me a code
+              {t("screensB.signin.emailCode")}
             </Button>
           </Card>
 
           <div className="scr-signin__or">
             <span className="scr-signin__rule" />
-            <span className="scr-signin__orlabel">or</span>
+            <span className="scr-signin__orlabel">{t("screensB.signin.or")}</span>
             <span className="scr-signin__rule" />
           </div>
 
@@ -116,27 +127,30 @@ export default function SignIn() {
             className="scr-signin__guest"
             onClick={() => startBooking(null)}
           >
-            Book without an account
+            {t("screensB.signin.bookWithoutAccount")}
           </Button>
 
-          <p className="scr-signin__foot">
-            This is a demo sign-in — any email works and no code is really sent.
-          </p>
+          <p className="scr-signin__foot">{t("screensB.signin.foot")}</p>
         </>
       ) : (
         <>
           <BackLink onClick={() => set({ siStep: "email", siCode: "", siErr: "" })}>
-            Use a different email
+            {t("screensB.signin.differentEmail")}
           </BackLink>
 
           <div className="scr-signin__intro">
             <span className="scr-signin__sent">
               <Icon name="mail-check" size={26} />
             </span>
-            <h1 className="bk-h1 scr-signin__h1--code">Check your inbox</h1>
+            <h1 className="bk-h1 scr-signin__h1--code">
+              {t("screensB.signin.checkInbox")}
+            </h1>
             <p className="bk-sub scr-signin__lede">
-              We sent a six-digit code to{" "}
-              <span className="scr-signin__echo">{siEmail || "your inbox"}</span>
+              {sentBefore}
+              <span className="scr-signin__echo">
+                {siEmail || t("screensB.signin.yourInbox")}
+              </span>
+              {sentAfter ?? ""}
             </p>
           </div>
 
@@ -149,11 +163,12 @@ export default function SignIn() {
                   siErr: "",
                 })
               }
+              /* A digit mask, not a word — the same in every locale. */
               placeholder="000000"
               maxLength={CODE_LENGTH}
               inputMode="numeric"
               mono
-              ariaLabel="Six-digit sign-in code"
+              ariaLabel={t("screensB.signin.codeLabel")}
               className="scr-signin__code"
             />
             {siErr ? (
@@ -164,22 +179,22 @@ export default function SignIn() {
             ) : null}
 
             <Button icon="log-in" iconSize={17} size="lg" full onClick={verify}>
-              Verify &amp; sign in
+              {t("screensB.signin.verify")}
             </Button>
 
             <div className="scr-signin__resend">
-              Didn’t get it?
+              {t("screensB.signin.didntGet")}
               <button
                 type="button"
                 className="bk-nav scr-signin__resendbtn"
-                onClick={() => showToast("New code on its way", "ok")}
+                onClick={() => showToast(t("screensB.signin.toastNewCode"), "ok")}
               >
-                Resend code
+                {t("screensB.signin.resend")}
               </button>
             </div>
           </Card>
 
-          <p className="scr-signin__foot">Demo hint: any six digits will do.</p>
+          <p className="scr-signin__foot">{t("screensB.signin.demoHint")}</p>
         </>
       )}
     </section>

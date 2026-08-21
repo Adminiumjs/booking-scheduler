@@ -18,12 +18,14 @@ import {
   TextInput,
 } from "../components/index.ts";
 import { FAQS, HELP_CONTACTS } from "../data/screens/help.ts";
-import { plural } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { minutesToTime, weekdayName } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-help.css";
 
 export default function Help() {
+  const { t, number } = useI18n();
   const helpQ = useStore((s) => s.helpQ);
   const helpOpen = useStore((s) => s.helpOpen);
   const go = useStore((s) => s.go);
@@ -40,17 +42,17 @@ export default function Help() {
     );
   }, [query]);
 
+  /* One whole sentence per plural form — the count, the noun and the quoted
+   * query are all inside the message, so word order belongs to the translator. */
   const countLabel = query
-    ? `${plural(faqs.length, "answer")} for “${query}”`
-    : "Common questions";
+    ? t("screensB.help.results", { query, count: number(faqs.length) }, faqs.length)
+    : t("screensB.help.common");
 
   return (
     <section className="bk-screen bk-page scr-help">
       <header className="scr-help__head">
-        <h1 className="bk-h1 scr-help__title">How can we help?</h1>
-        <p className="bk-sub scr-help__sub">
-          Answers to the things guests ask us most.
-        </p>
+        <h1 className="bk-h1 scr-help__title">{t("screensB.help.title")}</h1>
+        <p className="bk-sub scr-help__sub">{t("screensB.help.sub")}</p>
       </header>
 
       <div className="scr-help__search">
@@ -58,8 +60,8 @@ export default function Help() {
         <TextInput
           value={helpQ}
           onChange={(v) => set({ helpQ: v })}
-          placeholder="Search help articles…"
-          ariaLabel="Search help articles"
+          placeholder={t("screensB.help.searchPlaceholder")}
+          ariaLabel={t("screensB.help.searchLabel")}
           className="scr-help__searchinput"
         />
       </div>
@@ -67,17 +69,29 @@ export default function Help() {
       <div className="scr-help__contacts">
         {HELP_CONTACTS.map((c) => (
           <button
-            key={c.label}
+            key={c.labelKey}
             type="button"
             className="bk-tile scr-help__contact"
-            onClick={() => showToast(c.toast, "warn")}
+            onClick={() => showToast(t(c.toastKey), "warn")}
           >
             <span className="scr-help__contacticon">
               <Icon name={c.icon} size={17} />
             </span>
             <span>
-              <span className="scr-help__contactlabel">{c.label}</span>
-              <span className="scr-help__contactsub">{c.sub}</span>
+              <span className="scr-help__contactlabel">{t(c.labelKey)}</span>
+              <span className="scr-help__contactsub">
+                {t(c.subKey, {
+                  ...(c.contact === undefined ? null : { contact: c.contact }),
+                  ...(c.from === undefined ? null : { from: minutesToTime(c.from) }),
+                  ...(c.to === undefined ? null : { to: minutesToTime(c.to) }),
+                  ...(c.fromDay === undefined
+                    ? null
+                    : { fromDay: weekdayName(c.fromDay, "short") }),
+                  ...(c.toDay === undefined
+                    ? null
+                    : { toDay: weekdayName(c.toDay, "short") }),
+                })}
+              </span>
             </span>
           </button>
         ))}
@@ -95,8 +109,8 @@ export default function Help() {
         <EmptyState
           className="scr-help__empty"
           icon="search-x"
-          title="No matches"
-          body="Try a shorter search, or text us — a real person answers between 9 and 6."
+          title={t("screensB.help.emptyTitle")}
+          body={t("screensB.help.emptyBody")}
         />
       ) : (
         <Card clip className="scr-help__faqs">
@@ -130,10 +144,11 @@ export default function Help() {
 
       <div className="scr-help__stuck">
         <div>
-          <div className="scr-help__stucktitle">Still stuck?</div>
+          <div className="scr-help__stucktitle">
+            {t("screensB.help.stuckTitle")}
+          </div>
           <div className="scr-help__stuckbody">
-            Our cancellation policy covers most booking questions in plain
-            language.
+            {t("screensB.help.stuckBody")}
           </div>
         </div>
         <Button
@@ -142,7 +157,7 @@ export default function Help() {
           iconSize={15}
           onClick={() => go("policy")}
         >
-          Read the policy
+          {t("screensB.help.readPolicy")}
         </Button>
       </div>
     </section>

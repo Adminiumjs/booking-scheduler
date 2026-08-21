@@ -21,22 +21,28 @@ import {
   Icon,
   IconTile,
 } from "../components/index.ts";
+import type { ActivityRow } from "../data/screens/dash.ts";
 import {
   ACCOUNT_TINT,
   findPackage,
-  GIFTS_SENT_LABEL,
+  GIFTS_SENT_TOTAL,
   RECENT_ACTIVITY,
 } from "../data/screens/dash.ts";
 import { data } from "../data/source.ts";
 import type { OwnedPackage } from "../data/types.ts";
+import { useI18n } from "../i18n/index.tsx";
+import type { TFunction } from "../i18n/index.tsx";
 import {
   durationLabel,
   firstName,
   formatLongDate,
   formatLongISO,
+  formatMediumDate,
+  formatMediumISO,
+  formatNumber,
   initialsOf,
   minutesToTime,
-  MONTH_SHORT,
+  wholeMoney,
 } from "../lib/format.ts";
 import { selectUpcoming, useStore } from "../state/store.ts";
 
@@ -45,6 +51,30 @@ import "../styles/screen-dash.css";
 /* ------------------------------------------------------------------ *
  * Derivations
  * ------------------------------------------------------------------ */
+
+/**
+ * One "Recent activity" sentence.
+ *
+ * The row stores ids and figures, never a phrase: the service and the
+ * specialist come back through the seam so they read as the studio wrote them,
+ * while the points count goes through `t()`'s plural rather than a `+ 's'`.
+ */
+function activityLabel(t: TFunction, row: ActivityRow): string {
+  return t(
+    row.labelKey,
+    {
+      ...(row.svc === undefined
+        ? null
+        : { service: data.getService(row.svc)?.name ?? row.svc }),
+      ...(row.staff === undefined
+        ? null
+        : { staff: data.getStaffMember(row.staff)?.name ?? row.staff }),
+      ...(row.points === undefined ? null : { count: formatNumber(row.points) }),
+      ...(row.name === undefined ? null : { name: row.name }),
+    },
+    row.points,
+  );
+}
 
 interface OwnedCard {
   name: string;
@@ -59,7 +89,13 @@ interface OwnedCard {
   svc: string | null;
 }
 
-function ownedCards(owned: readonly OwnedPackage[]): OwnedCard[] {
+type NumberFn = (n: number, opts?: Intl.NumberFormatOptions) => string;
+
+function ownedCards(
+  owned: readonly OwnedPackage[],
+  t: TFunction,
+  number: NumberFn,
+): OwnedCard[] {
   return owned.flatMap((o) => {
     const p = findPackage(o.id);
     /* An id with no catalogue row is dropped rather than rendered blank. */
@@ -70,8 +106,15 @@ function ownedCards(owned: readonly OwnedPackage[]): OwnedCard[] {
     return [
       {
         name: p.name,
-        sub: `${p.qty} × ${data.getService(p.svc)?.name ?? "studio services"}`,
-        usedLabel: `${used} of ${p.qty} used`,
+        sub: t("screensA.dash.pkgSub", {
+          qty: number(p.qty),
+          service:
+            data.getService(p.svc)?.name ?? t("screensA.dash.pkgFallback"),
+        }),
+        usedLabel: t("screensA.dash.pkgUsed", {
+          used: number(used),
+          total: number(p.qty),
+        }),
         left: p.qty - used,
         pct: Math.round((used / p.qty) * 100),
         svc: p.svc,
@@ -81,17 +124,23 @@ function ownedCards(owned: readonly OwnedPackage[]): OwnedCard[] {
 }
 
 /** Packages run twelve months from purchase; the demo dates them from today. */
-function packageExpiry(): string {
+function packageExpiry(t: TFunction): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() + 1);
-  return `Expires ${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  return t("screensA.dash.pkgExpires", { date: formatMediumDate(d) });
 }
 
-function greetingFor(name: string): string {
+/* One key per part of the day: a greeting is a whole sentence in most
+ * languages, not a salutation with a name bolted on the end. */
+function greetingFor(name: string, t: TFunction): string {
   const hour = new Date().getHours();
-  const part =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  return `${part}, ${firstName(name)}`;
+  const key =
+    hour < 12
+      ? "screensA.dash.morning"
+      : hour < 18
+        ? "screensA.dash.afternoon"
+        : "screensA.dash.evening";
+  return t(key, { name: firstName(name) });
 }
 
 interface QuickAction {
@@ -105,6 +154,7 @@ interface QuickAction {
  * ------------------------------------------------------------------ */
 
 export default function Dash() {
+  const { t, number } = useI18n();
   const signedIn = useStore((s) => s.signedIn);
   const acct = useStore((s) => s.acct);
   const points = useStore((s) => s.points);
@@ -120,7 +170,10 @@ export default function Dash() {
     () => selectUpcoming(useStore.getState()),
     [bookings],
   );
-  const owned = useMemo(() => ownedCards(pkgOwned), [pkgOwned]);
+  const owned = useMemo(
+    () => ownedCards(pkgOwned, t, number),
+    [pkgOwned, t, number],
+  );
 
   if (!signedIn) {
     return (
@@ -128,8 +181,8 @@ export default function Dash() {
         <EmptyState
           className="scr-dash__signedout"
           icon="user-round"
-          title="You’re signed out"
-          body="Sign back in to see your visits, points and packages. It’s a demo — one tap, no password."
+          title={t("screensA.dash.signedOutTitle")}
+          body={t("screensA.dash.signedOutBody")}
           action={
             <Button
               icon="log-in"
@@ -139,7 +192,7 @@ export default function Dash() {
                 go("signin");
               }}
             >
-              Sign in as Ava
+              {t("screensA.dash.signIn")}
             </Button>
           }
         />
@@ -156,47 +209,63 @@ export default function Dash() {
   const stats = [
     {
       icon: "gem",
-      value: String(points),
-      label: "Loyalty points",
+      value: number(points),
+      label: t("screensA.dash.statPoints"),
       onClick: () => go("lhistory"),
     },
     {
       icon: "layers",
-      value: String(sessionsLeft),
-      label: "Package sessions left",
+      value: number(sessionsLeft),
+      label: t("screensA.dash.statSessions"),
       onClick: () => go("packages"),
     },
     {
       icon: "calendar-check",
-      value: String(upcoming.length),
-      label: "Upcoming visits",
+      value: number(upcoming.length),
+      label: t("screensA.dash.statVisits"),
       onClick: () => go("visits"),
     },
     {
       icon: "gift",
-      value: GIFTS_SENT_LABEL,
-      label: "Gift cards sent",
+      value: wholeMoney(GIFTS_SENT_TOTAL),
+      label: t("screensA.dash.statGifts"),
       onClick: () => go("mygifts"),
     },
   ];
 
   const actions: QuickAction[] = [
-    { icon: "calendar-plus", label: "Book a visit", onClick: () => startBooking(null) },
+    {
+      icon: "calendar-plus",
+      label: t("screensA.common.bookAVisit"),
+      onClick: () => startBooking(null),
+    },
     {
       icon: "settings-2",
-      label: "Manage booking",
+      label: t("screensA.dash.actManage"),
       onClick: () => {
         /* The lookup form, not a result — clear whatever was found before. */
         set({ foundCode: null });
         go("manage");
       },
     },
-    { icon: "bell", label: "Notifications", onClick: () => go("notifprefs") },
-    { icon: "clipboard-check", label: "Intake form", onClick: () => go("intake") },
-    { icon: "share-2", label: "Refer a friend", onClick: () => go("refer") },
+    {
+      icon: "bell",
+      label: t("screensA.dash.actNotifications"),
+      onClick: () => go("notifprefs"),
+    },
+    {
+      icon: "clipboard-check",
+      label: t("screensA.dash.actIntake"),
+      onClick: () => go("intake"),
+    },
+    {
+      icon: "share-2",
+      label: t("screensA.dash.actRefer"),
+      onClick: () => go("refer"),
+    },
     {
       icon: "users",
-      label: "Staff profiles",
+      label: t("screensA.dash.actStaff"),
       onClick: () => {
         /* The comp reset `staffSel` here; on this store the directory's own
          * selection is `staffId` — `staffSel` belongs to the booking draft. */
@@ -204,23 +273,47 @@ export default function Dash() {
         go("staff");
       },
     },
-    { icon: "shopping-bag", label: "Retail products", onClick: () => go("shop") },
-    { icon: "star", label: "Reviews & ratings", onClick: () => go("reviews") },
-    { icon: "file-down", label: "Export bookings", onClick: () => go("export") },
+    {
+      icon: "shopping-bag",
+      label: t("screensA.dash.actShop"),
+      onClick: () => go("shop"),
+    },
+    {
+      icon: "star",
+      label: t("screensA.dash.actReviews"),
+      onClick: () => go("reviews"),
+    },
+    {
+      icon: "file-down",
+      label: t("screensA.dash.actExport"),
+      onClick: () => go("export"),
+    },
     {
       icon: "credit-card",
-      label: "Checkout & payment",
+      label: t("screensA.dash.actCheckout"),
       onClick: () => {
         set({ ckStep: "pay" });
         go("checkout");
       },
     },
-    { icon: "receipt", label: "Order history", onClick: () => go("orders") },
-    { icon: "tag", label: "Seasonal offers", onClick: () => go("offers") },
-    { icon: "life-buoy", label: "Help & FAQ", onClick: () => go("help") },
+    {
+      icon: "receipt",
+      label: t("screensA.dash.actOrders"),
+      onClick: () => go("orders"),
+    },
+    {
+      icon: "tag",
+      label: t("screensA.dash.actOffers"),
+      onClick: () => go("offers"),
+    },
+    {
+      icon: "life-buoy",
+      label: t("screensA.dash.actHelp"),
+      onClick: () => go("help"),
+    },
     {
       icon: "gift",
-      label: "Gift cards",
+      label: t("screensA.dash.actGift"),
       onClick: () => {
         set({ gcStep: "design", gcCode: null, gcErr: "" });
         go("giftcards");
@@ -239,17 +332,19 @@ export default function Dash() {
           className="scr-dash__avatar"
         />
         <div className="scr-dash__id">
-          <h1 className="bk-h1 scr-dash__title">{greetingFor(acct.name)}</h1>
+          <h1 className="bk-h1 scr-dash__title">
+            {greetingFor(acct.name, t)}
+          </h1>
           <p className="bk-sub scr-dash__sub">
-            {formatLongDate(new Date())} · Studio Circle member
+            {t("screensA.dash.subline", { date: formatLongDate(new Date()) })}
           </p>
         </div>
         <div className="scr-dash__headbtns">
           <Button variant="ghost" icon="settings" onClick={() => go("account")}>
-            Settings
+            {t("screensA.dash.settings")}
           </Button>
           <Button icon="calendar-plus" onClick={() => startBooking(null)}>
-            Book a visit
+            {t("screensA.common.bookAVisit")}
           </Button>
         </div>
       </header>
@@ -276,7 +371,7 @@ export default function Dash() {
       <div className="scr-dash__panels">
         <Card radius={20} clip className="scr-dash__panel">
           <Eyebrow icon="calendar-clock" className="scr-dash__phead">
-            Next visit
+            {t("screensA.dash.nextVisit")}
           </Eyebrow>
           {next ? (
             <div className="scr-dash__pbody">
@@ -290,11 +385,14 @@ export default function Dash() {
                 />
                 <div className="scr-dash__nexttext">
                   <div className="scr-dash__cardtitle">
-                    {nextSvc?.name ?? "Appointment"}
+                    {nextSvc?.name ?? t("screensA.dash.appointment")}
                   </div>
                   <div className="scr-dash__cardsub">
-                    with {nextStaff?.name ?? "first available"} ·{" "}
-                    {durationLabel(next.dur)}
+                    {t("screensA.dash.nextWith", {
+                      staff:
+                        nextStaff?.name ?? t("screensA.dash.firstAvailable"),
+                      duration: durationLabel(next.dur),
+                    })}
                   </div>
                 </div>
               </div>
@@ -315,7 +413,7 @@ export default function Dash() {
                   iconSize={15}
                   onClick={() => openManage(next.code, next.email)}
                 >
-                  Manage
+                  {t("screensA.dash.manage")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -323,24 +421,28 @@ export default function Dash() {
                   iconSize={15}
                   onClick={() => go("visits")}
                 >
-                  All visits
+                  {t("screensA.dash.allVisits")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="scr-dash__pempty">
-              <div className="scr-dash__pemptytitle">Nothing on the books</div>
+              <div className="scr-dash__pemptytitle">
+                {t("screensA.dash.noBookingsTitle")}
+              </div>
               <p className="scr-dash__pemptybody">
-                Your calendar is clear. Want to change that?
+                {t("screensA.dash.noBookingsBody")}
               </p>
-              <Button onClick={() => startBooking(null)}>Book a visit</Button>
+              <Button onClick={() => startBooking(null)}>
+                {t("screensA.common.bookAVisit")}
+              </Button>
             </div>
           )}
         </Card>
 
         <Card radius={20} clip className="scr-dash__panel">
           <Eyebrow icon="layers" className="scr-dash__phead">
-            Your package
+            {t("screensA.dash.yourPackage")}
           </Eyebrow>
           {pkg ? (
             <div className="scr-dash__pbody">
@@ -352,7 +454,7 @@ export default function Dash() {
                 <div
                   className="scr-dash__bar"
                   role="progressbar"
-                  aria-label={`${pkg.name} sessions used`}
+                  aria-label={t("screensA.dash.pkgAria", { name: pkg.name })}
                   aria-valuenow={pkg.pct}
                   aria-valuemin={0}
                   aria-valuemax={100}
@@ -364,7 +466,7 @@ export default function Dash() {
                 </div>
                 <div className="scr-dash__barmeta">
                   <span>{pkg.usedLabel}</span>
-                  <span>{packageExpiry()}</span>
+                  <span>{packageExpiry(t)}</span>
                 </div>
               </div>
               <div className="scr-dash__pfoot">
@@ -373,20 +475,24 @@ export default function Dash() {
                   iconSize={15}
                   onClick={() => (pkg.svc ? startBooking(pkg.svc) : go("services"))}
                 >
-                  Use a session
+                  {t("screensA.dash.useSession")}
                 </Button>
                 <Button variant="ghost" onClick={() => go("packages")}>
-                  All packages
+                  {t("screensA.dash.allPackages")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="scr-dash__pempty">
-              <div className="scr-dash__pemptytitle">No packages yet</div>
+              <div className="scr-dash__pemptytitle">
+                {t("screensA.dash.noPackagesTitle")}
+              </div>
               <p className="scr-dash__pemptybody">
-                Bundles save up to 20% when you know you’ll be back.
+                {t("screensA.dash.noPackagesBody")}
               </p>
-              <Button onClick={() => go("packages")}>See package deals</Button>
+              <Button onClick={() => go("packages")}>
+                {t("screensA.dash.seePackages")}
+              </Button>
             </div>
           )}
         </Card>
@@ -394,7 +500,9 @@ export default function Dash() {
 
       <div className="scr-dash__cols">
         <section>
-          <h2 className="scr-dash__coltitle">Quick actions</h2>
+          <h2 className="scr-dash__coltitle">
+            {t("screensA.dash.quickActions")}
+          </h2>
           <div className="scr-dash__actions">
             {actions.map((a) => (
               <button
@@ -413,16 +521,22 @@ export default function Dash() {
         </section>
 
         <section>
-          <h2 className="scr-dash__coltitle">Recent activity</h2>
+          <h2 className="scr-dash__coltitle">
+            {t("screensA.dash.recentActivity")}
+          </h2>
           <Card clip className="scr-dash__activity">
             {RECENT_ACTIVITY.map((row) => (
-              <div key={row.label} className="scr-dash__actrow">
+              <div key={row.dateISO} className="scr-dash__actrow">
                 <span className="scr-dash__smalltile">
                   <Icon name={row.icon} size={15} />
                 </span>
                 <span className="scr-dash__actrowtext">
-                  <span className="scr-dash__actrowlabel">{row.label}</span>
-                  <span className="scr-dash__actrowdate">{row.date}</span>
+                  <span className="scr-dash__actrowlabel">
+                    {activityLabel(t, row)}
+                  </span>
+                  <span className="scr-dash__actrowdate">
+                    {formatMediumISO(row.dateISO)}
+                  </span>
                 </span>
               </div>
             ))}

@@ -27,11 +27,12 @@ import {
   hoursLabel,
   KPI_SEED,
   NEXT_STATUS,
-  ROW_ACTION,
+  ROW_ACTION_KEY,
   STATUS_META,
   STUDIO_BOOK,
 } from "../data/screens/admin-today.ts";
-import { minutesToTime, plural } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { durationLabel, minutesToTime } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-today.css";
@@ -40,6 +41,7 @@ import "../styles/screen-admin-today.css";
 const SHIFT = 8 * 60;
 
 export default function AdminToday() {
+  const { locale, t, number } = useI18n();
   const apptState = useStore((s) => s.apptState);
   const apptTime = useStore((s) => s.apptTime);
   const set = useStore((s) => s.set);
@@ -50,7 +52,10 @@ export default function AdminToday() {
 
   /* Read the clock once per mount rather than per render, so the header
    * reading cannot drift from the Calendar's "now" line mid-session. */
-  const nowLabel = useMemo(() => minutesToTime(clampedNow()), []);
+  /* `locale` is a dependency of every memo that formats: the formatters
+   * read it from the ambient bridge, so a switch that did not invalidate
+   * these would leave the last locale’s text cached on screen. */
+  const nowLabel = useMemo(() => minutesToTime(clampedNow()), [locale]);
   const weekday = useMemo(() => new Date().getDay() as Weekday, []);
 
   const { kpis, upcoming, util, pending } = useMemo(() => {
@@ -69,26 +74,41 @@ export default function AdminToday() {
 
     /* The comp hardcoded "2 still unconfirmed" while the book held one. The
      * sub-line now counts the rows the Confirm button actually empties. */
+    const soldHours = Math.round(booked / 60);
+    const capacityHours = Math.round(capacity / 60);
     const subs = [
-      `${plural(pend, "booking")} still unconfirmed`,
-      "vs. this time last Tuesday",
-      `${Math.round(booked / 60)} of ${Math.round(capacity / 60)} hours sold`,
-      "2 waitlist matches available",
+      t("screensA.today.unconfirmed", {}, pend),
+      t("screensA.today.vsLastWeek"),
+      t("screensA.today.hoursSold", { sold: number(soldHours) }, capacityHours),
+      t("screensA.today.waitlistMatches", {}, 2),
     ];
     const values = [
-      String(live.length),
+      number(live.length),
       dollars(revenue),
-      `${Math.round((booked / capacity) * 100)}%`,
-      "3",
+      number(booked / capacity, { style: "percent", maximumFractionDigits: 0 }),
+      number(3),
     ];
 
     return {
       pending: pend,
       kpis: KPI_SEED.map((k, i) => ({
         ...k,
+        label: t(k.labelKey),
         value: values[i],
         sub: subs[i],
-        up: k.delta.startsWith("+"),
+        /* A signed number in the seed, a signed string here: `signDisplay`
+         * draws the glyph the locale uses and puts it on the side it writes
+         * it — `startsWith('+')` was a fact about English, not about growth. */
+        delta:
+          k.delta === null
+            ? null
+            : number(k.delta, {
+                ...(k.deltaPercent
+                  ? { style: "percent" as const, maximumFractionDigits: 0 }
+                  : null),
+                signDisplay: "exceptZero",
+              }),
+        up: (k.delta ?? 0) >= 0,
       })),
       /* Ordered and stamped by the *effective* start, so an appointment
        * dragged on the Calendar shows its new time here too — the comp read
@@ -107,23 +127,30 @@ export default function AdminToday() {
           name: st.name,
           tint: st.tint,
           pct: Math.min(100, Math.round((mins / SHIFT) * 100)),
-          sub: `${Math.round((mins / 60) * 10) / 10} h booked · ${hoursLabel(st, weekday)}`,
+          sub: t("screensA.today.utilSub", {
+            hours: number(Math.round((mins / 60) * 10) / 10, {
+              style: "unit",
+              unit: "hour",
+              unitDisplay: "short",
+            }),
+            shift: hoursLabel(st, weekday),
+          }),
         };
       }),
     };
-  }, [apptState, apptTime, staff, weekday]);
+  }, [apptState, apptTime, staff, weekday, locale, t, number]);
 
   /* Two of the four alerts hand the studio to another screen with its filter
    * already set — the comp's behaviour, and the reason these are handlers
    * here rather than links in the seed. */
   function runAlert(action: AlertAction): void {
     if (action === "waitlist") {
-      showToast("Offer texted to both guests", "ok");
+      showToast(t("screensA.today.waitlistToast"), "ok");
     } else if (action === "stock") {
       set({ stockFilter: "low" });
       go("admin-stock");
     } else if (action === "intake") {
-      showToast("Intake form texted to Jonah", "ok");
+      showToast(t("screensA.today.intakeToast", { name: "Jonah" }), "ok");
     } else {
       set({ revFilter: "todo" });
       go("admin-reviews");
@@ -163,13 +190,15 @@ export default function AdminToday() {
       <div className="scr-admin-today__cols">
         <section className="scr-admin-today__panel">
           <header className="scr-admin-today__panelhead">
-            <h2 className="scr-admin-today__paneltitle">Now &amp; next</h2>
+            <h2 className="scr-admin-today__paneltitle">
+              {t("screensA.today.nowNext")}
+            </h2>
             <span className="bk-mono scr-admin-today__clock">{nowLabel}</span>
           </header>
 
           {upcoming.length === 0 ? (
             <p className="scr-admin-today__empty">
-              Every guest on today’s book has been seen. Nice work.
+              {t("screensA.today.allSeen")}
             </p>
           ) : (
             <ul className="scr-admin-today__list">
@@ -194,21 +223,31 @@ export default function AdminToday() {
                     <span className="scr-admin-today__rowid">
                       <span className="scr-admin-today__rowname">{a.client}</span>
                       <span className="scr-admin-today__rowmeta">
-                        {svc?.name} · {member?.name} · {svc?.dur} min
+                        {t("screensA.today.rowMeta", {
+                          service: svc?.name ?? "—",
+                          staff: member?.name ?? "—",
+                          duration: durationLabel(svc?.dur ?? 0),
+                        })}
                       </span>
                     </span>
                     <span className="scr-admin-today__pill" data-tone={meta.tone}>
-                      {meta.label}
+                      {t(meta.labelKey)}
                     </span>
                     <button
                       type="button"
                       className="bk-btn scr-admin-today__rowbtn"
                       onClick={() => {
                         set({ apptState: { ...apptState, [a.id]: next } });
-                        showToast(`${a.client} · ${STATUS_META[next].label}`, "ok");
+                        showToast(
+                          t("screensA.cal.statusToast", {
+                            client: a.client,
+                            status: t(STATUS_META[next].labelKey),
+                          }),
+                          "ok",
+                        );
                       }}
                     >
-                      {ROW_ACTION[status]}
+                      {t(ROW_ACTION_KEY[status])}
                     </button>
                   </li>
                 );
@@ -220,16 +259,18 @@ export default function AdminToday() {
         <div className="scr-admin-today__side">
           <section className="scr-admin-today__panel">
             <header className="scr-admin-today__panelhead">
-              <h2 className="scr-admin-today__paneltitle">Needs a decision</h2>
+              <h2 className="scr-admin-today__paneltitle">
+                {t("screensA.today.decisions")}
+              </h2>
               {pending > 0 ? (
                 <span className="scr-admin-today__pill" data-tone="warn">
-                  {pending} to confirm
+                  {t("screensA.today.toConfirm", { count: number(pending) })}
                 </span>
               ) : null}
             </header>
             <ul className="scr-admin-today__list">
               {ALERT_SEED.map((al) => (
-                <li key={al.title} className="scr-admin-today__alert">
+                <li key={al.action} className="scr-admin-today__alert">
                   <span
                     className="scr-admin-today__tile"
                     style={{ "--tint": al.tint } as CSSProperties}
@@ -237,15 +278,28 @@ export default function AdminToday() {
                     <Icon name={al.icon} size={15} />
                   </span>
                   <span className="scr-admin-today__alertid">
-                    <span className="scr-admin-today__alerttitle">{al.title}</span>
-                    <span className="scr-admin-today__alertsub">{al.sub}</span>
+                    <span className="scr-admin-today__alerttitle">
+                      {t(al.titleKey, al.subParams, al.titleCount)}
+                    </span>
+                    <span className="scr-admin-today__alertsub">
+                      {t(
+                        al.subKey,
+                        {
+                          ...al.subParams,
+                          ...(al.subTime === undefined
+                            ? {}
+                            : { time: minutesToTime(al.subTime) }),
+                        },
+                        al.subCount,
+                      )}
+                    </span>
                   </span>
                   <button
                     type="button"
                     className="bk-gi scr-admin-today__alertbtn"
                     onClick={() => runAlert(al.action)}
                   >
-                    {al.cta}
+                    {t(al.ctaKey)}
                   </button>
                 </li>
               ))}
@@ -255,7 +309,7 @@ export default function AdminToday() {
           <section className="scr-admin-today__panel">
             <header className="scr-admin-today__panelhead">
               <h2 className="scr-admin-today__paneltitle">
-                Chair utilisation today
+                {t("screensA.today.utilisation")}
               </h2>
             </header>
             <div className="scr-admin-today__util">
@@ -267,12 +321,14 @@ export default function AdminToday() {
                       style={{ "--tint": u.tint } as CSSProperties}
                     />
                     <span className="scr-admin-today__utilname">{u.name}</span>
-                    <span className="bk-mono scr-admin-today__utilpct">{u.pct}%</span>
+                    <span className="bk-mono scr-admin-today__utilpct">
+                      {number(u.pct / 100, { style: "percent" })}
+                    </span>
                   </div>
                   <div
                     className="scr-admin-today__track"
                     role="progressbar"
-                    aria-label={`${u.name} booked`}
+                    aria-label={t("screensA.today.utilAria", { name: u.name })}
                     aria-valuenow={u.pct}
                     aria-valuemin={0}
                     aria-valuemax={100}

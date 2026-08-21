@@ -7,6 +7,8 @@
  * carries that slice rather than a full client record.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 /** A guest a ticket can be rung up against. */
 export interface PosGuest {
   id: string;
@@ -129,19 +131,22 @@ export function nextPosGuest(id: string): PosGuest {
 
 export type PosTab = "svc" | "retail" | "gift";
 
-export const POS_TABS: readonly { id: PosTab; label: string }[] = [
-  { id: "svc", label: "Services" },
-  { id: "retail", label: "Retail" },
-  { id: "gift", label: "Gift cards" },
+export const POS_TABS: readonly { id: PosTab; labelKey: MessageKey }[] = [
+  { id: "svc", labelKey: "data.pos.tabServices" },
+  { id: "retail", labelKey: "data.pos.tabRetail" },
+  { id: "gift", labelKey: "data.pos.tabGift" },
 ];
 
-export const POS_METHODS: readonly { id: string; label: string; icon: string }[] =
-  [
-    { id: "card", label: "Card reader", icon: "credit-card" },
-    { id: "cash", label: "Cash", icon: "banknote" },
-    { id: "gift", label: "Gift balance", icon: "gift" },
-    { id: "link", label: "Payment link", icon: "link" },
-  ];
+export const POS_METHODS: readonly {
+  id: string;
+  labelKey: MessageKey;
+  icon: string;
+}[] = [
+  { id: "card", labelKey: "data.pos.methodCard", icon: "credit-card" },
+  { id: "cash", labelKey: "data.pos.methodCash", icon: "banknote" },
+  { id: "gift", labelKey: "data.pos.methodGift", icon: "gift" },
+  { id: "link", labelKey: "data.pos.methodLink", icon: "link" },
+];
 
 /**
  * Tip ladder. The comp offered 0/10/15/20 while seeding the till at 18%, so

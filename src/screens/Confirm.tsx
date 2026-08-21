@@ -21,9 +21,12 @@ import {
   IconTile,
   SuccessTile,
 } from "../components/index.ts";
-import { data } from "../data/source.ts";
+import { categoryName, data } from "../data/source.ts";
 import type { ReminderWhen } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
 import {
+  durationLabel,
   firstName,
   formatLongISO,
   formatShortISO,
@@ -35,13 +38,14 @@ import { useStore } from "../state/store.ts";
 
 import "../styles/screen-confirm.css";
 
-const SEND_LABEL: Record<ReminderWhen, string> = {
-  "24h": "24 hours before",
-  "2h": "2 hours before",
-  both: "24 hours & 2 hours before",
+const SEND_KEY: Record<ReminderWhen, MessageKey> = {
+  "24h": "screensA.confirm.send24",
+  "2h": "screensA.confirm.send2",
+  both: "screensA.confirm.sendBoth",
 };
 
 export default function Confirm() {
+  const t = useT();
   const lastCode = useStore((s) => s.lastCode);
   const bookings = useStore((s) => s.bookings);
   const openManage = useStore((s) => s.openManage);
@@ -56,11 +60,11 @@ export default function Confirm() {
       <main className="bk-screen bk-page bk-confirm">
         <EmptyState
           icon="calendar"
-          title="Nothing booked yet"
-          body="Pick a service and your confirmation will show up here."
+          title={t("screensA.confirm.emptyTitle")}
+          body={t("screensA.confirm.emptyBody")}
           action={
             <Button icon="calendar-plus" onClick={() => startBooking(null)}>
-              Book now
+              {t("screensA.confirm.bookNow")}
             </Button>
           }
         />
@@ -69,8 +73,8 @@ export default function Confirm() {
   }
 
   const first = firstName(booking.name);
-  const category = data.getCategory(svc.cat)?.name ?? "";
-  const staffName = staff?.name ?? "your specialist";
+  const category = categoryName(t, svc.cat);
+  const staffName = staff?.name ?? t("screensA.confirm.yourSpecialist");
   const longDate = formatLongISO(booking.dateISO);
   const timeLabel = minutesToTime(booking.time);
   /* The from-address is the studio's own; nothing is actually sent. */
@@ -81,12 +85,13 @@ export default function Confirm() {
     <main className="bk-screen bk-page bk-confirm">
       <header className="bk-confirm__head">
         <SuccessTile icon="check" size={78} iconSize={38} />
-        <h1 className="bk-h1">You’re booked, {first}!</h1>
-        <p className="bk-sub bk-confirm__lede">
-          We can’t wait to see you. Your booking code is below — keep it handy if you
-          need to make changes.
-        </p>
-        <CodePill label="Booking code" code={booking.code} codeSize={22} />
+        <h1 className="bk-h1">{t("screensA.confirm.title", { name: first })}</h1>
+        <p className="bk-sub bk-confirm__lede">{t("screensA.confirm.lede")}</p>
+        <CodePill
+          label={t("screensA.confirm.codeLabel")}
+          code={booking.code}
+          codeSize={22}
+        />
       </header>
 
       <Card radius={20} className="bk-confirm__appt">
@@ -95,7 +100,10 @@ export default function Confirm() {
           <div className="bk-confirm__appt-text">
             <div className="bk-confirm__appt-name">{svc.name}</div>
             <div className="bk-confirm__appt-meta">
-              {booking.dur} min · {category}
+              {t("screensA.confirm.apptMeta", {
+                duration: durationLabel(booking.dur),
+                category,
+              })}
             </div>
           </div>
           <div className="bk-mono bk-confirm__appt-price">{money(booking.price)}</div>
@@ -105,7 +113,7 @@ export default function Confirm() {
           <div className="bk-confirm__row">
             <span className="bk-confirm__row-key">
               <Icon name="user" size={15} />
-              With
+              {t("screensA.confirm.rowWith")}
             </span>
             <span className="bk-confirm__row-val">
               {staff ? `${staff.name} · ${staff.role}` : staffName}
@@ -114,14 +122,14 @@ export default function Confirm() {
           <div className="bk-confirm__row">
             <span className="bk-confirm__row-key">
               <Icon name="calendar" size={15} />
-              When
+              {t("screensA.confirm.rowWhen")}
             </span>
             <span className="bk-confirm__row-val">{longDate}</span>
           </div>
           <div className="bk-confirm__row">
             <span className="bk-confirm__row-key">
               <Icon name="clock" size={15} />
-              Time
+              {t("screensA.confirm.rowTime")}
             </span>
             <span className="bk-mono bk-confirm__row-val">{timeLabel}</span>
           </div>
@@ -132,7 +140,11 @@ export default function Confirm() {
         <Card radius={18} className="bk-confirm__recur">
           <div className="bk-confirm__recur-head">
             <Icon name="repeat" size={16} />
-            Repeats {recurLabel(booking.recurFreq)} · {booking.recurCount} visits
+            {t(
+              "screensA.confirm.repeats",
+              { frequency: recurLabel(booking.recurFreq) },
+              booking.recurCount,
+            )}
           </div>
           <ul className="bk-confirm__series">
             {booking.series.map((iso) => (
@@ -149,7 +161,9 @@ export default function Confirm() {
       {booking.remEmail || booking.remSms ? (
         <section className="bk-confirm__send">
           <Eyebrow icon="send">
-            Here’s what we’ll send · {SEND_LABEL[booking.remWhen]}
+            {t("screensA.confirm.sendEyebrow", {
+              when: t(SEND_KEY[booking.remWhen]),
+            })}
           </Eyebrow>
 
           {booking.remEmail ? (
@@ -166,12 +180,16 @@ export default function Confirm() {
               </div>
               <div className="bk-confirm__mail-body">
                 <div className="bk-confirm__mail-subject">
-                  Your appointment is confirmed · {booking.code}
+                  {t("screensA.confirm.mailSubject", { code: booking.code })}
                 </div>
                 <p className="bk-confirm__mail-text">
-                  Hi {first} — you’re all set for {svc.name} with {staffName} on{" "}
-                  {longDate} at {timeLabel}. Reply to this email if anything changes.
-                  See you soon!
+                  {t("screensA.confirm.mailBody", {
+                    name: first,
+                    service: svc.name,
+                    staff: staffName,
+                    date: longDate,
+                    time: timeLabel,
+                  })}
                 </p>
               </div>
             </Card>
@@ -184,11 +202,16 @@ export default function Confirm() {
               </span>
               <div className="bk-confirm__sms-col">
                 <div className="bk-confirm__sms-bubble">
-                  Lumen: Reminder — {svc.name} with {staffName}{" "}
-                  {formatShortISO(booking.dateISO)} at {timeLabel}. Reply R to
-                  reschedule, C to cancel.
+                  {t("screensA.confirm.smsBody", {
+                    service: svc.name,
+                    staff: staffName,
+                    date: formatShortISO(booking.dateISO),
+                    time: timeLabel,
+                  })}
                 </div>
-                <div className="bk-mono bk-confirm__sms-cap">SMS · text message</div>
+                <div className="bk-mono bk-confirm__sms-cap">
+                  {t("screensA.confirm.smsCaption")}
+                </div>
               </div>
             </div>
           ) : null}
@@ -196,8 +219,7 @@ export default function Confirm() {
       ) : null}
 
       <Banner tone="info" className="bk-confirm__banner">
-        This is a demo — no real appointment is booked, and no email or text is
-        actually sent.
+        {t("screensA.confirm.banner")}
       </Banner>
 
       <div className="bk-confirm__actions">
@@ -207,14 +229,14 @@ export default function Confirm() {
           icon="settings-2"
           onClick={() => openManage(booking.code, booking.email)}
         >
-          Manage booking
+          {t("screensA.confirm.manage")}
         </Button>
         <Button
           size="lg"
           icon="calendar-plus"
           onClick={() => startBooking(null)}
         >
-          Book another
+          {t("screensA.confirm.bookAnother")}
         </Button>
       </div>
     </main>

@@ -17,7 +17,9 @@ import {
   stockPercent,
 } from "../data/screens/admin-stock.ts";
 import type { StockItem } from "../data/screens/admin-stock.ts";
-import { money, plural } from "../lib/format.ts";
+import { sizeLabel } from "../data/screens/shop.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-stock.css";
@@ -29,6 +31,7 @@ function barTone(item: StockItem): string {
 }
 
 export default function AdminStock() {
+  const { t, number } = useI18n();
   const stockFilter = useStore((s) => s.stockFilter);
   const ordered = useStore((s) => s.ordered);
   const set = useStore((s) => s.set);
@@ -43,7 +46,7 @@ export default function AdminStock() {
     if (ordered[item.id]) return;
     const units = reorderUnits(item);
     set({ ordered: { ...ordered, [item.id]: units } });
-    showToast(`${item.name} · ${plural(units, "unit")} ordered`, "ok");
+    showToast(t("screensA.stock.ordered", { name: item.name }, units), "ok");
   };
 
   const orderAllLow = (): void => {
@@ -57,11 +60,11 @@ export default function AdminStock() {
     /* Nothing left to order is a real state — the comp claimed a purchase
      * order had gone out even when every low line was already on one. */
     if (added === 0) {
-      showToast("Every low line is already on order", "warn");
+      showToast(t("screensA.stock.allOnOrder"), "warn");
       return;
     }
     set({ ordered: next });
-    showToast("Purchase order sent to two suppliers", "ok");
+    showToast(t("screensA.stock.poSent"), "ok");
   };
 
   return (
@@ -71,7 +74,7 @@ export default function AdminStock() {
           {STOCK_FILTERS.map((f) => (
             <Chip
               key={f.id}
-              label={f.label}
+              label={t(f.labelKey)}
               active={stockFilter === f.id}
               onClick={() => set({ stockFilter: f.id })}
             />
@@ -82,7 +85,7 @@ export default function AdminStock() {
             onClick={orderAllLow}
           >
             <Icon name="truck" size={15} />
-            Reorder all low stock
+            {t("screensA.stock.reorderAll")}
           </button>
         </div>
 
@@ -90,13 +93,17 @@ export default function AdminStock() {
           <div className="scr-admin-stock__track">
             <div className="scr-admin-stock__head">
               <span />
-              <span>Product</span>
-              <span>Stock</span>
-              <span className="scr-admin-stock__end">Retail</span>
-              <span className="scr-admin-stock__end scr-admin-stock__sold">
-                Sold 30d
+              <span>{t("screensA.stock.colProduct")}</span>
+              <span>{t("screensA.stock.colStock")}</span>
+              <span className="scr-admin-stock__end">
+                {t("screensA.stock.colRetail")}
               </span>
-              <span className="scr-admin-stock__end">Action</span>
+              <span className="scr-admin-stock__end scr-admin-stock__sold">
+                {t("screensA.stock.colSold")}
+              </span>
+              <span className="scr-admin-stock__end">
+                {t("screensA.stock.colAction")}
+              </span>
             </div>
 
             {rows.map((p) => {
@@ -119,7 +126,10 @@ export default function AdminStock() {
                   <span className="scr-admin-stock__name">
                     <span className="scr-admin-stock__title">{p.name}</span>
                     <span className="scr-admin-stock__meta">
-                      {p.size} · par {p.par}
+                      {t("screensA.stock.meta", {
+                        size: sizeLabel(t, p.ml),
+                        par: number(p.par),
+                      })}
                     </span>
                   </span>
                   <span className="scr-admin-stock__level">
@@ -131,14 +141,17 @@ export default function AdminStock() {
                       />
                     </span>
                     <span className="bk-mono scr-admin-stock__count">
-                      {p.qty}/{p.par}
+                      {t("screensA.stock.level", {
+                        qty: number(p.qty),
+                        par: number(p.par),
+                      })}
                     </span>
                   </span>
                   <span className="bk-mono scr-admin-stock__end scr-admin-stock__price">
                     {money(p.price)}
                   </span>
                   <span className="bk-mono scr-admin-stock__end scr-admin-stock__sold">
-                    {p.sold}
+                    {number(p.sold)}
                   </span>
                   <span className="scr-admin-stock__actioncell">
                     <button
@@ -148,7 +161,13 @@ export default function AdminStock() {
                       disabled={onOrder}
                       onClick={() => order(p)}
                     >
-                      {onOrder ? "Ordered" : low ? "Reorder" : "Order"}
+                      {t(
+                        onOrder
+                          ? "screensA.stock.stateOrdered"
+                          : low
+                            ? "screensA.stock.stateReorder"
+                            : "screensA.stock.stateOrder",
+                      )}
                     </button>
                   </span>
                 </div>
@@ -157,7 +176,7 @@ export default function AdminStock() {
 
             {rows.length === 0 ? (
               <p className="scr-admin-stock__empty">
-                Nothing in this bracket. Every product is where it should be.
+                {t("screensA.stock.empty")}
               </p>
             ) : null}
           </div>

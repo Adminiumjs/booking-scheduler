@@ -14,6 +14,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/components.css";
 
+import { I18nProvider } from "./i18n/index.tsx";
 import App from "./app/App.tsx";
 
 const container = document.getElementById("root");
@@ -21,6 +22,8 @@ if (!container) throw new Error('Missing #root — check index.html');
 
 createRoot(container).render(
   <StrictMode>
-    <App />
+    <I18nProvider>
+      <App />
+    </I18nProvider>
   </StrictMode>,
 );

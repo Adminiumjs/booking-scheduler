@@ -13,22 +13,34 @@ import { useMemo } from "react";
 
 import { BackLink, Button, Chip, EmptyState, IconTile, StatusPill } from "../components/index.ts";
 import type { StatusTone } from "../components/index.ts";
-import { ORDER_FILTERS, ORDERS } from "../data/screens/orders.ts";
+import {
+  ORDER_FILTERS,
+  ORDER_STATUS_KEY,
+  ORDERS,
+} from "../data/screens/orders.ts";
 import type { Order, OrderStatus } from "../data/screens/orders.ts";
-import { money } from "../lib/format.ts";
+import { useT } from "../i18n/index.tsx";
+import {
+  durationLabel,
+  formatMediumISO,
+  formatMonthYearISO,
+  formatNumber,
+  money,
+} from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-orders.css";
 
 /** Refunds read as a warning, finished business as muted, live money as good. */
 function toneFor(status: OrderStatus): StatusTone {
-  if (status === "Refunded") return "warn";
-  if (status === "Completed") return "muted";
+  if (status === "refunded") return "warn";
+  if (status === "completed") return "muted";
   return "pos";
 }
 
 interface MonthGroup {
-  month: string;
+  /** `'2026-07'` — a machine key, so grouping never depends on the language. */
+  key: string;
   rows: Order[];
 }
 
@@ -36,14 +48,16 @@ interface MonthGroup {
 function groupByMonth(orders: readonly Order[]): MonthGroup[] {
   const groups: MonthGroup[] = [];
   for (const o of orders) {
-    const found = groups.find((g) => g.month === o.month);
+    const key = o.dateISO.slice(0, 7);
+    const found = groups.find((g) => g.key === key);
     if (found) found.rows.push(o);
-    else groups.push({ month: o.month, rows: [o] });
+    else groups.push({ key, rows: [o] });
   }
   return groups;
 }
 
 export default function Orders() {
+  const t = useT();
   const ordFilter = useStore((s) => s.ordFilter);
   const acctEmail = useStore((s) => s.acct.email);
   const go = useStore((s) => s.go);
@@ -59,23 +73,25 @@ export default function Orders() {
 
   /* Refunded money was never really spent, so it is left out of the total. */
   const spent = ORDERS.reduce(
-    (sum, o) => sum + (o.status === "Refunded" ? 0 : o.amount),
+    (sum, o) => sum + (o.status === "refunded" ? 0 : o.amount),
     0,
   );
 
   return (
     <section className="bk-screen bk-page scr-orders">
-      <BackLink onClick={() => go("dash")}>Back to dashboard</BackLink>
+      <BackLink onClick={() => go("dash")}>
+        {t("screensB.common.backToDashboard")}
+      </BackLink>
 
       <header className="scr-orders__head">
         <div>
-          <h1 className="bk-h1">Order history</h1>
-          <p className="bk-sub scr-orders__sub">
-            Every visit, package and gift card you’ve paid for.
-          </p>
+          <h1 className="bk-h1">{t("screensB.orders.title")}</h1>
+          <p className="bk-sub scr-orders__sub">{t("screensB.orders.sub")}</p>
         </div>
         <div className="bk-panel scr-orders__total">
-          <span className="scr-orders__totallabel">Spent in 2026</span>
+          <span className="scr-orders__totallabel">
+            {t("screensB.orders.spent")}
+          </span>
           <span className="bk-mono scr-orders__totalvalue">{money(spent)}</span>
         </div>
       </header>
@@ -84,7 +100,7 @@ export default function Orders() {
         {ORDER_FILTERS.map((f) => (
           <Chip
             key={f.value}
-            label={f.label}
+            label={t(f.labelKey)}
             active={ordFilter === f.value}
             onClick={() => set({ ordFilter: f.value })}
           />
@@ -94,27 +110,43 @@ export default function Orders() {
       {groups.length === 0 ? (
         <EmptyState
           icon="receipt"
-          title="Nothing in this filter"
-          body="Try another category — your other orders are still there."
+          title={t("screensB.orders.emptyTitle")}
+          body={t("screensB.orders.emptyBody")}
         />
       ) : (
         <div className="scr-orders__groups">
           {groups.map((g) => (
-            <section key={g.month}>
-              <h2 className="bk-eyebrow scr-orders__month">{g.month}</h2>
+            <section key={g.key}>
+              <h2 className="bk-eyebrow scr-orders__month">
+                {formatMonthYearISO(g.rows[0].dateISO)}
+              </h2>
               <div className="bk-panel scr-orders__list">
                 {g.rows.map((o) => (
                   <article key={o.code} className="scr-orders__row">
                     <IconTile icon={o.icon} tint={o.tint} size={44} iconSize={20} radius={15} />
                     <div className="scr-orders__body">
                       <div className="scr-orders__label">{o.label}</div>
-                      <div className="scr-orders__meta">{o.sub}</div>
+                      <div className="scr-orders__meta">
+                        {t(
+                          o.subKey,
+                          {
+                            date: formatMediumISO(o.dateISO),
+                            ...(o.dur === undefined
+                              ? null
+                              : { duration: durationLabel(o.dur) }),
+                            ...(o.sessions === undefined
+                              ? null
+                              : { count: formatNumber(o.sessions) }),
+                          },
+                          o.sessions,
+                        )}
+                      </div>
                       <div className="scr-orders__tags">
                         <StatusPill
                           tone={toneFor(o.status)}
                           className="scr-orders__status"
                         >
-                          {o.status}
+                          {t(ORDER_STATUS_KEY[o.status])}
                         </StatusPill>
                         <span className="bk-mono scr-orders__code">{o.code}</span>
                       </div>
@@ -127,10 +159,16 @@ export default function Orders() {
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          showToast(`Receipt ${o.code} emailed to ${acctEmail}`, "ok")
+                          showToast(
+                            t("screensB.orders.toastReceipt", {
+                              code: o.code,
+                              email: acctEmail,
+                            }),
+                            "ok",
+                          )
                         }
                       >
-                        Receipt
+                        {t("screensB.common.receipt")}
                       </Button>
                     </div>
                   </article>

@@ -24,9 +24,11 @@ import {
   STANDARD_DAY_MINUTES,
   TEAM_ROSTER,
   TIME_OFF,
+  TIME_OFF_FROM_KEY,
 } from "../data/screens/admin-team.ts";
 import type { TimeOffRequest } from "../data/screens/admin-team.ts";
-import { minutesToTime, money } from "../lib/format.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
+import { formatISORange, formatNumber, minutesToTime, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-team.css";
@@ -40,6 +42,7 @@ function shiftEnd(staff: StaffMember): string {
 }
 
 export default function AdminTeam() {
+  const t = useT();
   const apptState = useStore((s) => s.apptState);
 
   /* One pass over the roster: the live rows (a cancellation frees the chair)
@@ -86,7 +89,9 @@ export default function AdminTeam() {
       </div>
 
       <section className="scr-admin-team__panel">
-        <h2 className="scr-admin-team__paneltitle">Time off &amp; cover requests</h2>
+        <h2 className="scr-admin-team__paneltitle">
+          {t("screensA.team.timeOff")}
+        </h2>
         {TIME_OFF.map((req) => (
           <TimeOffRow key={req.key} req={req} />
         ))}
@@ -107,15 +112,16 @@ interface DayTotals {
 }
 
 function TeamCard({ staff, day }: { staff: StaffMember; day: DayTotals }) {
+  const { t, number } = useI18n();
   const set = useStore((s) => s.set);
   const go = useStore((s) => s.go);
   const showToast = useStore((s) => s.showToast);
 
   const pct = Math.min(100, Math.round((day.mins / STANDARD_DAY_MINUTES) * 100));
   const stats = [
-    { label: "Bookings", value: String(day.count) },
-    { label: "Takings", value: money(day.takings) },
-    { label: "Finishes", value: shiftEnd(staff) },
+    { label: t("screensA.team.statBookings"), value: number(day.count) },
+    { label: t("screensA.team.statTakings"), value: money(day.takings) },
+    { label: t("screensA.team.statFinishes"), value: shiftEnd(staff) },
   ];
 
   return (
@@ -136,7 +142,7 @@ function TeamCard({ staff, day }: { staff: StaffMember; day: DayTotals }) {
           className="scr-admin-team__state"
           data-busy={day.inChair ? "true" : "false"}
         >
-          {day.inChair ? "With a guest" : "Free now"}
+          {t(day.inChair ? "screensA.team.busy" : "screensA.team.free")}
         </span>
       </div>
 
@@ -151,8 +157,12 @@ function TeamCard({ staff, day }: { staff: StaffMember; day: DayTotals }) {
 
       <div>
         <div className="scr-admin-team__barhead">
-          <span className="scr-admin-team__barlabel">Booked today</span>
-          <span className="scr-admin-team__barpct bk-mono">{pct}%</span>
+          <span className="scr-admin-team__barlabel">
+            {t("screensA.team.bookedToday")}
+          </span>
+          <span className="scr-admin-team__barpct bk-mono">
+            {number(pct / 100, { style: "percent" })}
+          </span>
         </div>
         {/* The comp drew a bare div; a progressbar role makes the same picture
             readable to assistive tech. */}
@@ -162,7 +172,7 @@ function TeamCard({ staff, day }: { staff: StaffMember; day: DayTotals }) {
           aria-valuenow={pct}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={`${staff.name} booked today`}
+          aria-label={t("screensA.team.bookedTodayAria", { name: staff.name })}
         >
           <span
             className="scr-admin-team__bar"
@@ -182,14 +192,16 @@ function TeamCard({ staff, day }: { staff: StaffMember; day: DayTotals }) {
             go("admin-cal");
           }}
         >
-          Schedule
+          {t("screensA.team.schedule")}
         </button>
         <button
           type="button"
           className="bk-gi scr-admin-team__act scr-admin-team__act--quiet"
-          onClick={() => showToast(`Message sent to ${staff.name}`)}
+          onClick={() =>
+            showToast(t("screensA.team.messageSent", { name: staff.name }))
+          }
         >
-          Message
+          {t("screensA.team.message")}
         </button>
       </div>
     </article>
@@ -201,6 +213,21 @@ function TeamCard({ staff, day }: { staff: StaffMember; day: DayTotals }) {
  * ------------------------------------------------------------------ */
 
 function TimeOffRow({ req }: { req: TimeOffRequest }) {
+  const t = useT();
+  /* Kind of absence, when it runs and what it costs — three keys, because
+   * "Ivy · holiday" and "Aug 12 – 19 · 6 bookings need moving" are a word
+   * order, a date range and a plural that each locale settles for itself. */
+  const what = t(req.whatKey);
+  const when =
+    formatISORange(req.fromISO, req.toISO) +
+    (req.fromMinute === null
+      ? ""
+      : ` ${t(TIME_OFF_FROM_KEY, { time: minutesToTime(req.fromMinute) })}`);
+  const impact = t(
+    req.impactKey,
+    { count: formatNumber(req.impactCount) },
+    req.impactCount,
+  );
   const apptState = useStore((s) => s.apptState);
   const set = useStore((s) => s.set);
   const showToast = useStore((s) => s.showToast);
@@ -224,10 +251,10 @@ function TimeOffRow({ req }: { req: TimeOffRequest }) {
       />
       <span className="scr-admin-team__reqid">
         <span className="scr-admin-team__reqwho">
-          {req.who} · {req.what}
+          {req.who} · {what}
         </span>
         <span className="scr-admin-team__reqwhen">
-          {req.when} · {req.impact}
+          {when} · {impact}
         </span>
       </span>
 
@@ -236,7 +263,7 @@ function TimeOffRow({ req }: { req: TimeOffRequest }) {
           className="scr-admin-team__verdict"
           data-approved={decision === "ok" ? "true" : "false"}
         >
-          {decision === "ok" ? "Approved" : "Declined"}
+          {t(decision === "ok" ? "screensA.team.approved" : "screensA.team.declined")}
         </span>
       ) : (
         <span className="scr-admin-team__reqacts">
@@ -245,20 +272,28 @@ function TimeOffRow({ req }: { req: TimeOffRequest }) {
             className="bk-btn scr-admin-team__approve"
             onClick={() => {
               settle("ok");
-              showToast(`${req.who}’s ${req.what} approved`);
+              showToast(
+                t("screensA.team.approvedToast", {
+                  what,
+                  who: req.who,
+                }),
+              );
             }}
           >
-            Approve
+            {t("screensA.team.approve")}
           </button>
           <button
             type="button"
             className="bk-gi scr-admin-team__decline"
             onClick={() => {
               settle("no");
-              showToast(`${req.who} told — declined`, "warn");
+              showToast(
+                t("screensA.team.declinedToast", { who: req.who }),
+                "warn",
+              );
             }}
           >
-            Decline
+            {t("screensA.team.decline")}
           </button>
         </span>
       )}

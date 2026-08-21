@@ -6,7 +6,17 @@
  * (540 = 09:00, 840 = 14:00, 1200 = 20:00) and dates are always the local
  * ISO day string `YYYY-MM-DD` — parse them with `parseISO()` from
  * `src/lib/format.ts`, never with `new Date(iso)`.
+ *
+ * i18n: a field named `…Key` holds a `MessageKey`, never display text. Seed
+ * records keep the salon's own content in English — service names, staff and
+ * client names, reviews, journal posts, addresses — while the product's own
+ * vocabulary (categories, statuses, filters, column headings, units) is keyed
+ * and resolved with `t()` at the render site. The suffix is what tells the two
+ * apart at a glance, and renaming a field is what makes a missed render site a
+ * compile error rather than a dotted key on screen.
  */
+
+import type { MessageKey } from "../i18n/index.tsx";
 
 /* ------------------------------------------------------------------ *
  * Catalogue
@@ -20,7 +30,12 @@ export type CategoryFilter = CategorySlug | "all";
 
 export interface Category {
   slug: CategorySlug;
-  name: string;
+  /**
+   * Message key. A category is the catalogue's own filing system rather than
+   * something the salon wrote, so it is translated; the service *names* inside
+   * it are not.
+   */
+  nameKey: MessageKey;
   /** Lucide icon name (kebab-case), see `IconName` in `components/Icon.tsx`. */
   icon: string;
 }
@@ -155,13 +170,18 @@ export interface GiftCard {
   to: string;
   toEmail: string;
   status: GiftStatus;
-  /** Human date string, e.g. `'Jul 12, 2026'` or `'Just now'`. */
-  date: string;
+  /**
+   * `YYYY-MM-DD` the card was sent, or `null` for one bought in this session —
+   * which the screen says with `chrome.gift.justNow`. It used to hold
+   * `'Jul 12, 2026'`, a date only one of the eight locales writes that way.
+   */
+  dateISO: string | null;
 }
 
 export interface GiftTheme {
   id: string;
-  name: string;
+  /** Message key — the four themes are picker options, not salon copy. */
+  nameKey: MessageKey;
   tint: string;
 }
 
@@ -179,25 +199,39 @@ export type GiftSend = "now" | "schedule";
  * ------------------------------------------------------------------ */
 
 export interface LoyaltyReward {
-  label: string;
+  /** Message key, e.g. `'{amount} off any service'` or `'Free {service}'`. */
+  labelKey: MessageKey;
+  /** Whole dollars substituted into `{amount}` — render through `money()`. */
+  amount?: number;
+  /** Service id substituted into `{service}`, resolved through the seam. */
+  svc?: string;
   cost: number;
   icon: string;
   tint: string;
 }
 
 export interface MembershipPlan {
+  /** The plan's own product name — the salon's copy, not chrome. */
   name: string;
-  /** Pre-formatted, e.g. `'$39'`. */
-  price: string;
-  /** e.g. `'/mo'`. */
-  cadence: string;
+  /** Whole dollars; render through `money()` so the symbol lands correctly. */
+  price: number;
+  /** Message key for the billing cadence, e.g. `'/mo'`. */
+  cadenceKey: MessageKey;
   featured: boolean;
   perks: string[];
 }
 
 export interface LoyaltyHistoryRow {
-  label: string;
-  date: string;
+  /** Message key; `{service}`, `{staff}` and `{amount}` are filled from below. */
+  labelKey: MessageKey;
+  /** Service id substituted into `{service}`. */
+  svc?: string;
+  /** Staff id substituted into `{staff}`. */
+  staff?: string;
+  /** Whole dollars substituted into `{amount}`. */
+  amount?: number;
+  /** `YYYY-MM-DD`; render through `formatMediumISO()`. */
+  dateISO: string;
   /** Signed points delta. */
   delta: number;
 }
@@ -218,31 +252,50 @@ export interface Review {
   rating: number;
   /** Service *name* (display copy), not an id. */
   svc: string;
-  date: string;
+  /**
+   * How long ago the review was left — an offset, not a phrase. `'2 weeks ago'`
+   * is a sentence with a plural and (in Arabic) a dual in it; `relativeAgo()`
+   * builds the right one per locale from these two fields.
+   */
+  ago: number;
+  agoUnit: Intl.RelativeTimeFormatUnit;
   quote: string;
 }
 
 export interface ReviewSummary {
-  /** Computed mean of the seeded ratings (e.g. 4.75). */
+  /**
+   * Computed mean of the seeded ratings (e.g. 4.75).
+   *
+   * A number, and only a number. This used to be shipped alongside a
+   * pre-rendered `averageLabel: average.toFixed(1)`, which fixes the decimal
+   * separator to a full stop — half the bundle writes `4,9` — and pins the
+   * digits to Latin ones. Both screens now spell it with `number()`.
+   */
   average: number;
-  /** `average.toFixed(1)` — what the big mono figure shows. */
-  averageLabel: string;
   /** Number of seeded reviews. */
   count: number;
-  /** Marketing copy for the caption, e.g. `'480+ visits'`. */
-  countLabel: string;
+  /**
+   * The floor the caption's "480+ visits" counts from. A bare number rather
+   * than a phrase — the plural, the `+` and the digits are all the locale's.
+   */
+  countBase: number;
 }
 
 export interface ReferralStep {
   icon: string;
-  label: string;
+  labelKey: MessageKey;
+  /** Whole dollars substituted into `{amount}`. */
+  amount?: number;
 }
 
 export interface ReferralInvite {
   name: string;
   /** Derived from `name` — the comp printed the full name in the avatar. */
   initials: string;
-  status: string;
+  /** Message key for the invite's state. */
+  statusKey: MessageKey;
+  /** Whole dollars substituted into `{amount}`. */
+  amount?: number;
   done: boolean;
 }
 
@@ -260,7 +313,7 @@ export type IntakePressure = "light" | "medium" | "firm";
 
 export interface IntakeOption {
   id: IntakePressure;
-  label: string;
+  labelKey: MessageKey;
 }
 
 export interface IntakeState {
@@ -274,11 +327,22 @@ export interface IntakeState {
  * Studio
  * ------------------------------------------------------------------ */
 
+/**
+ * One published trading day.
+ *
+ * Neither the day's name nor its hours are stored as text: `'Monday'` and
+ * `'9:00 AM – 6:00 PM'` are two statements about English that stop being true
+ * seven locales over. The row carries the weekday *index* and two minute
+ * counts, and the screen spells them with `weekdayName()` and
+ * `minutesToTime()`. Rows stay Monday-first, matching `getTodayHoursIndex()`.
+ */
 export interface StudioHoursRow {
-  /** `'Monday'` … `'Sunday'` — Monday-first, matching `getTodayHoursIndex()`. */
-  day: string;
-  /** `'9:00 AM – 6:00 PM'` or `'Closed'`. */
-  value: string;
+  /** `Date.getDay()` — 0 = Sunday … 6 = Saturday. */
+  day: Weekday;
+  /** Opening time, minutes from midnight. Meaningless when `closed`. */
+  open: number;
+  /** Closing time, minutes from midnight. Meaningless when `closed`. */
+  close: number;
   closed: boolean;
 }
 
@@ -294,7 +358,13 @@ export interface StudioLocation {
   addressLine1: string;
   addressLine2: string;
   phone: string;
-  transit: string;
+  /**
+   * Walk from the nearest tram stop, in minutes. A number, because
+   * `'2 min from Alder stop'` is an abbreviation, a preposition and a word
+   * order that every locale settles for itself — `data.location.transit`
+   * carries the sentence, `durationLabel()` the unit.
+   */
+  transitMinutes: number;
   /** From-address used in the confirmation email mock. */
   email: string;
   /** Footer URL badge. */
@@ -450,6 +520,7 @@ export interface OwnedPackage {
  */
 export interface PackageDeal {
   id: string;
+  /** Product name — the salon's own copy, exempt from translation. */
   name: string;
   /** Service id the sessions are spent on, or `null` for anything we do. */
   svc: string | null;

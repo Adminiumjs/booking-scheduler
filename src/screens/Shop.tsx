@@ -14,13 +14,19 @@ import {
   cartSubtotal,
   PRODUCTS,
   SHOP_CATS,
+  sizeLabel,
 } from "../data/screens/shop.ts";
-import { money, plural } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-shop.css";
 
+/** Postage on a shelf order that is not collected in studio. */
+const POSTAGE = 6;
+
 export default function Shop() {
+  const { t, number } = useI18n();
   const shopCat = useStore((s) => s.shopCat);
   const cart = useStore((s) => s.cart);
   const set = useStore((s) => s.set);
@@ -51,18 +57,15 @@ export default function Shop() {
   return (
     <section className="bk-screen bk-page scr-shop">
       <header className="scr-shop__head">
-        <h1 className="bk-h1 scr-shop__title">The shelf</h1>
-        <p className="bk-sub scr-shop__sub">
-          Everything we actually use on you, in the sizes we’d buy ourselves.
-          Collect in studio or have it posted.
-        </p>
+        <h1 className="bk-h1 scr-shop__title">{t("screensB.shop.title")}</h1>
+        <p className="bk-sub scr-shop__sub">{t("screensB.shop.sub")}</p>
       </header>
 
       <div className="scr-shop__chips">
         {SHOP_CATS.map((c) => (
           <Chip
             key={c.slug}
-            label={c.label}
+            label={t(c.labelKey)}
             active={shopCat === c.slug}
             onClick={() => set({ shopCat: c.slug })}
           />
@@ -82,8 +85,8 @@ export default function Shop() {
                   minHeight={132}
                   filename={p.fname}
                 >
-                  {p.badge ? (
-                    <span className="scr-shop__badge">{p.badge}</span>
+                  {p.badgeKey ? (
+                    <span className="scr-shop__badge">{t(p.badgeKey)}</span>
                   ) : null}
                 </PlaceholderTile>
 
@@ -92,7 +95,7 @@ export default function Shop() {
                   <p className="scr-shop__blurb">{p.blurb}</p>
                   <div className="scr-shop__pricerow">
                     <span className="bk-mono scr-shop__price">{money(p.price)}</span>
-                    <span className="scr-shop__size">{p.size}</span>
+                    <span className="scr-shop__size">{sizeLabel(t, p.ml)}</span>
                   </div>
 
                   {qty > 0 ? (
@@ -101,18 +104,18 @@ export default function Shop() {
                         type="button"
                         className="bk-gi scr-shop__qtybtn"
                         onClick={() => bump(p.id, -1)}
-                        aria-label={`Remove one ${p.name}`}
+                        aria-label={t("screensB.shop.removeOne", { name: p.name })}
                       >
                         <Icon name="minus" size={15} />
                       </button>
                       <span className="bk-mono scr-shop__qtyval" aria-live="polite">
-                        {qty}
+                        {number(qty)}
                       </span>
                       <button
                         type="button"
                         className="bk-gi scr-shop__qtybtn"
                         onClick={() => bump(p.id, 1)}
-                        aria-label={`Add another ${p.name}`}
+                        aria-label={t("screensB.shop.addAnother", { name: p.name })}
                       >
                         <Icon name="plus" size={15} />
                       </button>
@@ -123,11 +126,14 @@ export default function Shop() {
                       className="bk-btn scr-shop__add"
                       onClick={() => {
                         bump(p.id, 1);
-                        showToast(`${p.name} added to your bag`, "ok");
+                        showToast(
+                          t("screensB.shop.toastAdded", { name: p.name }),
+                          "ok",
+                        );
                       }}
                     >
                       <Icon name="plus" size={15} />
-                      Add to bag
+                      {t("screensB.shop.addToBag")}
                     </button>
                   )}
                 </div>
@@ -140,14 +146,15 @@ export default function Shop() {
           <div className="bk-panel scr-shop__cart">
             <div className="scr-shop__carthead">
               <Icon name="shopping-bag" size={18} className="scr-shop__bagicon" />
-              <span className="scr-shop__carttitle">Your bag</span>
-              <span className="scr-shop__cartcount">{plural(count, "item")}</span>
+              <span className="scr-shop__carttitle">
+                {t("screensB.shop.yourBag")}
+              </span>
+              <span className="scr-shop__cartcount">{t("count.item", {}, count)}</span>
             </div>
 
             {lines.length === 0 ? (
               <p className="scr-shop__cartempty">
-                Nothing in the bag yet. Products can go on your visit’s bill if
-                you’d rather pay in studio.
+                {t("screensB.shop.cartEmpty")}
               </p>
             ) : null}
 
@@ -163,7 +170,10 @@ export default function Shop() {
                 <span className="scr-shop__linetext">
                   <span className="scr-shop__linename">{l.product.name}</span>
                   <span className="scr-shop__lineqty">
-                    {l.qty} × {money(l.product.price)}
+                    {t("screensB.shop.lineQty", {
+                      qty: number(l.qty),
+                      price: money(l.product.price),
+                    })}
                   </span>
                 </span>
                 <span className="bk-mono scr-shop__lineamt">{money(l.amount)}</span>
@@ -174,7 +184,9 @@ export default function Shop() {
               <>
                 <div className="scr-shop__rule" />
                 <div className="scr-shop__subtotal">
-                  <span className="scr-shop__subtotallabel">Subtotal</span>
+                  <span className="scr-shop__subtotallabel">
+                    {t("screensB.shop.subtotal")}
+                  </span>
                   <span className="bk-mono scr-shop__subtotalval">
                     {money(subtotal)}
                   </span>
@@ -185,10 +197,10 @@ export default function Shop() {
                   onClick={checkout}
                 >
                   <Icon name="credit-card" size={16} />
-                  Checkout
+                  {t("screensB.shop.checkout")}
                 </button>
                 <span className="scr-shop__ship">
-                  Free collection in studio · $6 posted
+                  {t("screensB.shop.ship", { amount: money(POSTAGE) })}
                 </span>
               </>
             ) : null}

@@ -35,9 +35,12 @@ import {
   WeekStrip,
 } from "../components/index.ts";
 import type { SegmentedOption } from "../components/index.ts";
-import { data } from "../data/source.ts";
+import { categoryName, data } from "../data/source.ts";
 import type { RecurFreq, ReminderWhen } from "../data/types.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
 import {
+  durationLabel,
   firstName,
   formatShortDate,
   formatShortISO,
@@ -61,16 +64,16 @@ import "../styles/screen-booking.css";
 
 const NOTE_MAX = 280;
 
-const REMINDER_OPTIONS: readonly SegmentedOption<ReminderWhen>[] = [
-  { value: "24h", label: "24h before" },
-  { value: "2h", label: "2h before" },
-  { value: "both", label: "Both" },
+const REMINDER_KEYS: readonly { value: ReminderWhen; key: MessageKey }[] = [
+  { value: "24h", key: "screensA.booking.remind24" },
+  { value: "2h", key: "screensA.booking.remind2" },
+  { value: "both", key: "screensA.booking.remindBoth" },
 ];
 
-const RECUR_OPTIONS: readonly SegmentedOption<RecurFreq>[] = [
-  { value: "1w", label: "Weekly" },
-  { value: "2w", label: "Every 2 wks" },
-  { value: "4w", label: "Every 4 wks" },
+const RECUR_KEYS: readonly { value: RecurFreq; key: MessageKey }[] = [
+  { value: "1w", key: "screensA.booking.freqWeekly" },
+  { value: "2w", key: "screensA.booking.freq2w" },
+  { value: "4w", key: "screensA.booking.freq4w" },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -149,6 +152,7 @@ function SummaryRow({ icon, label, value, mono = false }: SummaryRowProps) {
  * ------------------------------------------------------------------ */
 
 function StepService() {
+  const t = useT();
   const bCat = useStore((s) => s.bCat);
   const setBCat = useStore((s) => s.setBCat);
   const svcId = useStore((s) => s.svcId);
@@ -161,8 +165,8 @@ function StepService() {
   return (
     <section className="bk-booking__step">
       <header className="bk-booking__head">
-        <h2 className="bk-h2">What can we do for you?</h2>
-        <p className="bk-sub">Choose a service to get started.</p>
+        <h2 className="bk-h2">{t("screensA.booking.svcTitle")}</h2>
+        <p className="bk-sub">{t("screensA.booking.svcSub")}</p>
       </header>
 
       <button type="button" className="bk-booking__promo" onClick={() => go("group")}>
@@ -170,9 +174,11 @@ function StepService() {
           <Icon name="users" size={18} />
         </span>
         <span className="bk-booking__promo-text">
-          <span className="bk-booking__promo-title">Booking for a group?</span>
+          <span className="bk-booking__promo-title">
+            {t("screensA.booking.groupTitle")}
+          </span>
           <span className="bk-booking__promo-sub">
-            Set up a party of 2–8 and we’ll coordinate the timing.
+            {t("screensA.booking.groupSub")}
           </span>
         </span>
         <Icon name="arrow-right" size={16} />
@@ -180,7 +186,7 @@ function StepService() {
 
       <div className="bk-booking__chips">
         <Chip
-          label="All"
+          label={t("screensA.common.all")}
           active={bCat === "all"}
           onClick={() => setBCat("all")}
           iconSize={14}
@@ -188,7 +194,7 @@ function StepService() {
         {categories.map((c) => (
           <Chip
             key={c.slug}
-            label={c.name}
+            label={t(c.nameKey)}
             icon={c.icon}
             iconSize={14}
             active={bCat === c.slug}
@@ -197,7 +203,11 @@ function StepService() {
         ))}
       </div>
 
-      <div className="bk-booking__svcgrid" role="radiogroup" aria-label="Service">
+      <div
+        className="bk-booking__svcgrid"
+        role="radiogroup"
+        aria-label={t("screensA.booking.svcAria")}
+      >
         {services.map((s) => (
           <ServiceRow
             key={s.id}
@@ -216,6 +226,7 @@ function StepService() {
  * ------------------------------------------------------------------ */
 
 function StepStaff() {
+  const t = useT();
   const svcId = useStore((s) => s.svcId);
   const staffSel = useStore((s) => s.staffSel);
   const pickStaff = useStore((s) => s.pickStaff);
@@ -227,18 +238,21 @@ function StepStaff() {
   return (
     <section className="bk-booking__step">
       <header className="bk-booking__head">
-        <h2 className="bk-h2">Who would you like to see?</h2>
+        <h2 className="bk-h2">{t("screensA.booking.staffTitle")}</h2>
         <p className="bk-sub">
-          For <span className="bk-booking__svcname">{svc.name}</span>. Greyed-out
-          specialists don’t offer this one.
+          {t("screensA.booking.staffSub", { service: svc.name })}
         </p>
       </header>
 
-      <div className="bk-booking__staffrows" role="radiogroup" aria-label="Specialist">
+      <div
+        className="bk-booking__staffrows"
+        role="radiogroup"
+        aria-label={t("screensA.booking.staffAria")}
+      >
         <StaffRow
           icon="zap"
-          title="First available"
-          note="Soonest opening with any qualified specialist."
+          title={t("screensA.booking.firstAvailable")}
+          note={t("screensA.booking.firstAvailableNote")}
           selected={staffSel === "first"}
           onSelect={() => pickStaff("first")}
         />
@@ -250,7 +264,7 @@ function StepStaff() {
               staff={m}
               selected={staffSel === m.id}
               disabled={!ok}
-              note={ok ? undefined : "Doesn’t offer this service"}
+              note={ok ? undefined : t("screensA.booking.notOffered")}
               onSelect={() => pickStaff(m.id)}
             />
           );
@@ -265,6 +279,7 @@ function StepStaff() {
  * ------------------------------------------------------------------ */
 
 function StepDateTime() {
+  const t = useT();
   const svcId = useStore((s) => s.svcId);
   const staffSel = useStore((s) => s.staffSel);
   const slotStaff = useStore((s) => s.slotStaff);
@@ -288,7 +303,9 @@ function StepDateTime() {
   if (!svc) return null;
 
   const chosen = data.getStaffMember(staffSel);
-  const staffLabel = chosen ? firstName(chosen.name) : "first available";
+  const staffLabel = chosen
+    ? firstName(chosen.name)
+    : t("screensA.booking.firstAvailableLower");
   const summary = days.find((d) => d.index === dateIdx) ?? days[0];
   const shortDate = formatShortDate(date);
   const iso = isoOf(date);
@@ -298,46 +315,58 @@ function StepDateTime() {
   const pickedStaff = data.getStaffMember(
     resolveStaffId(ctx, svcId, staffSel, slotStaff),
   );
-  const pickLabel =
-    time === null
-      ? ""
-      : `${shortDate} · ${minutesToTime(time)}${pickedStaff ? ` · ${pickedStaff.name}` : ""}`;
+  let pickLabel = "";
+  if (time !== null) {
+    const parts = { date: shortDate, time: minutesToTime(time) };
+    pickLabel = pickedStaff
+      ? t("screensA.booking.pickWith", { ...parts, staff: pickedStaff.name })
+      : t("screensA.booking.pick", parts);
+  }
 
   const showWaitlist =
     !slotsLoading && summary !== undefined && !summary.isClosed && summary.hasWindows;
 
-  let waitTitle = "Don’t see the right time?";
-  let waitSub = `Join the waitlist for ${shortDate} and we’ll ping you about cancellations.`;
+  let waitTitle = t("screensA.booking.waitTitle");
+  let waitSub = t("screensA.booking.waitSub", { date: shortDate });
   if (joined) {
-    waitTitle = "You’re on the waitlist";
-    waitSub = `We’ll text you the moment a spot opens on ${shortDate}.`;
+    waitTitle = t("screensA.booking.waitJoinedTitle");
+    waitSub = t("screensA.booking.waitJoinedSub", { date: shortDate });
   } else if (dayFull) {
-    waitTitle = `${shortDate} is fully booked`;
-    waitSub = "Join the waitlist and we’ll text you the moment a spot opens.";
+    waitTitle = t("screensA.booking.waitFullTitle", { date: shortDate });
+    waitSub = t("screensA.booking.waitFullSub");
   }
 
   return (
     <section className="bk-booking__step">
       <header className="bk-booking__head">
-        <h2 className="bk-h2">Pick a date &amp; time</h2>
+        <h2 className="bk-h2">{t("screensA.booking.whenTitle")}</h2>
         <p className="bk-sub">
-          {svc.name} · {svc.dur} min with {staffLabel}
+          {t("screensA.booking.whenSub", {
+            service: svc.name,
+            duration: durationLabel(svc.dur),
+            staff: staffLabel,
+          })}
         </p>
       </header>
 
-      <WeekStrip days={days} value={dateIdx} onSelect={changeDay} label="Pick a date" />
+      <WeekStrip
+        days={days}
+        value={dateIdx}
+        onSelect={changeDay}
+        label={t("screensA.booking.pickDate")}
+      />
 
       {slotsLoading ? (
         <SlotSkeleton count={12} />
       ) : groups.length === 0 ? (
         <EmptyState
           icon="calendar-off"
-          title="No openings that day"
-          body={
+          title={t("screensA.booking.noOpeningsTitle")}
+          body={t(
             summary?.isClosed
-              ? "The studio is closed on Sundays. Try another day this week."
-              : "This specialist isn’t in that day. Pick another day, or choose “First available”."
-          }
+              ? "screensA.booking.closedBody"
+              : "screensA.booking.staffOffBody",
+          )}
         />
       ) : (
         <div className="bk-booking__groups">
@@ -372,10 +401,14 @@ function StepDateTime() {
       <div className="bk-booking__bar">
         <div className="bk-booking__pick">
           {time === null ? (
-            <span className="bk-booking__pick-none">Choose a time to continue.</span>
+            <span className="bk-booking__pick-none">
+              {t("screensA.booking.chooseTime")}
+            </span>
           ) : (
             <>
-              <span className="bk-booking__pick-cap">Selected</span>
+              <span className="bk-booking__pick-cap">
+                {t("screensA.booking.selected")}
+              </span>
               <span className="bk-mono bk-booking__pick-label">{pickLabel}</span>
             </>
           )}
@@ -386,7 +419,11 @@ function StepDateTime() {
           disabled={time === null}
           onClick={step2Next}
         >
-          {rescheduleCode ? "Confirm new time" : "Continue"}
+          {t(
+            rescheduleCode
+              ? "screensA.booking.confirmNewTime"
+              : "screensA.common.continue",
+          )}
         </Button>
       </div>
     </section>
@@ -398,6 +435,7 @@ function StepDateTime() {
  * ------------------------------------------------------------------ */
 
 function StepDetails() {
+  const { t, number } = useI18n();
   const svcId = useStore((s) => s.svcId);
   const staffSel = useStore((s) => s.staffSel);
   const slotStaff = useStore((s) => s.slotStaff);
@@ -425,33 +463,43 @@ function StepDetails() {
   const svc = data.getService(svcId);
   if (!svc) return null;
 
-  const category = data.getCategory(svc.cat)?.name ?? "";
+  const reminderOptions: readonly SegmentedOption<ReminderWhen>[] =
+    REMINDER_KEYS.map((r) => ({ value: r.value, label: t(r.key) }));
+  const recurOptions: readonly SegmentedOption<RecurFreq>[] = RECUR_KEYS.map(
+    (r) => ({ value: r.value, label: t(r.key) }),
+  );
+
+  const category = categoryName(t, svc.cat);
   const chosen = data.getStaffMember(staffSel);
   const resolved = data.getStaffMember(
     resolveStaffId(ctx, svcId, staffSel, slotStaff),
   );
 
-  let withValue = "First available";
+  let withValue = t("screensA.booking.firstAvailable");
   if (chosen) withValue = chosen.name;
-  else if (resolved) withValue = `${resolved.name} (first free)`;
+  else if (resolved)
+    withValue = t("screensA.booking.firstFree", { name: resolved.name });
 
   const iso = isoOf(date);
   const series = seriesDates(iso, recurFreq, recurCount);
   const lastISO = series[series.length - 1];
   const recurSummary =
     time === null
-      ? `Repeats ${recurLabel(recurFreq)}`
-      : `Repeats ${recurLabel(recurFreq)} · through ${formatShortISO(lastISO)}`;
+      ? t("screensA.booking.repeatsSummary", { frequency: recurLabel(recurFreq) })
+      : t("screensA.booking.repeatsThrough", {
+          frequency: recurLabel(recurFreq),
+          date: formatShortISO(lastISO),
+        });
 
   return (
     <section className="bk-booking__details">
       <div className="bk-booking__form">
         <header className="bk-booking__head">
-          <h2 className="bk-h2">Your details</h2>
-          <p className="bk-sub">So we know who to expect.</p>
+          <h2 className="bk-h2">{t("screensA.booking.detailsTitle")}</h2>
+          <p className="bk-sub">{t("screensA.booking.detailsSub")}</p>
         </header>
 
-        <Field label="Full name" error={errs.name}>
+        <Field label={t("screensA.common.fullName")} error={errs.name}>
           {(c) => (
             <TextInput
               {...c}
@@ -462,7 +510,7 @@ function StepDetails() {
           )}
         </Field>
 
-        <Field label="Email" error={errs.email}>
+        <Field label={t("screensA.common.email")} error={errs.email}>
           {(c) => (
             <TextInput
               {...c}
@@ -475,7 +523,7 @@ function StepDetails() {
           )}
         </Field>
 
-        <Field label="Phone" error={errs.phone}>
+        <Field label={t("screensA.common.phone")} error={errs.phone}>
           {(c) => (
             <TextInput
               {...c}
@@ -489,11 +537,14 @@ function StepDetails() {
         </Field>
 
         <Field
-          label="Anything we should know?"
-          hint="(optional)"
+          label={t("screensA.booking.noteLabel")}
+          hint={t("screensA.common.optional")}
           aside={
             <span className="bk-mono">
-              {form.note.length} / {NOTE_MAX}
+              {t("screensA.booking.noteCount", {
+                used: number(form.note.length),
+                max: number(NOTE_MAX),
+              })}
             </span>
           }
         >
@@ -504,36 +555,38 @@ function StepDetails() {
               onChange={(v) => setField("note", v)}
               rows={3}
               maxLength={NOTE_MAX}
-              placeholder="Allergies, parking, or if it’s your first visit — anything helps."
+              placeholder={t("screensA.booking.notePlaceholder")}
               className="bk-booking__note"
             />
           )}
         </Field>
 
         <Card radius={16} className="bk-booking__card">
-          <CardHead icon="bell" title="Appointment reminders" />
+          <CardHead icon="bell" title={t("screensA.booking.reminders")} />
           <ToggleRow
             icon="mail"
-            title="Email reminders"
-            sub="A confirmation now, plus a heads-up before."
+            title={t("screensA.booking.emailReminders")}
+            sub={t("screensA.booking.emailRemindersSub")}
             checked={remEmail}
             onChange={setRemEmail}
           />
           <ToggleRow
             icon="message-square"
-            title="SMS reminders"
-            sub="A quick text so it never sneaks up on you."
+            title={t("screensA.booking.smsReminders")}
+            sub={t("screensA.booking.smsRemindersSub")}
             checked={remSms}
             onChange={setRemSms}
           />
           {remEmail || remSms ? (
             <div className="bk-booking__sendrow">
-              <span className="bk-booking__sendlabel">Send</span>
+              <span className="bk-booking__sendlabel">
+                {t("screensA.booking.send")}
+              </span>
               <Segmented
-                label="Reminder timing"
+                label={t("screensA.booking.reminderTiming")}
                 value={remWhen}
                 onChange={setRemWhen}
-                options={REMINDER_OPTIONS}
+                options={reminderOptions}
               />
             </div>
           ) : null}
@@ -542,33 +595,35 @@ function StepDetails() {
         <Card radius={16} className="bk-booking__card">
           <CardHead
             icon="repeat"
-            title="Make it recurring"
-            sub="Keep this time on a repeat — we’ll hold it for you."
+            title={t("screensA.booking.recurring")}
+            sub={t("screensA.booking.recurringSub")}
             aside={
               <Toggle
                 checked={recurOn}
                 onChange={setRecurOn}
-                label="Make it recurring"
+                label={t("screensA.booking.recurring")}
               />
             }
           />
           {recurOn ? (
             <div className="bk-booking__recur">
               <Segmented
-                label="How often"
+                label={t("screensA.booking.howOften")}
                 value={recurFreq}
                 onChange={setRecurFreq}
-                options={RECUR_OPTIONS}
+                options={recurOptions}
               />
               <div className="bk-booking__countrow">
-                <span className="bk-booking__countlabel">How many visits</span>
+                <span className="bk-booking__countlabel">
+                  {t("screensA.booking.howMany")}
+                </span>
                 <NumberStepper
                   value={recurCount}
                   onChange={setRecurCount}
                   min={2}
                   max={8}
-                  label="How many visits"
-                  format={(v) => `${v} visits`}
+                  label={t("screensA.booking.howMany")}
+                  format={(v) => t("count.visit", {}, v)}
                 />
               </div>
               <div className="bk-booking__recursum">
@@ -583,7 +638,7 @@ function StepDetails() {
       <aside className="bk-booking__summary">
         <Card radius={18} clip className="bk-booking__summary-card">
           <PanelHeader>
-            <Eyebrow>Your appointment</Eyebrow>
+            <Eyebrow>{t("screensA.booking.yourAppointment")}</Eyebrow>
           </PanelHeader>
           <div className="bk-booking__summary-body">
             <div className="bk-booking__summary-svc">
@@ -591,31 +646,47 @@ function StepDetails() {
               <span className="bk-booking__summary-svctext">
                 <span className="bk-booking__summary-svcname">{svc.name}</span>
                 <span className="bk-booking__summary-svcmeta">
-                  {svc.dur} min · {category}
+                  {t("screensA.booking.svcMeta", {
+                    duration: durationLabel(svc.dur),
+                    category,
+                  })}
                 </span>
               </span>
             </div>
 
             <div className="bk-booking__srows">
-              <SummaryRow icon="user" label="With" value={withValue} />
-              <SummaryRow icon="calendar" label="Date" value={formatShortDate(date)} />
+              <SummaryRow
+                icon="user"
+                label={t("screensA.booking.rowWith")}
+                value={withValue}
+              />
+              <SummaryRow
+                icon="calendar"
+                label={t("screensA.booking.rowDate")}
+                value={formatShortDate(date)}
+              />
               <SummaryRow
                 icon="clock"
-                label="Time"
+                label={t("screensA.booking.rowTime")}
                 value={time === null ? "—" : minutesToTime(time)}
                 mono
               />
               {recurOn ? (
                 <SummaryRow
                   icon="repeat"
-                  label="Repeats"
-                  value={`${recurLabel(recurFreq)} ×${recurCount}`}
+                  label={t("screensA.booking.rowRepeats")}
+                  value={t("screensA.booking.repeatsValue", {
+                    frequency: recurLabel(recurFreq),
+                    count: number(recurCount),
+                  })}
                 />
               ) : null}
             </div>
 
             <div className="bk-booking__total">
-              <span className="bk-booking__total-key">Total</span>
+              <span className="bk-booking__total-key">
+                {t("screensA.common.total")}
+              </span>
               <span className="bk-mono bk-booking__total-val">{money(svc.price)}</span>
             </div>
 
@@ -625,13 +696,12 @@ function StepDetails() {
               onClick={confirmBooking}
               className="bk-booking__cta"
             >
-              Confirm booking
+              {t("screensA.booking.confirm")}
             </Button>
 
             <p className="bk-booking__fine">
               <Icon name="shield-check" size={14} />
-              No card needed to hold your spot. This is a demo — nothing is really
-              booked.
+              {t("screensA.booking.fine")}
             </p>
           </div>
         </Card>
@@ -645,6 +715,7 @@ function StepDetails() {
  * ------------------------------------------------------------------ */
 
 export default function Booking() {
+  const t = useT();
   const step = useStore((s) => s.step);
   const svcId = useStore((s) => s.svcId);
   const staffSel = useStore((s) => s.staffSel);
@@ -653,11 +724,13 @@ export default function Booking() {
   const bookBack = useStore((s) => s.bookBack);
   const setStep = useStore((s) => s.setStep);
 
-  const backLabel = rescheduleCode
-    ? "Back to booking"
-    : step > 0
-      ? "Back"
-      : "Back to services";
+  const backLabel = t(
+    rescheduleCode
+      ? "screensA.booking.backToBooking"
+      : step > 0
+        ? "screensA.common.back"
+        : "screensA.booking.backToServices",
+  );
 
   return (
     <main className="bk-screen bk-page bk-booking">

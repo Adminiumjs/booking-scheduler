@@ -11,6 +11,8 @@
  * Today flips the matching card to "With a guest" here.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export type RosterStatus =
   | "confirmed"
   | "arrived"
@@ -49,16 +51,26 @@ export const TEAM_ROSTER: readonly RosterEntry[] = [
  */
 export const STANDARD_DAY_MINUTES = 8 * 60;
 
+/** Part-day absences: `t(TIME_OFF_FROM_KEY, { time: minutesToTime(m) })`. */
+export const TIME_OFF_FROM_KEY: MessageKey = "data.team.offFrom";
+
 export interface TimeOffRequest {
   key: string;
   who: string;
   initials: string;
   tint: string;
-  /** Kind of absence, lower-case — it reads as "Ivy · holiday". */
-  what: string;
-  when: string;
+  /** Kind of absence — a key, it reads as "Ivy · holiday". */
+  whatKey: MessageKey;
+  /** First day off, `YYYY-MM-DD`. */
+  fromISO: string;
+  /** Last day off; equal to `fromISO` for a single day. */
+  toISO: string;
+  /** Minutes from midnight when a part-day absence starts, else `null`. */
+  fromMinute: number | null;
   /** What it costs the diary if approved. */
-  impact: string;
+  impactKey: MessageKey;
+  /** Fills `{count}` in the impact line; `0` selects the "nothing" wording. */
+  impactCount: number;
 }
 
 export const TIME_OFF: readonly TimeOffRequest[] = [
@@ -67,26 +79,35 @@ export const TIME_OFF: readonly TimeOffRequest[] = [
     who: "Ivy",
     initials: "IV",
     tint: "#c08a6a",
-    what: "holiday",
-    when: "Aug 12 – Aug 19",
-    impact: "6 bookings need moving",
+    whatKey: "data.team.offHoliday",
+    fromISO: "2026-08-12",
+    toISO: "2026-08-19",
+    fromMinute: null,
+    impactKey: "data.team.impactMove",
+    impactCount: 6,
   },
   {
     key: "t2",
     who: "Marco",
     initials: "MA",
     tint: "#7d9166",
-    what: "late start",
-    when: "Thu Aug 6 · from 2 PM",
-    impact: "No bookings affected",
+    whatKey: "data.team.offLateStart",
+    fromISO: "2026-08-06",
+    toISO: "2026-08-06",
+    fromMinute: 840,
+    impactKey: "data.team.impactNone",
+    impactCount: 0,
   },
   {
     key: "t3",
     who: "Noor",
     initials: "NO",
     tint: "#6f8bb0",
-    what: "course day",
-    when: "Sep 3 · full day",
-    impact: "2 facials to rebook",
+    whatKey: "data.team.offCourse",
+    fromISO: "2026-09-03",
+    toISO: "2026-09-03",
+    fromMinute: null,
+    impactKey: "data.team.impactRebook",
+    impactCount: 2,
   },
 ];

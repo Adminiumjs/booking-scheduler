@@ -4,6 +4,7 @@
  * time?" — are chosen by the caller and passed in.
  */
 
+import { useT } from "../i18n/index.tsx";
 import { Icon } from "./Icon.tsx";
 
 export interface WaitlistCardProps {
@@ -25,6 +26,7 @@ export function WaitlistCard({
   onJoin,
   className,
 }: WaitlistCardProps) {
+  const t = useT();
   return (
     <div
       className={["bk-waitlist", className].filter(Boolean).join(" ")}
@@ -47,12 +49,12 @@ export function WaitlistCard({
         {joined ? (
           <>
             <Icon name="check-circle-2" size={15} />
-            On the waitlist
+            {t("chrome.waitlist.joined")}
           </>
         ) : (
           <>
             <Icon name="bell-plus" size={15} />
-            Join the waitlist
+            {t("chrome.waitlist.join")}
           </>
         )}
       </button>

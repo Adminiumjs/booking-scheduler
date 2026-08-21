@@ -11,20 +11,44 @@
  * directory does not list.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export type OrderType = "visit" | "package" | "gift";
 
-/** Statuses the comp uses; `ordersTone` maps each to a `StatusPill` tone. */
-export type OrderStatus = "Completed" | "Sent" | "Active" | "Refunded";
+/**
+ * Statuses the comp uses; `ordersTone` maps each to a `StatusPill` tone.
+ *
+ * Lower-cased into machine tokens: the union used to be the display text too,
+ * so a screen printing `order.status` looked correct in English and shipped
+ * `Completed` into all eight bundles. Resolve `ORDER_STATUS_KEY[status]`.
+ */
+export type OrderStatus = "completed" | "sent" | "active" | "refunded";
+
+export const ORDER_STATUS_KEY: Record<OrderStatus, MessageKey> = {
+  completed: "data.orders.statusCompleted",
+  sent: "data.orders.statusSent",
+  active: "data.orders.statusActive",
+  refunded: "data.orders.statusRefunded",
+};
 
 export interface Order {
   code: string;
   type: OrderType;
+  /** The receipt's own line — a treatment, a package, a gift. Salon copy. */
   label: string;
-  sub: string;
+  /**
+   * The grey line under it. The date is ISO and the length is minutes, both
+   * spelled at render; `subKey` says which shape the row takes, since a gift
+   * card has no duration and a package counts sessions instead.
+   */
+  dateISO: string;
+  subKey: MessageKey;
+  /** Minutes, for a visit. */
+  dur?: number;
+  /** Sessions, for a package. */
+  sessions?: number;
   amount: number;
   status: OrderStatus;
-  /** Group heading — rows keep their seeded order inside a month. */
-  month: string;
   icon: string;
   tint: string;
 }
@@ -34,10 +58,11 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2291",
     type: "visit",
     label: "Balayage with Elin",
-    sub: "Jul 14, 2026 · 90 min",
+    dateISO: "2026-07-14",
+    subKey: "data.orders.subVisit",
+    dur: 90,
     amount: 190,
-    status: "Completed",
-    month: "July 2026",
+    status: "completed",
     icon: "palette",
     tint: "#b58a6a",
   },
@@ -45,10 +70,10 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2288",
     type: "gift",
     label: "Gift card for Robin Alvarez",
-    sub: "Jul 12, 2026 · emailed",
+    dateISO: "2026-07-12",
+    subKey: "data.orders.subEmailed",
     amount: 100,
-    status: "Sent",
-    month: "July 2026",
+    status: "sent",
     icon: "gift",
     tint: "#b07d9a",
   },
@@ -56,10 +81,11 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2276",
     type: "package",
     label: "Glow Five package",
-    sub: "Jul 6, 2026 · five facials",
+    dateISO: "2026-07-06",
+    subKey: "data.orders.subSessions",
+    sessions: 5,
     amount: 475,
-    status: "Active",
-    month: "July 2026",
+    status: "active",
     icon: "flower-2",
     tint: "#6f8bb0",
   },
@@ -67,10 +93,11 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2264",
     type: "visit",
     label: "Signature Facial with Noor",
-    sub: "Jun 30, 2026 · 60 min",
+    dateISO: "2026-06-30",
+    subKey: "data.orders.subVisit",
+    dur: 60,
     amount: 110,
-    status: "Completed",
-    month: "June 2026",
+    status: "completed",
     icon: "flower-2",
     tint: "#6f8bb0",
   },
@@ -78,10 +105,11 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2251",
     type: "visit",
     label: "Gel Manicure with Ivy",
-    sub: "Jun 2, 2026 · 60 min",
+    dateISO: "2026-06-02",
+    subKey: "data.orders.subVisit",
+    dur: 60,
     amount: 58,
-    status: "Completed",
-    month: "June 2026",
+    status: "completed",
     icon: "sparkles",
     tint: "#c08a6a",
   },
@@ -89,10 +117,11 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2240",
     type: "visit",
     label: "Reformer Pilates with Marco",
-    sub: "May 26, 2026 · 45 min",
+    dateISO: "2026-05-26",
+    subKey: "data.orders.subVisit",
+    dur: 45,
     amount: 40,
-    status: "Completed",
-    month: "May 2026",
+    status: "completed",
     icon: "activity",
     tint: "#7d9166",
   },
@@ -100,19 +129,30 @@ export const ORDERS: readonly Order[] = [
     code: "ORD-2233",
     type: "visit",
     label: "Cut & Style with Elin",
-    sub: "May 12, 2026 · cancelled in time",
+    dateISO: "2026-05-12",
+    subKey: "data.orders.subCancelledInTime",
     amount: 78,
-    status: "Refunded",
-    month: "May 2026",
+    status: "refunded",
     icon: "scissors",
     tint: "#b07d9a",
   },
 ];
 
+/**
+ * Month heading a row groups under.
+ *
+ * Derived rather than seeded: `'July 2026'` was stored on every row, which is
+ * a date written in English seven locales too early. The screen groups on this
+ * key and spells the heading with `Intl` from the same row's `dateISO`.
+ */
+export function orderMonthKey(order: Order): string {
+  return order.dateISO.slice(0, 7);
+}
+
 /** The filter chip row. `all` is the store's seed value for `ordFilter`. */
-export const ORDER_FILTERS: readonly { value: string; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "visit", label: "Visits" },
-  { value: "package", label: "Packages" },
-  { value: "gift", label: "Gift cards" },
+export const ORDER_FILTERS: readonly { value: string; labelKey: MessageKey }[] = [
+  { value: "all", labelKey: "data.orders.filterAll" },
+  { value: "visit", labelKey: "data.orders.filterVisits" },
+  { value: "package", labelKey: "data.orders.filterPackages" },
+  { value: "gift", labelKey: "data.orders.filterGifts" },
 ];

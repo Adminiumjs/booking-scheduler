@@ -14,7 +14,8 @@
  */
 
 import type { StaffMember, Weekday } from "../types.ts";
-import { minutesToTime } from "../../lib/format.ts";
+import type { MessageKey } from "../../i18n/index.tsx";
+import { minutesToTime, wholeMoney } from "../../lib/format.ts";
 
 /** Where an appointment is in its life, front-desk vocabulary. */
 export type ApptStatus =
@@ -74,17 +75,23 @@ export const ROW = 44;
 export type StatusTone = "info" | "pos" | "muted" | "warn" | "danger";
 
 export interface StatusMeta {
-  label: string;
+  /**
+   * Message key, not display text. A status name is product chrome, so it has
+   * to survive a locale switch — the screen resolves this through `t()`. The
+   * field is deliberately not called `label`: anything that renders it raw is
+   * then a visible key rather than English that quietly looks translated.
+   */
+  labelKey: MessageKey;
   /** Drives a `data-tone` attribute; the colour itself lives in CSS. */
   tone: StatusTone;
 }
 
 export const STATUS_META: Record<ApptStatus, StatusMeta> = {
-  confirmed: { label: "Confirmed", tone: "info" },
-  arrived: { label: "In chair", tone: "pos" },
-  done: { label: "Done", tone: "muted" },
-  pending: { label: "Unconfirmed", tone: "warn" },
-  cancelled: { label: "Cancelled", tone: "danger" },
+  confirmed: { labelKey: "screensA.today.statusConfirmed", tone: "info" },
+  arrived: { labelKey: "screensA.today.statusArrived", tone: "pos" },
+  done: { labelKey: "screensA.today.statusDone", tone: "muted" },
+  pending: { labelKey: "screensA.today.statusPending", tone: "warn" },
+  cancelled: { labelKey: "screensA.today.statusCancelled", tone: "danger" },
 };
 
 /** What the primary action on a row does next, given where it is now. */
@@ -100,21 +107,28 @@ export const NEXT_STATUS: Record<ApptStatus, ApptStatus> = {
  * The primary action's label + glyph in the Calendar's appointment panel,
  * keyed by the status it acts on.
  */
-export const PANEL_ACTION: Record<ApptStatus, { label: string; icon: string }> = {
-  confirmed: { label: "Check in", icon: "log-in" },
-  arrived: { label: "Mark complete", icon: "check" },
-  pending: { label: "Confirm booking", icon: "check" },
-  done: { label: "Reopen", icon: "rotate-ccw" },
-  cancelled: { label: "Reopen", icon: "rotate-ccw" },
+export const PANEL_ACTION: Record<
+  ApptStatus,
+  { labelKey: MessageKey; icon: string }
+> = {
+  confirmed: { labelKey: "screensA.today.panelCheckIn", icon: "log-in" },
+  arrived: { labelKey: "screensA.today.panelMarkComplete", icon: "check" },
+  pending: { labelKey: "screensA.today.panelConfirmBooking", icon: "check" },
+  done: { labelKey: "screensA.today.panelReopen", icon: "rotate-ccw" },
+  cancelled: { labelKey: "screensA.today.panelReopen", icon: "rotate-ccw" },
 };
 
-/** The same action, abbreviated for the narrow button on a Today row. */
-export const ROW_ACTION: Record<ApptStatus, string> = {
-  confirmed: "Check in",
-  arrived: "Complete",
-  pending: "Confirm",
-  done: "Reopen",
-  cancelled: "Reopen",
+/**
+ * The same action, abbreviated for the narrow button on a Today row. Keys, not
+ * text — the abbreviation is per-language, so a locale is free to shorten
+ * differently (or not at all) rather than inherit English's clipping.
+ */
+export const ROW_ACTION_KEY: Record<ApptStatus, MessageKey> = {
+  confirmed: "screensA.today.rowCheckIn",
+  arrived: "screensA.today.rowComplete",
+  pending: "screensA.today.rowConfirm",
+  done: "screensA.today.rowReopen",
+  cancelled: "screensA.today.rowReopen",
 };
 
 function isStatus(v: string | undefined): v is ApptStatus {
@@ -139,10 +153,11 @@ export function effStart(a: StudioAppt, moved: Record<string, number>): number {
 /**
  * Whole-dollar money. The studio half prices in round numbers on tiles and
  * blocks — `money()` from `lib/format` is the guest-facing two-decimal form
- * and stays that way for receipts.
+ * and stays that way for receipts. Both run through `Intl` now, so the symbol
+ * lands on the side the reader's locale puts it on.
  */
 export function dollars(n: number): string {
-  return `$${Math.round(n)}`;
+  return wholeMoney(n);
 }
 
 /** Minutes from midnight, clamped into the trading day. */
@@ -169,12 +184,21 @@ export function hoursLabel(staff: StaffMember, weekday: Weekday): string {
  * ------------------------------------------------------------------ */
 
 export interface KpiSeed {
-  label: string;
+  labelKey: MessageKey;
   icon: string;
   /** Per-record tint; `var(--accent)` for the headline tile. */
   tint: string;
-  /** Period-on-period movement, or "" when the tile has none. */
-  delta: string;
+  /**
+   * Period-on-period movement, or `null` when the tile shows none.
+   *
+   * A signed number rather than `'+18%'`: the sign glyph, the grouping and the
+   * digits are all the reader's — Arabic writes `٪١٨+` — and the screen has to
+   * read the sign anyway to colour the chip, which `startsWith('+')` only ever
+   * did correctly for a string English had already formatted.
+   */
+  delta: number | null;
+  /** `true` when `delta` is a rate to spell as a percentage, not a count. */
+  deltaPercent: boolean;
 }
 
 /**
@@ -182,10 +206,34 @@ export interface KpiSeed {
  * time; only the copy and the trend live here.
  */
 export const KPI_SEED: readonly KpiSeed[] = [
-  { label: "Bookings today", icon: "calendar-check", tint: "var(--accent)", delta: "+3" },
-  { label: "Taken so far", icon: "banknote", tint: "#7d9166", delta: "+18%" },
-  { label: "Chair utilisation", icon: "gauge", tint: "#6f8bb0", delta: "−4%" },
-  { label: "Gaps to fill", icon: "triangle-alert", tint: "#c08a6a", delta: "" },
+  {
+    labelKey: "screensA.today.kpiBookings",
+    icon: "calendar-check",
+    tint: "var(--accent)",
+    delta: 3,
+    deltaPercent: false,
+  },
+  {
+    labelKey: "screensA.today.kpiTaken",
+    icon: "banknote",
+    tint: "#7d9166",
+    delta: 0.18,
+    deltaPercent: true,
+  },
+  {
+    labelKey: "screensA.today.kpiUtil",
+    icon: "gauge",
+    tint: "#6f8bb0",
+    delta: -0.04,
+    deltaPercent: true,
+  },
+  {
+    labelKey: "screensA.today.kpiGaps",
+    icon: "triangle-alert",
+    tint: "#c08a6a",
+    delta: null,
+    deltaPercent: false,
+  },
 ];
 
 /**
@@ -205,9 +253,20 @@ export interface AlertSeed {
   action: AlertAction;
   icon: string;
   tint: string;
-  title: string;
-  sub: string;
-  cta: string;
+  titleKey: MessageKey;
+  subKey: MessageKey;
+  ctaKey: MessageKey;
+  /** Drives the title's plural where it counts something. */
+  titleCount?: number;
+  /** Drives the sub's plural where it counts something. */
+  subCount?: number;
+  /**
+   * Demo fiction the sub interpolates — guest, specialist and product names.
+   * These stay literal on purpose: the salon's own people are not chrome.
+   */
+  subParams?: Record<string, string>;
+  /** Minutes from midnight; the screen clocks it for the reader's locale. */
+  subTime?: number;
 }
 
 /** "Needs a decision" — the four things worth interrupting someone for. */
@@ -216,33 +275,43 @@ export const ALERT_SEED: readonly AlertSeed[] = [
     action: "waitlist",
     icon: "bell-plus",
     tint: "#c08a6a",
-    title: "2 waitlist matches for today",
-    sub: "Sam Doyle cancelled 1:30 PM with Noor — two guests want that window.",
-    cta: "Offer it",
+    titleKey: "screensA.today.alertWaitlistTitle",
+    titleCount: 2,
+    subKey: "screensA.today.alertWaitlistSub",
+    subParams: { client: "Sam Doyle", staff: "Noor" },
+    subTime: 810,
+    ctaKey: "screensA.today.alertWaitlistCta",
   },
   {
     action: "stock",
     icon: "package",
     tint: "#b58a6a",
-    title: `${LOW_STOCK_COUNT} products below par`,
-    sub: "Barrier Repair Cream is down to two units.",
-    cta: "Reorder",
+    titleKey: "screensA.today.alertStockTitle",
+    titleCount: LOW_STOCK_COUNT,
+    subKey: "screensA.today.alertStockSub",
+    subParams: { product: "Barrier Repair Cream" },
+    subCount: 2,
+    ctaKey: "screensA.today.alertStockCta",
   },
   {
     action: "intake",
     icon: "user-plus",
     tint: "#7d9166",
-    title: "Jonah Pike has no intake form",
-    sub: "First visit at 4:00 PM with Elin.",
-    cta: "Send form",
+    titleKey: "screensA.today.alertIntakeTitle",
+    subParams: { client: "Jonah Pike", staff: "Elin" },
+    subKey: "screensA.today.alertIntakeSub",
+    subTime: 960,
+    ctaKey: "screensA.today.alertIntakeCta",
   },
   {
     action: "reviews",
     icon: "star",
     tint: "#6f8bb0",
-    title: `${REVIEWS_TODO_COUNT} reviews need a reply`,
-    sub: "One three-star from Sam Doyle is still unanswered.",
-    cta: "Open",
+    titleKey: "screensA.today.alertReviewsTitle",
+    titleCount: REVIEWS_TODO_COUNT,
+    subKey: "screensA.today.alertReviewsSub",
+    subParams: { client: "Sam Doyle" },
+    ctaKey: "screensA.today.alertReviewsCta",
   },
 ];
 

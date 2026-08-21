@@ -13,6 +13,8 @@
  * not the comp's.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
 export interface StudioReview {
   name: string;
   initials: string;
@@ -23,7 +25,13 @@ export interface StudioReview {
   svc: string;
   /** Staff id, matching `data.getStaff()`. */
   staff: string;
-  date: string;
+  /**
+   * How long ago the review was left — an offset, not a phrase. `'2 weeks ago'`
+   * is a sentence with a plural and (in Arabic) a dual in it; `relativeAgo()`
+   * builds the right one per locale from these two fields.
+   */
+  ago: number;
+  agoUnit: Intl.RelativeTimeFormatUnit;
   helpful: number;
   quote: string;
   /** Empty when the studio has not replied. */
@@ -40,7 +48,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 5,
     svc: "Balayage",
     staff: "elin",
-    date: "2 weeks ago",
+    ago: 2,
+    agoUnit: "week",
     helpful: 24,
     quote:
       "Elin read exactly what I wanted from one blurry screenshot. Best color I’ve ever had, full stop.",
@@ -55,7 +64,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 5,
     svc: "Deep-Tissue Massage",
     staff: "noor",
-    date: "1 month ago",
+    ago: 1,
+    agoUnit: "month",
     helpful: 18,
     quote:
       "Noor found every knot I’d been ignoring for a year. I walked out standing three inches taller.",
@@ -70,7 +80,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 5,
     svc: "Gel Manicure",
     staff: "ivy",
-    date: "3 weeks ago",
+    ago: 3,
+    agoUnit: "week",
     helpful: 31,
     quote:
       "Ivy’s detail work is unreal, and it lasted almost three weeks without a single chip.",
@@ -85,7 +96,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 4,
     svc: "Reformer Pilates",
     staff: "marco",
-    date: "6 days ago",
+    ago: 6,
+    agoUnit: "day",
     helpful: 9,
     quote:
       "Marco tailors every session to how my back feels that day. Rebooking is genuinely one tap.",
@@ -100,7 +112,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 5,
     svc: "Signature Facial",
     staff: "noor",
-    date: "1 week ago",
+    ago: 1,
+    agoUnit: "week",
     helpful: 14,
     quote:
       "She told me to stop using two products I loved and my skin has been calm ever since. Worth it for the honesty alone.",
@@ -115,7 +128,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 4,
     svc: "Cut & Style",
     staff: "elin",
-    date: "2 months ago",
+    ago: 2,
+    agoUnit: "month",
     helpful: 6,
     quote:
       "Ran about ten minutes late starting, but the cut has grown out beautifully and that matters more.",
@@ -131,7 +145,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 5,
     svc: "Deluxe Pedicure",
     staff: "ivy",
-    date: "5 weeks ago",
+    ago: 5,
+    agoUnit: "week",
     helpful: 11,
     quote:
       "The only place I’ve been where the massage goes past the ankle. Small thing, enormous difference.",
@@ -146,7 +161,8 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
     rating: 3,
     svc: "Gloss & Tone",
     staff: "elin",
-    date: "3 months ago",
+    ago: 3,
+    agoUnit: "month",
     helpful: 4,
     quote:
       "Lovely result but I’d hoped for a bigger change from a gloss. My expectations, not their work.",
@@ -157,21 +173,29 @@ export const STUDIO_REVIEWS: readonly StudioReview[] = [
   },
 ];
 
-/** The five filter chips above the list. */
-export const REVIEW_FILTERS: readonly { id: string; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "5", label: "5 star" },
-  { id: "4", label: "4 star" },
-  { id: "low", label: "3 & under" },
-  { id: "replied", label: "With a reply" },
+/** The five filter chips above the list. `stars` fills `{count}`. */
+export const REVIEW_FILTERS: readonly {
+  id: string;
+  labelKey: MessageKey;
+  stars?: number;
+}[] = [
+  { id: "all", labelKey: "data.reviews.filterAll" },
+  { id: "5", labelKey: "data.reviews.filterStars", stars: 5 },
+  { id: "4", labelKey: "data.reviews.filterStars", stars: 4 },
+  { id: "low", labelKey: "data.reviews.filterUnder", stars: 3 },
+  { id: "replied", labelKey: "data.reviews.filterReplied" },
 ];
 
-/** Index by star count — `RATING_WORDS[4]` is `'Really good'`. */
-export const RATING_WORDS: readonly string[] = [
-  "",
-  "Not great",
-  "Below par",
-  "Fine",
-  "Really good",
-  "Perfect",
+/**
+ * Index by star count — `RATING_WORD_KEYS[4]` is "Really good". Index 0 is
+ * `null`: there is no nought-star rating, and an empty string in a bundle
+ * reads as a missing translation rather than a deliberate blank.
+ */
+export const RATING_WORD_KEYS: readonly (MessageKey | null)[] = [
+  null,
+  "data.rating.1",
+  "data.rating.2",
+  "data.rating.3",
+  "data.rating.4",
+  "data.rating.5",
 ];

@@ -27,11 +27,14 @@ import {
   EXPORT_RANGES,
 } from "../data/screens/export.ts";
 import type { ExportRange } from "../data/screens/export.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { formatMediumISO } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-export.css";
 
 export default function ExportData() {
+  const { t, number } = useI18n();
   const exRange = useStore((s) => s.exRange);
   const exFrom = useStore((s) => s.exFrom);
   const exTo = useStore((s) => s.exTo);
@@ -64,10 +67,16 @@ export default function ExportData() {
   const format =
     EXPORT_FORMATS.find((f) => f.id === exFmt) ?? EXPORT_FORMATS[0];
   const filename = `lumen-bookings-${exFrom}_${exTo}.${exFmt}`;
-  const meta = `${rowCount} rows · ${format.sub.toLowerCase()} · ${
-    exEmail ? "download + email" : "download only"
-  }`;
-  const size = `${Math.max(4, rowCount * 1.4).toFixed(0)} KB`;
+  const meta = t(
+    exEmail ? "screensA.export.metaBoth" : "screensA.export.metaDownload",
+    { format: t(format.subKey) },
+    rowCount,
+  );
+  const size = number(Math.round(Math.max(4, rowCount * 1.4)), {
+    style: "unit",
+    unit: "kilobyte",
+    unitDisplay: "short",
+  });
 
   const pickRange = (r: ExportRange): void =>
     set({
@@ -82,7 +91,7 @@ export default function ExportData() {
 
   const generate = (): void => {
     if (rowCount === 0) {
-      showToast("Pick at least one thing to include", "warn");
+      showToast(t("screensA.export.pickOne"), "warn");
       return;
     }
     set({ exState: "busy" });
@@ -90,31 +99,30 @@ export default function ExportData() {
     timer.current = setTimeout(() => {
       timer.current = null;
       set({ exState: "ready" });
-      showToast("Export ready", "ok");
+      showToast(t("screensA.export.readyToast"), "ok");
     }, EXPORT_DELAY_MS);
   };
 
   return (
     <section className="bk-screen bk-page scr-export">
-      <BackLink onClick={() => go("dash")}>Back to dashboard</BackLink>
+      <BackLink onClick={() => go("dash")}>
+        {t("screensA.common.backToDashboard")}
+      </BackLink>
 
       <header className="scr-export__head">
-        <h1 className="bk-h1">Export your booking history</h1>
-        <p className="bk-sub scr-export__lede">
-          Useful for expenses, insurance claims, or just keeping your own
-          records. Your data, whenever you want it.
-        </p>
+        <h1 className="bk-h1">{t("screensA.export.title")}</h1>
+        <p className="bk-sub scr-export__lede">{t("screensA.export.lede")}</p>
       </header>
 
       <div className="scr-export__grid">
         <Card radius={22} padding={24} className="scr-export__form">
           <div>
-            <span className="bk-label">Date range</span>
+            <span className="bk-label">{t("screensA.export.dateRange")}</span>
             <div className="scr-export__chips">
               {EXPORT_RANGES.map((r) => (
                 <Chip
                   key={r.id}
-                  label={r.label}
+                  label={t(r.labelKey, r.months === undefined ? undefined : { count: number(r.months) }, r.months)}
                   active={exRange === r.id}
                   onClick={() => pickRange(r)}
                 />
@@ -127,24 +135,24 @@ export default function ExportData() {
                   set({ exFrom: v, exRange: "custom", exState: "idle" })
                 }
                 mono
-                ariaLabel="Export start date"
+                ariaLabel={t("screensA.export.fromAria")}
                 className="scr-export__date"
               />
-              <span className="scr-export__to">to</span>
+              <span className="scr-export__to">{t("screensA.export.to")}</span>
               <TextInput
                 value={exTo}
                 onChange={(v) =>
                   set({ exTo: v, exRange: "custom", exState: "idle" })
                 }
                 mono
-                ariaLabel="Export end date"
+                ariaLabel={t("screensA.export.toAria")}
                 className="scr-export__date"
               />
             </div>
           </div>
 
           <div>
-            <span className="bk-label">What to include</span>
+            <span className="bk-label">{t("screensA.export.include")}</span>
             <div className="scr-export__includes">
               {EXPORT_INCLUDES.map((o, i) => {
                 const on = Boolean(exInc[o.key]);
@@ -163,11 +171,11 @@ export default function ExportData() {
                   >
                     <Checkbox checked={on} />
                     <span className="scr-export__inctext">
-                      <span className="scr-export__inclabel">{o.label}</span>
-                      <span className="scr-export__incsub">{o.sub}</span>
+                      <span className="scr-export__inclabel">{t(o.labelKey)}</span>
+                      <span className="scr-export__incsub">{t(o.subKey)}</span>
                     </span>
                     <span className="scr-export__inccount bk-mono">
-                      {o.count}
+                      {number(o.count)}
                     </span>
                   </button>
                 );
@@ -176,7 +184,7 @@ export default function ExportData() {
           </div>
 
           <div>
-            <span className="bk-label">Format</span>
+            <span className="bk-label">{t("screensA.export.format")}</span>
             <div className="scr-export__formats">
               {EXPORT_FORMATS.map((f) => (
                 <button
@@ -189,7 +197,7 @@ export default function ExportData() {
                 >
                   <Icon name={f.icon} size={19} />
                   <span className="scr-export__fmtlabel">{f.label}</span>
-                  <span className="scr-export__fmtsub">{f.sub}</span>
+                  <span className="scr-export__fmtsub">{t(f.subKey)}</span>
                 </button>
               ))}
             </div>
@@ -204,14 +212,14 @@ export default function ExportData() {
           >
             <Checkbox checked={exEmail} />
             <span className="scr-export__emailtext">
-              Email me a copy as well
+              {t("screensA.export.emailCopy")}
             </span>
           </button>
         </Card>
 
         <div className="scr-export__side">
           <Card radius={22} padding={24} className="scr-export__file">
-            <Eyebrow>Your export</Eyebrow>
+            <Eyebrow>{t("screensA.export.yourExport")}</Eyebrow>
 
             <div className="scr-export__filerow">
               <span className="scr-export__filetile">
@@ -225,7 +233,7 @@ export default function ExportData() {
 
             {exState === "idle" ? (
               <Button icon="file-down" iconSize={17} size="lg" full onClick={generate}>
-                Generate export
+                {t("screensA.export.generate")}
               </Button>
             ) : null}
 
@@ -237,7 +245,7 @@ export default function ExportData() {
                   className="scr-export__spinner"
                 />
                 <span className="scr-export__busytext">
-                  Gathering {rowCount} rows…
+                  {t("screensA.export.gathering", {}, rowCount)}
                 </span>
               </div>
             ) : null}
@@ -247,7 +255,7 @@ export default function ExportData() {
                 <div className="scr-export__ready" role="status">
                   <Icon name="check-circle-2" size={17} />
                   <span>
-                    Ready — {rowCount} rows, {size}.
+                    {t("screensA.export.ready", { size }, rowCount)}
                   </span>
                 </div>
                 <div className="scr-export__readyrow">
@@ -261,13 +269,15 @@ export default function ExportData() {
                           ? /* The comp read a free variable that was never
                              * declared here; the copy goes to the account
                              * email, which is the address the form means. */
-                            `Downloaded · copy emailed to ${acctEmail}`
-                          : "Downloaded · demo only",
+                            t("screensA.export.downloadedEmail", {
+                              email: acctEmail,
+                            })
+                          : t("screensA.export.downloaded"),
                         "ok",
                       )
                     }
                   >
-                    Download
+                    {t("screensA.export.download")}
                   </Button>
                   <Button
                     variant="ghost"
@@ -275,20 +285,20 @@ export default function ExportData() {
                     className="scr-export__restart"
                     onClick={() => set({ exState: "idle" })}
                   >
-                    Start over
+                    {t("screensA.export.startOver")}
                   </Button>
                 </div>
               </>
             ) : null}
 
             <span className="scr-export__note">
-              Demo export — the file is described, not actually written.
+              {t("screensA.export.note")}
             </span>
           </Card>
 
           <Card radius={20} clip className="scr-export__history">
             <div className="bk-eyebrow scr-export__historyhead">
-              Earlier exports
+              {t("screensA.export.earlier")}
             </div>
             {EXPORT_HISTORY.map((h, i) => (
               <div
@@ -301,14 +311,26 @@ export default function ExportData() {
                 </span>
                 <span className="scr-export__htext">
                   <span className="scr-export__hfile bk-mono">{h.file}</span>
-                  <span className="scr-export__hmeta">{h.meta}</span>
+                  <span className="scr-export__hmeta">
+                    {t("data.export.historyMeta", {
+                      date: formatMediumISO(h.dateISO),
+                      count: t(h.countKey, { count: number(h.count) }, h.count),
+                      size: number(h.kb, {
+                        style: "unit",
+                        unit: "kilobyte",
+                        unitDisplay: "short",
+                      }),
+                    })}
+                  </span>
                 </span>
                 <button
                   type="button"
                   className="bk-gi scr-export__get"
-                  onClick={() => showToast(`${h.file} · demo only`, "ok")}
+                  onClick={() =>
+                    showToast(t("screensA.export.getToast", { file: h.file }), "ok")
+                  }
                 >
-                  Get
+                  {t("screensA.export.get")}
                 </button>
               </div>
             ))}

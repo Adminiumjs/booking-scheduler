@@ -9,6 +9,7 @@
 
 import { PRODUCTS } from "./shop.ts";
 import type { ShopProduct } from "./shop.ts";
+import type { MessageKey } from "../../i18n/index.tsx";
 
 /** A product's stockroom numbers. */
 export interface StockLevel {
@@ -66,8 +67,8 @@ export function reorderUnits(item: StockItem): number {
 
 export type StockFilter = "all" | "low" | "ok";
 
-export const STOCK_FILTERS: readonly { id: StockFilter; label: string }[] = [
-  { id: "all", label: "All products" },
-  { id: "low", label: "Low stock" },
-  { id: "ok", label: "Well stocked" },
+export const STOCK_FILTERS: readonly { id: StockFilter; labelKey: MessageKey }[] = [
+  { id: "all", labelKey: "data.stock.filterAll" },
+  { id: "low", labelKey: "data.stock.filterLow" },
+  { id: "ok", labelKey: "data.stock.filterOk" },
 ];

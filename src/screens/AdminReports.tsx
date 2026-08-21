@@ -18,17 +18,18 @@ import {
   REVENUE_SERIES,
   TOP_CLIENTS,
 } from "../data/screens/admin-reports.ts";
+import { useI18n } from "../i18n/index.tsx";
+import { formatISORange, weekdayName, wholeMoney } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-reports.css";
 
 /* Whole dollars — see the note in AdminPayroll; `money()` is the guest-facing
  * two-decimal formatter and reads as noise on a reporting page. */
-function dollars(n: number): string {
-  return `$${Math.round(n).toLocaleString("en-US")}`;
-}
+const dollars = wholeMoney;
 
 export default function AdminReports() {
+  const { locale, t, number } = useI18n();
   const repRange = useStore((s) => s.repRange);
   const set = useStore((s) => s.set);
   const showToast = useStore((s) => s.showToast);
@@ -39,15 +40,27 @@ export default function AdminReports() {
     () =>
       REPORT_KPIS.map((k) => {
         const scaled = (k.base ?? 0) * range.multiplier;
+        const figure = k.fixed ?? scaled;
         return {
-          label: k.label,
-          value:
-            k.fixed ?? (k.money ? dollars(scaled) : String(Math.round(scaled))),
-          delta: k.delta,
-          up: k.delta.startsWith("+"),
+          label: t(k.labelKey),
+          value: k.money
+            ? dollars(figure)
+            : k.fixed !== undefined
+              ? /* A bare `fixed` that is not money is a rate, e.g. the 72%
+                 * rebook figure — a fraction in the seed, a percentage here. */
+                number(figure, { style: "percent", maximumFractionDigits: 0 })
+              : number(Math.round(figure)),
+          /* The sign is `Intl`'s to draw: `signDisplay` puts it on the side the
+           * locale writes it, which `'+' + n` only ever got right in English. */
+          delta: number(k.delta, {
+            style: "percent",
+            maximumFractionDigits: 0,
+            signDisplay: "exceptZero",
+          }),
+          up: k.delta >= 0,
         };
       }),
-    [range],
+    [range, locale, t, number],
   );
 
   /*
@@ -72,12 +85,15 @@ export default function AdminReports() {
   const mix = useMemo(() => {
     const max = Math.max(...REVENUE_MIX.map((m) => m.value), 1);
     return REVENUE_MIX.map((m) => ({
-      label: m.label,
+      label: t(m.labelKey),
       tint: m.tint,
       amount: dollars(m.value * range.multiplier),
       pct: Math.round((m.value / max) * 100),
     }));
-  }, [range]);
+    /* `locale` is a dependency of every memo that formats: the formatters read
+     * it from the ambient bridge, so a switch that did not invalidate these
+     * would leave the last locale’s text cached on screen. */
+  }, [range, locale, t]);
 
   return (
     <div className="scr-admin-reports">
@@ -85,7 +101,7 @@ export default function AdminReports() {
         {REPORT_RANGES.map((r) => (
           <Chip
             key={r.id}
-            label={r.label}
+            label={t(r.labelKey, r.days === undefined ? undefined : { count: number(r.days) }, r.days)}
             active={repRange === r.id}
             onClick={() => set({ repRange: r.id })}
           />
@@ -97,10 +113,15 @@ export default function AdminReports() {
           iconSize={15}
           size="sm"
           onClick={() =>
-            showToast(`lumen-report-${range.id}.csv downloaded`, "ok")
+            showToast(
+              t("screensA.reports.downloaded", {
+                file: `lumen-report-${range.id}.csv`,
+              }),
+              "ok",
+            )
           }
         >
-          Export CSV
+          {t("screensA.reports.exportCsv")}
         </Button>
       </div>
 
@@ -121,8 +142,12 @@ export default function AdminReports() {
       <div className="rep-grid">
         <section className="bk-panel rep-card rep-chart">
           <div className="rep-chart__head">
-            <h2 className="rep-card__title">Revenue by day</h2>
-            <span className="rep-chart__range">{range.range}</span>
+            <h2 className="rep-card__title">
+              {t("screensA.reports.revenueByDay")}
+            </h2>
+            <span className="rep-chart__range">
+              {formatISORange(range.fromISO, range.toISO)}
+            </span>
           </div>
           <div className="rep-chart__plot">
             {bars.map((b) => (
@@ -139,7 +164,11 @@ export default function AdminReports() {
                     }
                   />
                 </span>
-                <span className="rep-bar-col__day">{b.day}</span>
+                {/* `day` is a `Date.getDay()` index, not a label — printing it
+                  * raw put "1 2 3 4 5 6 0" under the chart. */}
+                <span className="rep-bar-col__day">
+                  {weekdayName(b.day, "short")}
+                </span>
               </div>
             ))}
           </div>
@@ -148,7 +177,7 @@ export default function AdminReports() {
         <div className="rep-col">
           <section className="bk-panel rep-card">
             <h2 className="rep-card__title rep-card__title--spaced">
-              Where the money comes from
+              {t("screensA.reports.mixTitle")}
             </h2>
             <div className="rep-mix">
               {mix.map((m) => (
@@ -178,7 +207,7 @@ export default function AdminReports() {
           </section>
 
           <section className="bk-panel rep-card rep-card--banded">
-            <h2 className="rep-band">Best guests this month</h2>
+            <h2 className="rep-band">{t("screensA.reports.topTitle")}</h2>
             <ul className="rep-top">
               {TOP_CLIENTS.map((c) => (
                 <li className="rep-top__row" key={c.name}>
@@ -192,7 +221,7 @@ export default function AdminReports() {
                   <span className="rep-top__id">
                     <span className="rep-top__name">{c.name}</span>
                     <span className="rep-top__sub">
-                      {c.visits} visits · usually {c.staff}
+                      {t("screensA.reports.topSub", { staff: c.staff }, c.visits)}
                     </span>
                   </span>
                   <span className="rep-top__amount bk-mono">

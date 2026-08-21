@@ -35,6 +35,7 @@ import {
   DeviceFrame,
   type DevicePlatform,
 } from "../components/DeviceFrame.tsx";
+import { BRAND } from "../components/chrome.ts";
 import {
   Avatar,
   Icon,
@@ -56,28 +57,60 @@ import {
   PHONE_TOAST_MS,
   POINTS_GOAL,
   PROFILE_TINT,
+  DETAIL_KEY,
+  type AccountRow,
   QUICK_CHIPS,
-  REWARD_LABEL,
+  REWARD_AMOUNT,
+  REWARD_LABEL_KEY,
   SLOT_MINUTES,
   START_POINTS,
-  TAB_TITLES,
+  TAB_TITLE_KEYS,
   UPCOMING_VISITS,
   YOU_STATS,
   type MobileTabKey,
 } from "../data/screens/mobile.ts";
+import {
+  journalCategoryLabel,
+  journalReadLabel,
+  type JournalCategory,
+} from "../data/screens/blog.ts";
 import { data } from "../data/source.ts";
 import type { CategoryFilter, Service, ToastKind } from "../data/types.ts";
+import { useI18n, useT, type MessageKey, type TFunction } from "../i18n/index.tsx";
 import {
-  DOW_SHORT,
+  weekdayName,
   durationLabel,
+  formatMediumISO,
   formatShortDate,
   initialsOf,
   minutesToTime,
   money,
+  wholeMoney,
 } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-mobile.css";
+
+/**
+ * The trailing grey figure on a You-tab row.
+ *
+ * Two of the six kinds carry a word as well as a number ("2 sent", "4 open"),
+ * so those go through a key; the rest are a figure the reader's own `Intl`
+ * shapes — a rating with one decimal, a total in their currency.
+ */
+function detailLabel(
+  t: TFunction,
+  number: (n: number, opts?: Intl.NumberFormatOptions) => string,
+  row: AccountRow,
+): string {
+  if (row.detail === "none" || row.value === undefined) return "";
+  const key = DETAIL_KEY[row.detail];
+  if (key) return t(key, { count: number(row.value) }, row.value);
+  if (row.detail === "money") return wholeMoney(row.value);
+  if (row.detail === "rating")
+    return number(row.value, { minimumFractionDigits: 1 });
+  return number(row.value);
+}
 
 type Toaster = (msg: string, kind?: ToastKind) => void;
 type VisitTab = "upcoming" | "past";
@@ -94,9 +127,9 @@ type VisitTab = "upcoming" | "past";
  * hardware names and the note under the control says so, because "Android"
  * over the iOS design would be a claim the screen cannot back up.
  */
-const DEVICE_OPTIONS: { value: DevicePlatform; label: string }[] = [
-  { value: "ios", label: "iPhone" },
-  { value: "android", label: "Android phone" },
+const DEVICE_OPTIONS: { value: DevicePlatform; labelKey: MessageKey }[] = [
+  { value: "ios", labelKey: "screensB.mobile.deviceIphone" },
+  { value: "android", labelKey: "screensB.mobile.deviceAndroid" },
 ];
 
 interface PhoneToast {
@@ -105,11 +138,19 @@ interface PhoneToast {
   kind: ToastKind;
 }
 
+/** Which greeting the hour of the day earns. */
+function greetingKey(hour: number): MessageKey {
+  if (hour < 12) return "screensB.mobile.greetMorning";
+  if (hour < 18) return "screensB.mobile.greetAfternoon";
+  return "screensB.mobile.greetEvening";
+}
+
 /* ------------------------------------------------------------------ *
  * Screen
  * ------------------------------------------------------------------ */
 
 export default function Mobile() {
+  const t = useT();
   const week = useStore((s) => s.week);
   const acct = useStore((s) => s.acct);
   const theme = useStore((s) => s.theme);
@@ -132,14 +173,14 @@ export default function Mobile() {
    * instead of firing into an unmounted tree the way the comp's did. */
   useEffect(() => {
     if (!toast) return undefined;
-    const t = setTimeout(() => setToast(null), PHONE_TOAST_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setToast(null), PHONE_TOAST_MS);
+    return () => clearTimeout(timer);
   }, [toast]);
 
   useEffect(() => {
     if (!copied) return undefined;
-    const t = setTimeout(() => setCopied(""), COPIED_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCopied(""), COPIED_MS);
+    return () => clearTimeout(timer);
   }, [copied]);
 
   const showToast = useCallback<Toaster>((msg, kind = "ok") => {
@@ -164,7 +205,7 @@ export default function Mobile() {
   const confirm = (): void => {
     if (!svc) return;
     if (time === null) {
-      showToast("Pick a time first", "warn");
+      showToast(t("screensB.mobile.toastPickTime"), "warn");
       return;
     }
     /* The comp routed Confirm into a checkout sub-route, and only that route
@@ -180,44 +221,43 @@ export default function Mobile() {
     setTime(null);
     setTab("visits");
     setVisitTab("upcoming");
-    showToast("Booking confirmed");
+    showToast(t("screensB.mobile.toastBooked"));
   };
 
-  const greeting = useMemo(() => {
-    const hr = new Date().getHours();
-    const part =
-      hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening";
-    return `${part}, ${acct.name.split(" ")[0]}`;
-  }, [acct.name]);
+  const greeting = useMemo(
+    () =>
+      t(greetingKey(new Date().getHours()), {
+        name: acct.name.split(" ")[0],
+      }),
+    [acct.name, t],
+  );
 
   return (
     <section className="bk-screen bk-page scr-mobile">
       <header className="scr-mobile__intro">
         <span className="scr-mobile__eyebrow">
           <Icon name="smartphone" size={14} />
-          Companion app
+          {t("screensB.mobile.eyebrow")}
         </span>
-        <h1 className="scr-mobile__h1">Lumen Studio in your pocket</h1>
-        <p className="scr-mobile__sub">
-          The phone app is its own design, not a squeezed-down website — five
-          tabs, a booking flow built for thumbs, and your points on the home
-          screen. What follows is a showcase of that design rather than the
-          shipping app, but it is not a screenshot: tap through it.
-        </p>
+        <h1 className="scr-mobile__h1">
+          {t("screensB.mobile.h1", { brand: BRAND.name })}
+        </h1>
+        <p className="scr-mobile__sub">{t("screensB.mobile.sub")}</p>
       </header>
 
       <div className="scr-mobile__stage">
         <div className="scr-mobile__switch">
           <Segmented
-            options={DEVICE_OPTIONS}
+            options={DEVICE_OPTIONS.map((o) => ({
+              value: o.value,
+              label: t(o.labelKey),
+            }))}
             value={device}
             onChange={setDevice}
-            label="Device frame"
+            label={t("screensB.mobile.deviceFrame")}
           />
           <span className="scr-mobile__switchnote">
-            This switches the handset, not the app. The Android build has its
-            own Material design — a different nav bar, tighter top spacing —
-            which is a separate comp and is not shown here.
+            {t("screensB.mobile.switchNote")}
           </span>
         </div>
 
@@ -227,10 +267,12 @@ export default function Mobile() {
             <div className="scr-mobile__header">
               <div className="scr-mobile__headid">
                 {tab === "home" ? (
-                  <div className="scr-mobile__kicker">Lumen Studio</div>
+                  <div className="scr-mobile__kicker">{BRAND.name}</div>
                 ) : null}
                 <div className="scr-mobile__title">
-                  {tab === "home" ? greeting : TAB_TITLES[tab]}
+                  {tab === "home" || TAB_TITLE_KEYS[tab] === null
+                    ? greeting
+                    : t(TAB_TITLE_KEYS[tab])}
                 </div>
               </div>
               {tab !== "you" ? (
@@ -238,7 +280,7 @@ export default function Mobile() {
                   type="button"
                   className="scr-mobile__avatarbtn"
                   onClick={() => goTab("you")}
-                  aria-label="Your profile"
+                  aria-label={t("screensB.mobile.yourProfile")}
                 >
                   <Avatar
                     initials={initialsOf(acct.name)}
@@ -292,7 +334,7 @@ export default function Mobile() {
                   week={week}
                   onReschedule={(id) => {
                     pick(id);
-                    showToast("Pick a new time");
+                    showToast(t("screensB.mobile.toastPickNewTime"));
                   }}
                   onPick={pick}
                   toast={showToast}
@@ -304,7 +346,7 @@ export default function Mobile() {
                   copied={copied}
                   onCopy={(code) => {
                     setCopied(code);
-                    showToast(`${code} copied`);
+                    showToast(t("screensB.common.codeCopied", { code }));
                   }}
                   onPick={pick}
                 />
@@ -318,7 +360,13 @@ export default function Mobile() {
                   push={push}
                   onPush={() => {
                     setPush(!push);
-                    showToast(push ? "Push off" : "Push on");
+                    showToast(
+                      t(
+                        push
+                          ? "screensB.mobile.toastPushOff"
+                          : "screensB.mobile.toastPushOn",
+                      ),
+                    );
                   }}
                   dark={theme === "dark"}
                   onDark={toggleTheme}
@@ -338,25 +386,27 @@ export default function Mobile() {
                 >
                   <Icon name="calendar-check" size={17} />
                   {time !== null
-                    ? `Confirm · ${minutesToTime(time)}`
-                    : "Pick a time to continue"}
+                    ? t("screensB.mobile.ctaConfirm", {
+                        time: minutesToTime(time),
+                      })
+                    : t("screensB.mobile.ctaPickTime")}
                 </button>
               </div>
             ) : null}
 
             {/* --- tab bar: app navigation, not device chrome --- */}
-            <nav className="scr-mobile__tabs" aria-label="App tabs">
-              {MOBILE_TABS.map((t) => (
+            <nav className="scr-mobile__tabs" aria-label={t("screensB.mobile.appTabs")}>
+              {MOBILE_TABS.map((item) => (
                 <button
-                  key={t.key}
+                  key={item.key}
                   type="button"
                   className="scr-mobile__tab"
-                  data-on={t.key === tab ? "true" : "false"}
-                  aria-current={t.key === tab ? "page" : undefined}
-                  onClick={() => goTab(t.key)}
+                  data-on={item.key === tab ? "true" : "false"}
+                  aria-current={item.key === tab ? "page" : undefined}
+                  onClick={() => goTab(item.key)}
                 >
-                  <Icon name={t.icon} size={21} />
-                  {t.label}
+                  <Icon name={item.icon} size={21} />
+                  {t(item.labelKey)}
                 </button>
               ))}
             </nav>
@@ -391,15 +441,7 @@ export default function Mobile() {
 
       <p className="scr-mobile__note">
         <Icon name="info" size={17} className="scr-mobile__noteicon" />
-        <span>
-          A design showcase, not the running app — nothing you tap here reaches
-          your account. The tabs, the booking flow and the promo codes are live
-          so the design can be felt; rows that opened the app's deeper screens
-          (the team, the shelf, gift cards) answer with a toast instead, and
-          those flows ship in full on the web. The phone itself is a
-          reconstruction: the comps imported a device frame that was never
-          handed over with them.
-        </span>
+        <span>{t("screensB.mobile.note")}</span>
       </p>
     </section>
   );
@@ -418,11 +460,15 @@ interface HomeTabProps {
 }
 
 function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
+  const { t, number } = useI18n();
   const next = UPCOMING_VISITS[0];
   const nextSvc = data.getService(next.svc);
   const nextStaff = data.getStaffForService(next.svc)[0];
   const pct = Math.min(100, Math.round((points / POINTS_GOAL) * 100));
   const toGo = POINTS_GOAL - points;
+  /* "$25 reward" — the figure is whole dollars in the seed so the symbol
+   * lands where the reader's locale puts it. */
+  const rewardLabel = t(REWARD_LABEL_KEY, { amount: wholeMoney(REWARD_AMOUNT) });
   const cards = HOME_SERVICE_IDS.map((id) => data.getService(id)).filter(
     (s): s is Service => Boolean(s),
   );
@@ -439,7 +485,9 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
             radius={14}
           />
           <span className="scr-mobile__nextid">
-            <span className="scr-mobile__nextlabel">Next visit</span>
+            <span className="scr-mobile__nextlabel">
+              {t("screensB.mobile.nextVisit")}
+            </span>
             <span className="scr-mobile__nextsvc">{nextSvc?.name}</span>
           </span>
         </div>
@@ -454,7 +502,7 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
           </span>
           <span className="scr-mobile__fact">
             <Icon name="user" size={13} className="scr-mobile__facticon" />
-            {nextStaff?.name ?? "First available"}
+            {nextStaff?.name ?? t("screensB.common.firstAvailable")}
           </span>
         </div>
         <div className="scr-mobile__nextactions">
@@ -463,14 +511,14 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
             className="scr-mobile__btn scr-mobile__btn--accent"
             onClick={() => onTab("visits")}
           >
-            Manage
+            {t("screensB.mobile.manage")}
           </button>
           <button
             type="button"
             className="scr-mobile__btn scr-mobile__btn--outline"
-            onClick={() => toast("Opening Maps — demo only", "warn")}
+            onClick={() => toast(t("screensB.common.toastMaps"), "warn")}
           >
-            Directions
+            {t("screensB.mobile.directions")}
           </button>
         </div>
       </div>
@@ -478,28 +526,35 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
       <div className="scr-mobile__rail">
         {QUICK_CHIPS.map((q) => (
           <button
-            key={q.label}
+            key={q.labelKey}
             type="button"
             className="scr-mobile__quick"
             onClick={() =>
-              q.tab ? onTab(q.tab) : toast(`${q.label} — demo only`, "warn")
+              q.tab
+                ? onTab(q.tab)
+                : toast(
+                    t("screensB.common.demoOnly", { label: t(q.labelKey) }),
+                    "warn",
+                  )
             }
           >
             <Icon name={q.icon} size={15} className="scr-mobile__quickicon" />
-            {q.label}
+            {t(q.labelKey)}
           </button>
         ))}
       </div>
 
       <div>
         <div className="scr-mobile__sechead">
-          <span className="scr-mobile__sectitle">Book again</span>
+          <span className="scr-mobile__sectitle">
+            {t("screensB.mobile.bookAgain")}
+          </span>
           <button
             type="button"
             className="scr-mobile__link"
             onClick={() => onTab("book")}
           >
-            See all
+            {t("screensB.common.seeAll")}
           </button>
         </div>
         <div className="scr-mobile__rail scr-mobile__rail--cards">
@@ -519,7 +574,10 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
               <span className="scr-mobile__svccardbody">
                 <span className="scr-mobile__svccardname">{s.name}</span>
                 <span className="bk-mono scr-mobile__svccardmeta">
-                  {durationLabel(s.dur)} · {money(s.price)}
+                  {t("screensB.mobile.durPrice", {
+                    duration: durationLabel(s.dur),
+                    price: money(s.price),
+                  })}
                 </span>
               </span>
             </button>
@@ -537,8 +595,12 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
         </span>
         <span className="scr-mobile__pointsbody">
           <span className="scr-mobile__pointsline">
-            <span className="bk-mono scr-mobile__pointsnum">{points}</span>
-            <span className="scr-mobile__pointsword">points</span>
+            <span className="bk-mono scr-mobile__pointsnum">
+              {number(points)}
+            </span>
+            <span className="scr-mobile__pointsword">
+              {t("screensB.common.pointsUnit", {}, points)}
+            </span>
           </span>
           <span className="scr-mobile__meter">
             <span
@@ -550,8 +612,12 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
               the balance past the goal; at or over it, say so instead. */}
           <span className="scr-mobile__pointsgoal">
             {toGo > 0
-              ? `${toGo} points to your next ${REWARD_LABEL}`
-              : `Your ${REWARD_LABEL} is ready to redeem`}
+              ? t(
+                  "screensB.mobile.pointsGoal",
+                  { count: number(toGo), reward: rewardLabel },
+                  toGo,
+                )
+              : t("screensB.mobile.pointsReady", { reward: rewardLabel })}
           </span>
         </span>
       </button>
@@ -559,7 +625,7 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
       <button
         type="button"
         className="scr-mobile__journal"
-        onClick={() => toast("Opening the journal — demo only", "warn")}
+        onClick={() => toast(t("screensB.mobile.toastJournal"), "warn")}
       >
         <PlaceholderTile
           tint={JOURNAL_TEASER.tint}
@@ -571,12 +637,22 @@ function HomeTab({ points, week, onTab, onPick, toast }: HomeTabProps) {
         />
         <span className="scr-mobile__journalbody">
           <span className="scr-mobile__journalkicker">
-            {JOURNAL_TEASER.kicker}
+            {t(JOURNAL_TEASER.kickerKey, {
+              category: journalCategoryLabel(
+                t,
+                JOURNAL_TEASER.cat as JournalCategory,
+              ),
+            })}
           </span>
           <span className="scr-mobile__journaltitle">
             {JOURNAL_TEASER.title}
           </span>
-          <span className="scr-mobile__journalby">{JOURNAL_TEASER.byline}</span>
+          <span className="scr-mobile__journalby">
+            {t("screensB.post.byline", {
+              date: data.getStaffMember(JOURNAL_TEASER.author)?.name ?? "",
+              read: journalReadLabel(t, JOURNAL_TEASER.readMin),
+            })}
+          </span>
         </span>
       </button>
     </div>
@@ -614,10 +690,12 @@ function BookTab({
   onTime,
   toast,
 }: BookTabProps) {
+  const { t, number } = useI18n();
+
   if (!svc) {
     const chips: { value: CategoryFilter; label: string }[] = [
-      { value: "all", label: "All" },
-      ...data.getCategories().map((c) => ({ value: c.slug, label: c.name })),
+      { value: "all", label: t("screensB.common.all") },
+      ...data.getCategories().map((c) => ({ value: c.slug, label: t(c.nameKey) })),
     ];
 
     return (
@@ -654,7 +732,10 @@ function BookTab({
               <span className="scr-mobile__rowid">
                 <span className="scr-mobile__rowname">{s.name}</span>
                 <span className="scr-mobile__rowmeta">
-                  {durationLabel(s.dur)} · {data.getStaffNames(s.id)}
+                  {t("screensB.mobile.durStaff", {
+                    duration: durationLabel(s.dur),
+                    staff: data.getStaffNames(s.id),
+                  })}
                 </span>
               </span>
               <span className="scr-mobile__rowend">
@@ -672,7 +753,7 @@ function BookTab({
     <div className="scr-mobile__pane">
       <button type="button" className="scr-mobile__back" onClick={onBack}>
         <Icon name="chevron-left" size={16} />
-        All services
+        {t("screensB.mobile.allServices")}
       </button>
 
       <div className="scr-mobile__picked">
@@ -686,13 +767,16 @@ function BookTab({
         <span className="scr-mobile__rowid">
           <span className="scr-mobile__pickedname">{svc.name}</span>
           <span className="scr-mobile__rowmeta">
-            {durationLabel(svc.dur)} · with {data.getStaffNames(svc.id)}
+            {t("screensB.mobile.durWithStaff", {
+              duration: durationLabel(svc.dur),
+              staff: data.getStaffNames(svc.id),
+            })}
           </span>
         </span>
         <span className="bk-mono scr-mobile__pickedprice">{money(svc.price)}</span>
       </div>
 
-      <span className="scr-mobile__label">Pick a day</span>
+      <span className="scr-mobile__label">{t("screensB.mobile.pickDay")}</span>
       <div className="scr-mobile__rail scr-mobile__rail--days">
         {week.map((d, i) => (
           <button
@@ -703,13 +787,15 @@ function BookTab({
             aria-pressed={i === dayIdx}
             onClick={() => onDay(i)}
           >
-            <span className="scr-mobile__daydow">{DOW_SHORT[d.getDay()]}</span>
-            <span className="bk-mono scr-mobile__daynum">{d.getDate()}</span>
+            <span className="scr-mobile__daydow">{weekdayName(d.getDay(), "short")}</span>
+            <span className="bk-mono scr-mobile__daynum">
+              {number(d.getDate())}
+            </span>
           </button>
         ))}
       </div>
 
-      <span className="scr-mobile__label">Pick a time</span>
+      <span className="scr-mobile__label">{t("screensB.mobile.pickTime")}</span>
       <div className="scr-mobile__slots">
         {SLOT_MINUTES.map((m, i) => {
           const open = isSlotOpen(dayIdx, i);
@@ -723,7 +809,9 @@ function BookTab({
               /* Taken slots stay tappable so the comp's explanatory toast
                  still fires; screen readers hear them as unavailable. */
               aria-disabled={!open}
-              onClick={() => (open ? onTime(m) : toast("That slot is taken", "warn"))}
+              onClick={() =>
+                open ? onTime(m) : toast(t("screensB.mobile.toastTaken"), "warn")
+              }
             >
               {minutesToTime(m)}
             </button>
@@ -755,6 +843,7 @@ function VisitsTab({
   onPick,
   toast,
 }: VisitsTabProps) {
+  const t = useT();
   const upcoming = visitTab === "upcoming";
   /* The comp hardcoded "Tue, Jul 28" in three places; upcoming visits are
    * pinned to the rolling week instead so the demo never shows a past date.
@@ -764,13 +853,16 @@ function VisitsTab({
         code: v.code,
         svc: v.svc,
         price: v.price,
-        when: `${formatShortDate(week[v.dayIdx] ?? week[0])} · ${minutesToTime(v.time)}`,
+        when: t("screensB.mobile.dateTime", {
+          date: formatShortDate(week[v.dayIdx] ?? week[0]),
+          time: minutesToTime(v.time),
+        }),
       }))
     : PAST_VISITS.map((v) => ({
         code: v.code,
         svc: v.svc,
         price: v.price,
-        when: v.date,
+        when: formatMediumISO(v.dateISO),
       }));
 
   return (
@@ -785,7 +877,11 @@ function VisitsTab({
             aria-pressed={v === visitTab}
             onClick={() => onVisitTab(v)}
           >
-            {v === "upcoming" ? "Upcoming" : "Past"}
+            {t(
+              v === "upcoming"
+                ? "screensB.mobile.upcoming"
+                : "screensB.mobile.past",
+            )}
           </button>
         ))}
       </div>
@@ -807,7 +903,10 @@ function VisitsTab({
                 <span className="scr-mobile__rowid">
                   <span className="scr-mobile__pickedname">{s?.name}</span>
                   <span className="scr-mobile__rowmeta">
-                    {v.when} · {staff?.name ?? "First available"}
+                    {t("screensB.mobile.whenWho", {
+                      when: v.when,
+                      who: staff?.name ?? t("screensB.common.firstAvailable"),
+                    })}
                   </span>
                 </span>
                 <span className="bk-mono scr-mobile__price">{money(v.price)}</span>
@@ -818,19 +917,31 @@ function VisitsTab({
                   className="scr-mobile__btn scr-mobile__btn--accent"
                   onClick={() => (upcoming ? onReschedule(v.svc) : onPick(v.svc))}
                 >
-                  {upcoming ? "Reschedule" : "Book again"}
+                  {t(
+                    upcoming
+                      ? "screensB.common.reschedule"
+                      : "screensB.mobile.bookAgain",
+                  )}
                 </button>
                 <button
                   type="button"
                   className="scr-mobile__btn scr-mobile__btn--quiet"
                   onClick={() =>
                     toast(
-                      upcoming ? "Cancelled — demo only" : "Receipt emailed",
+                      t(
+                        upcoming
+                          ? "screensB.mobile.toastCancelled"
+                          : "screensB.mobile.toastReceipt",
+                      ),
                       "warn",
                     )
                   }
                 >
-                  {upcoming ? "Cancel" : "Receipt"}
+                  {t(
+                    upcoming
+                      ? "screensB.common.cancel"
+                      : "screensB.common.receipt",
+                  )}
                 </button>
               </div>
             </article>
@@ -852,21 +963,30 @@ interface OffersTabProps {
 }
 
 function OffersTab({ copied, onCopy, onPick }: OffersTabProps) {
+  const t = useT();
+
+  /** The copy button's accessible name flips with its state. */
+  const codeLabel = (code: string, on: boolean): string =>
+    t(on ? "screensB.common.codeCopied" : "screensB.common.copyCode", { code });
+
   return (
     <div className="scr-mobile__pane">
       <div className="scr-mobile__feature">
-        <span className="scr-mobile__featends">{FEATURED_OFFER.ends}</span>
+        <span className="scr-mobile__featends">
+          {t("screensB.offers.ends", {
+            date: formatMediumISO(FEATURED_OFFER.endsISO),
+          })}
+        </span>
         <div className="scr-mobile__feattitle">{FEATURED_OFFER.title}</div>
         <p className="scr-mobile__featblurb">{FEATURED_OFFER.blurb}</p>
         <button
           type="button"
           className="bk-mono scr-mobile__featcode"
           onClick={() => onCopy(FEATURED_OFFER.code)}
-          aria-label={
-            copied === FEATURED_OFFER.code
-              ? `${FEATURED_OFFER.code} copied`
-              : `Copy the code ${FEATURED_OFFER.code}`
-          }
+          aria-label={codeLabel(
+            FEATURED_OFFER.code,
+            copied === FEATURED_OFFER.code,
+          )}
         >
           <Icon name={copied === FEATURED_OFFER.code ? "check" : "copy"} size={15} />
           {FEATURED_OFFER.code}
@@ -897,7 +1017,7 @@ function OffersTab({ copied, onCopy, onPick }: OffersTabProps) {
                 className="bk-mono scr-mobile__code"
                 data-on={on ? "true" : "false"}
                 onClick={() => onCopy(o.code)}
-                aria-label={on ? `${o.code} copied` : `Copy the code ${o.code}`}
+                aria-label={codeLabel(o.code, on)}
               >
                 <Icon name={on ? "check" : "copy"} size={14} />
                 {o.code}
@@ -907,13 +1027,17 @@ function OffersTab({ copied, onCopy, onPick }: OffersTabProps) {
               <button
                 type="button"
                 className="scr-mobile__btn scr-mobile__btn--accent scr-mobile__offerbook"
-                aria-label={`Book ${o.title}`}
+                aria-label={t("screensB.common.bookNamed", { name: o.title })}
                 onClick={() => onPick(o.svc)}
               >
-                Book
+                {t("screensB.common.book")}
               </button>
             </div>
-            <span className="scr-mobile__offerends">{o.ends}</span>
+            <span className="scr-mobile__offerends">
+              {t("screensB.offers.ends", {
+                date: formatMediumISO(o.endsISO),
+              })}
+            </span>
           </article>
         );
       })}
@@ -946,9 +1070,29 @@ function YouTab({
   onDark,
   toast,
 }: YouTabProps) {
-  const toggles = [
-    { key: "push", icon: "bell", label: "Push notifications", on: push, act: onPush },
-    { key: "theme", icon: "moon", label: "Dark appearance", on: dark, act: onDark },
+  const { t, number } = useI18n();
+
+  const toggles: {
+    key: string;
+    icon: string;
+    labelKey: MessageKey;
+    on: boolean;
+    act: () => void;
+  }[] = [
+    {
+      key: "push",
+      icon: "bell",
+      labelKey: "screensB.mobile.pushNotifications",
+      on: push,
+      act: onPush,
+    },
+    {
+      key: "theme",
+      icon: "moon",
+      labelKey: "screensB.mobile.darkAppearance",
+      on: dark,
+      act: onDark,
+    },
   ];
 
   return (
@@ -967,72 +1111,93 @@ function YouTab({
         </span>
         <span className="scr-mobile__circle">
           <Icon name="gem" size={11} />
-          Circle
+          {t("screensB.mobile.circle")}
         </span>
       </div>
 
       <div className="scr-mobile__stats">
         <div className="scr-mobile__stat">
-          <span className="bk-mono scr-mobile__statval">{points}</span>
-          <span className="scr-mobile__statlabel">Points</span>
+          <span className="bk-mono scr-mobile__statval">{number(points)}</span>
+          <span className="scr-mobile__statlabel">
+            {t("screensB.mobile.statPoints")}
+          </span>
         </div>
         {YOU_STATS.map((s) => (
-          <div className="scr-mobile__stat" key={s.label}>
-            <span className="bk-mono scr-mobile__statval">{s.value}</span>
-            <span className="scr-mobile__statlabel">{s.label}</span>
+          <div className="scr-mobile__stat" key={s.labelKey}>
+            <span className="bk-mono scr-mobile__statval">{number(s.value)}</span>
+            <span className="scr-mobile__statlabel">
+              {t(
+                s.labelKey,
+                s.year === undefined
+                  ? undefined
+                  : { year: number(s.year, { useGrouping: false }) },
+              )}
+            </span>
           </div>
         ))}
       </div>
 
-      <span className="scr-mobile__label">Preferences</span>
+      <span className="scr-mobile__label">
+        {t("screensB.mobile.preferences")}
+      </span>
       <div className="scr-mobile__group">
-        {toggles.map((t) => (
+        {toggles.map((row) => (
           <button
-            key={t.key}
+            key={row.key}
             type="button"
             role="switch"
-            aria-checked={t.on}
+            aria-checked={row.on}
             className="scr-mobile__row"
-            onClick={t.act}
+            onClick={row.act}
           >
             <span className="scr-mobile__rowicon">
-              <Icon name={t.icon} size={15} />
+              <Icon name={row.icon} size={15} />
             </span>
-            <span className="scr-mobile__rowlabel">{t.label}</span>
-            <span className="scr-mobile__track" data-on={t.on ? "true" : "false"}>
+            <span className="scr-mobile__rowlabel">{t(row.labelKey)}</span>
+            <span className="scr-mobile__track" data-on={row.on ? "true" : "false"}>
               <span className="scr-mobile__knob" />
             </span>
           </button>
         ))}
       </div>
 
-      <span className="scr-mobile__label">Account</span>
+      <span className="scr-mobile__label">{t("screensB.mobile.account")}</span>
       <div className="scr-mobile__group">
-        {ACCOUNT_ROWS.map((r) => (
+        {ACCOUNT_ROWS.map((r) => {
+          const label = t(r.labelKey);
+          return (
           <button
-            key={r.label}
+            key={r.labelKey}
             type="button"
             className="scr-mobile__row"
-            onClick={() => toast(`${r.label} — demo only`, "warn")}
+            onClick={() =>
+              toast(t("screensB.common.demoOnly", { label }), "warn")
+            }
           >
             <span className="scr-mobile__rowicon">
               <Icon name={r.icon} size={15} />
             </span>
-            <span className="scr-mobile__rowlabel">{r.label}</span>
-            <span className="scr-mobile__rowdetail">{r.detail}</span>
+            <span className="scr-mobile__rowlabel">{label}</span>
+            <span className="scr-mobile__rowdetail">{detailLabel(t, number, r)}</span>
             <Icon name="chevron-right" size={16} className="scr-mobile__rowchev" />
           </button>
-        ))}
+          );
+        })}
       </div>
 
       <button
         type="button"
         className="scr-mobile__signout"
-        onClick={() => toast("Signed out — demo only", "warn")}
+        onClick={() => toast(t("screensB.mobile.toastSignedOut"), "warn")}
       >
-        Sign out
+        {t("screensB.mobile.signOut")}
       </button>
-      <div className="scr-mobile__version">Lumen Studio · {APP_VERSION}</div>
+      <div className="scr-mobile__version">
+        {t("screensB.mobile.version", {
+          brand: BRAND.name,
+          version: APP_VERSION,
+        })}
+      </div>
     </div>
   );
 }
@@ -1049,27 +1214,47 @@ interface SuccessSheetProps {
 }
 
 function SuccessSheet({ svc, date, time, onClose }: SuccessSheetProps) {
+  const t: TFunction = useT();
   const staff = data.getStaffForService(svc.id)[0];
   const rows = [
-    { icon: "calendar", label: "When", value: formatShortDate(date) },
+    {
+      icon: "calendar",
+      label: t("screensB.common.when"),
+      value: formatShortDate(date),
+    },
     {
       icon: "clock",
-      label: "Time",
-      value: `${minutesToTime(time)} · ${durationLabel(svc.dur)}`,
+      label: t("screensB.common.time"),
+      value: t("screensB.common.timeDur", {
+        time: minutesToTime(time),
+        duration: durationLabel(svc.dur),
+      }),
     },
-    { icon: "credit-card", label: "Total", value: money(svc.price) },
+    {
+      icon: "credit-card",
+      label: t("screensB.common.total"),
+      value: money(svc.price),
+    },
   ];
 
   return (
     <div className="scr-mobile__scrim">
-      <div className="scr-mobile__sheet" role="dialog" aria-label="You’re booked">
+      <div
+        className="scr-mobile__sheet"
+        role="dialog"
+        aria-label={t("screensB.mobile.booked")}
+      >
         <span className="scr-mobile__sheeticon">
           <Icon name="check" size={30} />
         </span>
-        <div className="scr-mobile__sheettitle">You’re booked</div>
+        <div className="scr-mobile__sheettitle">
+          {t("screensB.mobile.booked")}
+        </div>
         <p className="scr-mobile__sheetsub">
-          We’ve got you down for {svc.name} with{" "}
-          {staff?.name ?? "the first specialist free"}.
+          {t("screensB.mobile.sheetSub", {
+            service: svc.name,
+            staff: staff?.name ?? t("screensB.mobile.firstSpecialistFree"),
+          })}
         </p>
         <div className="scr-mobile__sheetrows">
           {rows.map((r) => (
@@ -1085,7 +1270,7 @@ function SuccessSheet({ svc, date, time, onClose }: SuccessSheetProps) {
           className="scr-mobile__btn scr-mobile__btn--accent scr-mobile__sheetcta"
           onClick={onClose}
         >
-          See my visits
+          {t("screensB.mobile.seeMyVisits")}
         </button>
       </div>
     </div>

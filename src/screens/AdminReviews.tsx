@@ -20,11 +20,14 @@ import {
   REVIEW_FILTERS,
 } from "../data/screens/admin-reviews.ts";
 import type { AdminReview } from "../data/screens/admin-reviews.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
+import { relativeAgo } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-reviews.css";
 
 export default function AdminReviews() {
+  const { t, number } = useI18n();
   const revFilter = useStore((s) => s.revFilter);
   const replied = useStore((s) => s.replied);
   const set = useStore((s) => s.set);
@@ -43,19 +46,22 @@ export default function AdminReviews() {
   const average = all.reduce((n, r) => n + r.rating, 0) / all.length;
   const kpis = [
     {
-      label: "Average rating",
-      value: average.toFixed(1),
-      sub: `${all.length} reviews all-time`,
+      label: t("screensA.reviews.kpiAvg"),
+      value: number(average, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }),
+      sub: t("screensA.reviews.kpiAvgSub", {}, all.length),
     },
     {
-      label: "Waiting on a reply",
-      value: String(all.filter((r) => !r.reply).length),
-      sub: "Aim for under 48 hours",
+      label: t("screensA.reviews.kpiWaiting"),
+      value: number(all.filter((r) => !r.reply).length),
+      sub: t("screensA.reviews.kpiWaitingSub"),
     },
     {
-      label: "Under four stars",
-      value: String(all.filter((r) => r.rating < LOW_RATING).length),
-      sub: "Worth a personal call",
+      label: t("screensA.reviews.kpiLow"),
+      value: number(all.filter((r) => r.rating < LOW_RATING).length),
+      sub: t("screensA.reviews.kpiLowSub"),
     },
   ];
 
@@ -81,7 +87,7 @@ export default function AdminReviews() {
         {REVIEW_FILTERS.map((f) => (
           <Chip
             key={f.id}
-            label={f.label}
+            label={t(f.labelKey, f.count === undefined ? undefined : { count: number(f.count) }, f.count)}
             active={revFilter === f.id}
             /* Closing any open draft: it belonged to a card that may be about
              * to disappear behind the new filter. */
@@ -93,8 +99,8 @@ export default function AdminReviews() {
       {list.length === 0 ? (
         <EmptyState
           icon="check-circle-2"
-          title="You’re all caught up"
-          body="Every review has a reply. Switch to All reviews to read them back."
+          title={t("screensA.reviews.caughtUpTitle")}
+          body={t("screensA.reviews.caughtUpBody")}
         />
       ) : (
         <div className="scr-admin-reviews__list">
@@ -112,6 +118,7 @@ export default function AdminReviews() {
  * ------------------------------------------------------------------ */
 
 function ReviewRow({ review }: { review: AdminReview }) {
+  const t = useT();
   const replyOpen = useStore((s) => s.replyOpen);
   const replyDraft = useStore((s) => s.replyDraft);
   const set = useStore((s) => s.set);
@@ -121,7 +128,7 @@ function ReviewRow({ review }: { review: AdminReview }) {
 
   const send = () => {
     if (!replyDraft.trim()) {
-      showToast("Write a line first", "warn");
+      showToast(t("screensA.reviews.writeFirst"), "warn");
       return;
     }
     /* Merged against the live store, so a reply posted while another card's
@@ -131,7 +138,7 @@ function ReviewRow({ review }: { review: AdminReview }) {
       replyOpen: null,
       replyDraft: "",
     });
-    showToast("Reply posted publicly");
+    showToast(t("screensA.reviews.posted"));
   };
 
   return (
@@ -147,14 +154,18 @@ function ReviewRow({ review }: { review: AdminReview }) {
         <span className="scr-admin-reviews__id">
           <span className="scr-admin-reviews__name">{review.name}</span>
           <span className="scr-admin-reviews__meta">
-            {review.svc} · {review.staff} · {review.date}
+            {review.svc} · {review.staff} ·{" "}
+            {relativeAgo(review.ago, review.agoUnit)}
           </span>
         </span>
         <StarBar
           value={review.rating}
           size={13}
           gap={1}
-          label={`${review.rating} out of 5`}
+          label={t("screensA.reviews.stars", {
+            rating: review.rating,
+            max: 5,
+          })}
         />
       </div>
 
@@ -169,7 +180,7 @@ function ReviewRow({ review }: { review: AdminReview }) {
           />
           <span className="scr-admin-reviews__replybody">
             <span className="scr-admin-reviews__replyby">
-              {review.replyBy} replied
+              {t("screensA.reviews.repliedBy", { name: review.replyBy ?? "" })}
             </span>
             <span className="scr-admin-reviews__replytext">{review.reply}</span>
           </span>
@@ -181,9 +192,9 @@ function ReviewRow({ review }: { review: AdminReview }) {
           <TextArea
             value={replyDraft}
             onChange={(v) => set({ replyDraft: v })}
-            placeholder="Reply as the studio…"
+            placeholder={t("screensA.reviews.replyPlaceholder")}
             rows={3}
-            ariaLabel={`Reply to ${review.name}`}
+            ariaLabel={t("screensA.reviews.replyAria", { name: review.name })}
           />
           <div className="scr-admin-reviews__actions">
             <button
@@ -191,14 +202,14 @@ function ReviewRow({ review }: { review: AdminReview }) {
               className="bk-btn scr-admin-reviews__post"
               onClick={send}
             >
-              Post reply
+              {t("screensA.reviews.post")}
             </button>
             <button
               type="button"
               className="bk-gi scr-admin-reviews__cancel"
               onClick={() => set({ replyOpen: null, replyDraft: "" })}
             >
-              Cancel
+              {t("screensA.common.cancel")}
             </button>
           </div>
         </div>
@@ -212,14 +223,14 @@ function ReviewRow({ review }: { review: AdminReview }) {
             onClick={() => set({ replyOpen: review.id, replyDraft: "" })}
           >
             <Icon name="reply" size={14} />
-            Reply
+            {t("screensA.reviews.reply")}
           </button>
           <button
             type="button"
             className="bk-gi scr-admin-reviews__act scr-admin-reviews__act--quiet"
-            onClick={() => showToast("Flagged for the platform to review", "warn")}
+            onClick={() => showToast(t("screensA.reviews.flagged"), "warn")}
           >
-            Flag
+            {t("screensA.reviews.flag")}
           </button>
         </div>
       ) : null}

@@ -11,11 +11,14 @@ import { useEffect } from "react";
 
 import { Button, Icon, IconTile } from "../components/index.ts";
 import { COPIED_MS, FEATURED_OFFER, OFFERS } from "../data/screens/offers.ts";
+import { useT } from "../i18n/index.tsx";
+import { formatMediumISO, formatNumber } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-offers.css";
 
 export default function Offers() {
+  const t = useT();
   const copiedCode = useStore((s) => s.copiedCode);
   const set = useStore((s) => s.set);
   const startBooking = useStore((s) => s.startBooking);
@@ -26,8 +29,8 @@ export default function Offers() {
    * second code restarts the countdown instead of stacking a new one. */
   useEffect(() => {
     if (!copiedCode) return undefined;
-    const t = setTimeout(() => set({ copiedCode: "" }), COPIED_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => set({ copiedCode: "" }), COPIED_MS);
+    return () => clearTimeout(timer);
   }, [copiedCode, set]);
 
   const copy = (code: string): void => {
@@ -37,7 +40,7 @@ export default function Offers() {
       /* clipboard denied — the demo still confirms the intent */
     });
     set({ copiedCode: code });
-    showToast(`${code} copied to clipboard`);
+    showToast(t("screensB.offers.toastCopied", { code }));
   };
 
   return (
@@ -45,18 +48,19 @@ export default function Offers() {
       <header className="scr-offers__intro">
         <span className="scr-offers__eyebrow">
           <Icon name="tag" size={14} />
-          Autumn 2026
+          {t("screensB.offers.eyebrow")}
         </span>
-        <h1 className="scr-offers__h1">Seasonal offers</h1>
-        <p className="scr-offers__sub">
-          A handful of things worth booking this season. Copy a code and it'll
-          apply at checkout — one per visit.
-        </p>
+        <h1 className="scr-offers__h1">{t("screensB.offers.h1")}</h1>
+        <p className="scr-offers__sub">{t("screensB.offers.sub")}</p>
       </header>
 
       <div className="scr-offers__feature">
         <div className="scr-offers__featbody">
-          <span className="scr-offers__featends">Ends {FEATURED_OFFER.ends}</span>
+          <span className="scr-offers__featends">
+            {t("screensB.offers.ends", {
+              date: formatMediumISO(FEATURED_OFFER.endsISO),
+            })}
+          </span>
           <h2 className="scr-offers__feattitle">{FEATURED_OFFER.title}</h2>
           <p className="scr-offers__featblurb">{FEATURED_OFFER.blurb}</p>
         </div>
@@ -65,11 +69,12 @@ export default function Offers() {
             type="button"
             className="bk-mono scr-offers__featcode"
             onClick={() => copy(FEATURED_OFFER.code)}
-            aria-label={
+            aria-label={t(
               copiedCode === FEATURED_OFFER.code
-                ? `${FEATURED_OFFER.code} copied`
-                : `Copy the code ${FEATURED_OFFER.code}`
-            }
+                ? "screensB.common.codeCopied"
+                : "screensB.common.copyCode",
+              { code: FEATURED_OFFER.code },
+            )}
           >
             <Icon
               name={copiedCode === FEATURED_OFFER.code ? "check" : "copy"}
@@ -84,7 +89,7 @@ export default function Offers() {
             className="scr-offers__featbook"
             onClick={() => startBooking(null)}
           >
-            Book the pairing
+            {t("screensB.offers.bookPairing")}
           </Button>
         </div>
       </div>
@@ -113,9 +118,19 @@ export default function Offers() {
               <div className="scr-offer__meta">
                 <span className="scr-offer__ends">
                   <Icon name="clock" size={13} />
-                  {o.ends}
+                  {t("screensB.offers.ends", {
+                    date: formatMediumISO(o.endsISO),
+                  })}
                 </span>
-                <span className="bk-mono">{o.left}</span>
+                <span className="bk-mono">
+                  {t(
+                    o.leftKey,
+                    o.leftCount === undefined
+                      ? undefined
+                      : { count: formatNumber(o.leftCount) },
+                    o.leftCount,
+                  )}
+                </span>
               </div>
 
               <div className="scr-offer__actions">
@@ -124,9 +139,12 @@ export default function Offers() {
                   className="bk-mono scr-offer__code"
                   data-copied={copied ? "true" : "false"}
                   onClick={() => copy(o.code)}
-                  aria-label={
-                    copied ? `${o.code} copied` : `Copy the code ${o.code}`
-                  }
+                  aria-label={t(
+                    copied
+                      ? "screensB.common.codeCopied"
+                      : "screensB.common.copyCode",
+                    { code: o.code },
+                  )}
                 >
                   <Icon name={copied ? "check" : "copy"} size={14} />
                   {o.code}
@@ -135,10 +153,10 @@ export default function Offers() {
                     carries the context, so the accessible name adds it back. */}
                 <Button
                   size="sm"
-                  ariaLabel={`Book ${o.title}`}
+                  ariaLabel={t("screensB.common.bookNamed", { name: o.title })}
                   onClick={() => startBooking(o.svc)}
                 >
-                  Book
+                  {t("screensB.common.book")}
                 </Button>
               </div>
             </article>
@@ -148,11 +166,7 @@ export default function Offers() {
 
       <p className="scr-offers__note">
         <Icon name="info" size={17} className="scr-offers__noteicon" />
-        <span>
-          One offer per visit, not combinable with package sessions or gift-card
-          top-ups. Members always get their 10% on top. Demo codes — nothing is
-          discounted for real.
-        </span>
+        <span>{t("screensB.offers.note")}</span>
       </p>
     </section>
   );

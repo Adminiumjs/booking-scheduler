@@ -14,16 +14,19 @@ import { Button, Icon, PlaceholderTile } from "../components/index.ts";
 import { data } from "../data/source.ts";
 import {
   ARRIVAL_NOTES,
-  DOOR_NOTE,
+  DOOR_NOTE_KEY,
   LOCATION_MAP_FILENAME,
   LOCATION_MAP_TINT,
   TRAVEL,
 } from "../data/screens/location.ts";
+import { useT } from "../i18n/index.tsx";
+import { hoursLabel, weekdayName } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-location.css";
 
 export default function Location() {
+  const t = useT();
   const showToast = useStore((s) => s.showToast);
 
   const loc = data.getLocation();
@@ -34,21 +37,27 @@ export default function Location() {
   const rows = [
     {
       icon: "map-pin",
-      label: "Address",
-      value: `${loc.addressLine1}, ${loc.addressLine2}`,
+      label: t("screensB.location.rowAddress"),
+      value: t("screensB.location.addressValue", {
+        line1: loc.addressLine1,
+        line2: loc.addressLine2,
+      }),
     },
-    { icon: "phone", label: "Phone", value: loc.phone },
-    { icon: "mail", label: "Email", value: loc.email },
-    { icon: "door-open", label: "Getting in", value: DOOR_NOTE },
+    { icon: "phone", label: t("screensB.common.phone"), value: loc.phone },
+    { icon: "mail", label: t("screensB.common.email"), value: loc.email },
+    {
+      icon: "door-open",
+      label: t("screensB.location.rowGettingIn"),
+      value: t(DOOR_NOTE_KEY),
+    },
   ];
 
   return (
     <main className="bk-screen bk-page scr-location">
       <div className="scr-location__head">
-        <h1 className="bk-h1">Find us</h1>
+        <h1 className="bk-h1">{t("screensB.location.title")}</h1>
         <p className="bk-sub scr-location__lede">
-          Two floors above the bakery on Alder Lane. Ring the bell marked Studio if
-          the street door is shut.
+          {t("screensB.location.lede")}
         </p>
       </div>
 
@@ -82,28 +91,33 @@ export default function Location() {
             <div className="scr-location__actions">
               <Button
                 icon="navigation"
-                onClick={() => showToast("Opening Maps — demo only", "warn")}
+                onClick={() => showToast(t("screensB.common.toastMaps"), "warn")}
               >
-                Get directions
+                {t("screensB.location.getDirections")}
               </Button>
               <Button
                 variant="ghost"
                 icon="phone"
-                onClick={() => showToast(`Dialling ${loc.phone} — demo only`, "warn")}
+                onClick={() =>
+                  showToast(
+                    t("screensB.location.toastDial", { phone: loc.phone }),
+                    "warn",
+                  )
+                }
               >
-                Call the studio
+                {t("screensB.location.callStudio")}
               </Button>
             </div>
           </div>
 
           <div className="scr-location__travel">
-            {TRAVEL.map((t) => (
-              <div key={t.label} className="scr-location__travel-card">
+            {TRAVEL.map((row) => (
+              <div key={row.labelKey} className="scr-location__travel-card">
                 <span className="scr-location__travel-icon">
-                  <Icon name={t.icon} size={16} />
+                  <Icon name={row.icon} size={16} />
                 </span>
-                <span className="scr-location__travel-label">{t.label}</span>
-                <span className="scr-location__travel-sub">{t.sub}</span>
+                <span className="scr-location__travel-label">{t(row.labelKey)}</span>
+                <span className="scr-location__travel-sub">{t(row.subKey)}</span>
               </div>
             ))}
           </div>
@@ -112,9 +126,15 @@ export default function Location() {
         <div className="scr-location__col">
           <div className="scr-location__hours">
             <div className="scr-location__hours-head">
-              <span className="bk-eyebrow scr-location__hours-title">Opening hours</span>
+              <span className="bk-eyebrow scr-location__hours-title">
+                {t("screensB.location.openingHours")}
+              </span>
               <span className="scr-location__open" data-open={openToday}>
-                {openToday ? "Open today" : "Closed today"}
+                {t(
+                  openToday
+                    ? "screensB.location.openToday"
+                    : "screensB.location.closedToday",
+                )}
               </span>
             </div>
             {hours.map((h, i) => (
@@ -123,20 +143,22 @@ export default function Location() {
                 className="scr-location__hours-row"
                 data-today={i === todayIdx}
               >
-                <span className="scr-location__day">{h.day}</span>
+                <span className="scr-location__day">{weekdayName(h.day)}</span>
                 <span className="scr-location__time bk-mono" data-closed={h.closed}>
-                  {h.value}
+                  {hoursLabel(h)}
                 </span>
               </div>
             ))}
           </div>
 
           <div className="scr-location__notes">
-            <span className="scr-location__notes-title">Before you arrive</span>
+            <span className="scr-location__notes-title">
+              {t("screensB.location.beforeYouArrive")}
+            </span>
             {ARRIVAL_NOTES.map((n) => (
-              <span key={n.text} className="scr-location__note">
+              <span key={n.textKey} className="scr-location__note">
                 <Icon name={n.icon} size={15} className="scr-location__note-icon" />
-                {n.text}
+                {t(n.textKey)}
               </span>
             ))}
           </div>

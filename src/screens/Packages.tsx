@@ -11,26 +11,28 @@ import { useMemo } from "react";
 
 import { Button, Icon, IconTile } from "../components/index.ts";
 import { data } from "../data/source.ts";
-import { PACKAGE_VALID_LABEL } from "../data/screens/packages.ts";
+import {
+  PACKAGE_VALID_KEY,
+  PACKAGE_VALID_MONTHS,
+} from "../data/screens/packages.ts";
 import type { PackageDeal } from "../data/types.ts";
-import { MONTH_SHORT, money } from "../lib/format.ts";
+import { useI18n } from "../i18n/index.tsx";
+import type { TFunction } from "../i18n/index.tsx";
+import { formatMediumDate, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-packages.css";
 
 /** `'5 × Signature Facial'`, or the studio-wide wording for a mixed bundle. */
-function subjectOf(pkg: PackageDeal): string {
-  return `${pkg.qty} × ${data.getService(pkg.svc)?.name ?? "studio services"}`;
-}
-
-/** Twelve months from today, phrased the way the card shows it. */
-function expiryLabel(): string {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() + 1);
-  return `Expires ${MONTH_SHORT[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+function subjectOf(t: TFunction, qty: string, pkg: PackageDeal): string {
+  return t("screensB.packages.subject", {
+    qty,
+    name: data.getService(pkg.svc)?.name ?? t("screensB.packages.studioServices"),
+  });
 }
 
 export default function Packages() {
+  const { t, number } = useI18n();
   const pkgOwned = useStore((s) => s.pkgOwned);
   const set = useStore((s) => s.set);
   const go = useStore((s) => s.go);
@@ -39,7 +41,14 @@ export default function Packages() {
 
   /* One "today" per visit to the screen — every owned card shows the same
    * expiry, and re-deriving it per render would be pointless churn. */
-  const expiry = useMemo(expiryLabel, []);
+  const expiryDate = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d;
+  }, []);
+  const expiry = t("screensB.packages.expires", {
+    date: formatMediumDate(expiryDate),
+  });
 
   /* An owned entry whose package has since left the catalogue is dropped
    * rather than rendered half-blank. */
@@ -61,11 +70,14 @@ export default function Packages() {
 
   const buy = (pkg: PackageDeal): void => {
     if (pkgOwned.some((o) => o.id === pkg.id)) {
-      showToast(`${pkg.name} is already in your account`, "warn");
+      showToast(
+        t("screensB.packages.toastAlready", { name: pkg.name }),
+        "warn",
+      );
       return;
     }
     set({ pkgOwned: [...pkgOwned, { id: pkg.id, used: 0 }] });
-    showToast(`${pkg.name} added — demo only, no charge`);
+    showToast(t("screensB.packages.toastAdded", { name: pkg.name }));
   };
 
   return (
@@ -73,18 +85,17 @@ export default function Packages() {
       <header className="scr-packages__intro">
         <span className="scr-packages__eyebrow">
           <Icon name="layers" size={14} />
-          Prepaid bundles
+          {t("screensB.packages.eyebrow")}
         </span>
-        <h1 className="scr-packages__h1">Package deals</h1>
-        <p className="scr-packages__sub">
-          Buy a few visits at once and pay less per session. Sessions sit in your
-          account until you book them — no monthly fee, no expiry games.
-        </p>
+        <h1 className="scr-packages__h1">{t("screensB.packages.h1")}</h1>
+        <p className="scr-packages__sub">{t("screensB.packages.sub")}</p>
       </header>
 
       {owned.length > 0 ? (
         <>
-          <h2 className="scr-packages__label">Your packages</h2>
+          <h2 className="scr-packages__label">
+            {t("screensB.packages.yourPackages")}
+          </h2>
           <div className="scr-packages__owned">
             {owned.map(({ used, pkg }) => {
               const left = pkg.qty - used;
@@ -101,11 +112,17 @@ export default function Packages() {
                     />
                     <div className="scr-pkg-owned__id">
                       <h3 className="scr-pkg-owned__name">{pkg.name}</h3>
-                      <div className="scr-pkg-owned__sub">{subjectOf(pkg)}</div>
+                      <div className="scr-pkg-owned__sub">
+                        {subjectOf(t, number(pkg.qty), pkg)}
+                      </div>
                     </div>
                     <span className="scr-pkg-owned__tally">
-                      <span className="bk-mono scr-pkg-owned__left">{left}</span>
-                      <span className="scr-pkg-owned__leftlabel">left</span>
+                      <span className="bk-mono scr-pkg-owned__left">
+                        {number(left)}
+                      </span>
+                      <span className="scr-pkg-owned__leftlabel">
+                        {t("screensB.packages.left")}
+                      </span>
                     </span>
                   </div>
 
@@ -116,7 +133,9 @@ export default function Packages() {
                       aria-valuemin={0}
                       aria-valuemax={pkg.qty}
                       aria-valuenow={used}
-                      aria-label={`${pkg.name} sessions used`}
+                      aria-label={t("screensB.packages.sessionsUsed", {
+                        name: pkg.name,
+                      })}
                     >
                       <div
                         className="scr-pkg-owned__fill"
@@ -125,7 +144,10 @@ export default function Packages() {
                     </div>
                     <div className="scr-pkg-owned__meta">
                       <span>
-                        {used} of {pkg.qty} used
+                        {t("screensB.packages.usedOf", {
+                          used: number(used),
+                          total: number(pkg.qty),
+                        })}
                       </span>
                       <span>{expiry}</span>
                     </div>
@@ -137,7 +159,7 @@ export default function Packages() {
                     full
                     onClick={() => book(pkg)}
                   >
-                    Book a session
+                    {t("screensB.packages.bookSession")}
                   </Button>
                 </article>
               );
@@ -146,7 +168,9 @@ export default function Packages() {
         </>
       ) : null}
 
-      <h2 className="scr-packages__label">Available packages</h2>
+      <h2 className="scr-packages__label">
+        {t("screensB.packages.available")}
+      </h2>
       <div className="scr-packages__grid">
         {data.getPackages().map((pkg) => {
           const have = pkgOwned.some((o) => o.id === pkg.id);
@@ -157,7 +181,9 @@ export default function Packages() {
               key={pkg.id}
             >
               {pkg.featured ? (
-                <span className="scr-pkg__ribbon">Most popular</span>
+                <span className="scr-pkg__ribbon">
+                  {t("screensB.packages.mostPopular")}
+                </span>
               ) : null}
 
               <div className="scr-pkg__head">
@@ -170,7 +196,9 @@ export default function Packages() {
                 />
                 <div className="scr-pkg__id">
                   <h3 className="scr-pkg__name">{pkg.name}</h3>
-                  <div className="scr-pkg__qty">{subjectOf(pkg)}</div>
+                  <div className="scr-pkg__qty">
+                    {subjectOf(t, number(pkg.qty), pkg)}
+                  </div>
                 </div>
               </div>
 
@@ -180,13 +208,25 @@ export default function Packages() {
                 <span className="bk-mono scr-pkg__now">{money(pkg.now)}</span>
                 <span className="bk-mono scr-pkg__was">{money(pkg.was)}</span>
                 <span className="scr-pkg__save">
-                  Save {money(pkg.was - pkg.now)}
+                  {t("screensB.packages.save", {
+                    amount: money(pkg.was - pkg.now),
+                  })}
                 </span>
               </div>
 
               <div className="bk-mono scr-pkg__terms">
-                <span>{money(pkg.now / pkg.qty)} / session</span>
-                <span>{PACKAGE_VALID_LABEL}</span>
+                <span>
+                  {t("screensB.packages.perSession", {
+                    amount: money(pkg.now / pkg.qty),
+                  })}
+                </span>
+                <span>
+                  {t(
+                    PACKAGE_VALID_KEY,
+                    { count: number(PACKAGE_VALID_MONTHS) },
+                    PACKAGE_VALID_MONTHS,
+                  )}
+                </span>
               </div>
 
               <Button
@@ -195,7 +235,11 @@ export default function Packages() {
                 full
                 onClick={() => buy(pkg)}
               >
-                {have ? "In your account" : "Buy package"}
+                {t(
+                  have
+                    ? "screensB.packages.inAccount"
+                    : "screensB.packages.buy",
+                )}
               </Button>
             </article>
           );
@@ -204,10 +248,7 @@ export default function Packages() {
 
       <p className="scr-packages__note">
         <Icon name="info" size={17} className="scr-packages__noteicon" />
-        <span>
-          Sessions stay valid for 12 months, can be gifted to a friend once, and
-          are refundable pro-rata. This is a demo — nothing is charged.
-        </span>
+        <span>{t("screensB.packages.note")}</span>
       </p>
     </section>
   );

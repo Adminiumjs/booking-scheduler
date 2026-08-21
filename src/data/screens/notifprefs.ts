@@ -6,35 +6,36 @@
  */
 
 import type { NotifPrefs } from "../types.ts";
+import type { MessageKey } from "../../i18n/index.tsx";
 
 /** The three delivery channels, which are booleans on `NotifPrefs` itself. */
 export type NotifChannel = Extract<keyof NotifPrefs, "email" | "sms" | "push">;
 
 export interface PrefRowSpec<K extends string = string> {
   key: K;
-  label: string;
-  sub: string;
+  labelKey: MessageKey;
+  subKey: MessageKey;
   icon: string;
 }
 
 export const NOTIF_CHANNELS: readonly PrefRowSpec<NotifChannel>[] = [
   {
     key: "email",
-    label: "Email",
-    sub: "Receipts, confirmations and the monthly letter.",
+    labelKey: "data.notif.chEmail",
+    subKey: "data.notif.chEmailSub",
     icon: "mail",
   },
   {
     key: "sms",
-    label: "Text message",
-    sub: "Short reminders and waitlist openings.",
+    labelKey: "data.notif.chSms",
+    subKey: "data.notif.chSmsSub",
     icon: "message-square",
   },
   /* The comp asks for `bell-ring`, which the registry does not carry. */
   {
     key: "push",
-    label: "Push",
-    sub: "Browser alerts the moment a spot frees up.",
+    labelKey: "data.notif.chPush",
+    subKey: "data.notif.chPushSub",
     icon: "bell",
   },
 ];
@@ -43,52 +44,68 @@ export const NOTIF_CHANNELS: readonly PrefRowSpec<NotifChannel>[] = [
 export const NOTIF_CATEGORIES: readonly PrefRowSpec[] = [
   {
     key: "reminders",
-    label: "Appointment reminders",
-    sub: "A nudge before every visit.",
+    labelKey: "data.notif.catReminders",
+    subKey: "data.notif.catRemindersSub",
     icon: "calendar-clock",
   },
   {
     key: "waitlist",
-    label: "Waitlist openings",
-    sub: "The moment a spot frees up.",
+    labelKey: "data.notif.catWaitlist",
+    subKey: "data.notif.catWaitlistSub",
     icon: "bell-plus",
   },
   {
     key: "loyalty",
-    label: "Points & rewards",
-    sub: "When you earn or unlock something.",
+    labelKey: "data.notif.catLoyalty",
+    subKey: "data.notif.catLoyaltySub",
     icon: "gem",
   },
   {
     key: "packages",
-    label: "Package updates",
-    sub: "Sessions used and expiry warnings.",
+    labelKey: "data.notif.catPackages",
+    subKey: "data.notif.catPackagesSub",
     icon: "layers",
   },
   {
     key: "journal",
-    label: "New journal posts",
-    sub: "One short note when we publish.",
+    labelKey: "data.notif.catJournal",
+    subKey: "data.notif.catJournalSub",
     icon: "book-open",
   },
   {
     key: "offers",
-    label: "Offers & promotions",
-    sub: "Occasional seasonal deals.",
+    labelKey: "data.notif.catOffers",
+    subKey: "data.notif.catOffersSub",
     icon: "tag",
   },
 ];
 
-/** `NotifPrefs.when` — how far ahead of a visit the reminder goes out. */
+/**
+ * `NotifPrefs.when` — how far ahead of a visit the reminder goes out. The
+ * lead time is a count so `{count} hour|{count} hours` selects properly; the
+ * "both" option has none.
+ */
 export const NOTIF_WHEN_OPTIONS = [
-  { value: "24h", label: "24h before" },
-  { value: "2h", label: "2h before" },
-  { value: "both", label: "Both" },
-] as const;
+  { value: "24h", labelKey: "data.notif.whenBefore", hours: 24 },
+  { value: "2h", labelKey: "data.notif.whenBefore", hours: 2 },
+  { value: "both", labelKey: "data.notif.whenBoth", hours: null },
+] as const satisfies readonly {
+  value: string;
+  labelKey: MessageKey;
+  hours: number | null;
+}[];
 
-/** `NotifPrefs.quietWin` — which hours are held back. */
+/**
+ * `NotifPrefs.quietWin` — which hours are held back. Minutes from midnight,
+ * so the window is drawn on the reader's own clock.
+ */
 export const NOTIF_QUIET_OPTIONS = [
-  { value: "10p8a", label: "10 PM – 8 AM" },
-  { value: "9p7a", label: "9 PM – 7 AM" },
-  { value: "weekends", label: "Weekends too" },
-] as const;
+  { value: "10p8a", labelKey: "data.notif.quietRange", from: 1320, to: 480 },
+  { value: "9p7a", labelKey: "data.notif.quietRange", from: 1260, to: 420 },
+  { value: "weekends", labelKey: "data.notif.quietWeekends", from: null, to: null },
+] as const satisfies readonly {
+  value: string;
+  labelKey: MessageKey;
+  from: number | null;
+  to: number | null;
+}[];

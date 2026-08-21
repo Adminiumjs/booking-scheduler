@@ -15,10 +15,17 @@ import {
   StarBar,
 } from "../components/index.ts";
 import { STUDIO_REVIEWS } from "../data/screens/reviews.ts";
-import { staffProfile } from "../data/screens/staff.ts";
+import { nextFreeLabel, staffProfile } from "../data/screens/staff.ts";
 import { data } from "../data/source.ts";
 import type { StaffMember, Weekday } from "../data/types.ts";
-import { DOW_LONG, minutesToTime, money } from "../lib/format.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
+import {
+  formatNumber,
+  minutesToTime,
+  money,
+  relativeAgo,
+  weekdayName,
+} from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-staff.css";
@@ -42,16 +49,14 @@ export default function Staff() {
  * ------------------------------------------------------------------ */
 
 function Directory() {
+  const t = useT();
   const set = useStore((s) => s.set);
 
   return (
     <>
       <div className="scr-staff__head">
-        <h1 className="bk-h1">The people in the chairs</h1>
-        <p className="bk-sub scr-staff__lede">
-          Four specialists, each with their own hours and their own way of
-          working. Pick whoever suits you — or let us match you.
-        </p>
+        <h1 className="bk-h1">{t("screensB.staff.dirTitle")}</h1>
+        <p className="bk-sub scr-staff__lede">{t("screensB.staff.dirLede")}</p>
       </div>
 
       <div className="scr-staff__grid">
@@ -86,24 +91,26 @@ function Directory() {
                   </span>
                   <span className="scr-staff__cardrating">
                     <Icon name="star" size={13} />
-                    {x.rating}
+                    {formatNumber(x.rating, { minimumFractionDigits: 1 })}
                   </span>
                 </span>
 
                 <span className="scr-staff__cardbio">{s.bio}</span>
 
                 <span className="scr-staff__tags">
-                  {x.tags.slice(0, 3).map((t) => (
-                    <span key={t} className="scr-staff__tag">
-                      {t}
+                  {x.tags.slice(0, 3).map((tag) => (
+                    <span key={tag} className="scr-staff__tag">
+                      {tag}
                     </span>
                   ))}
                 </span>
 
                 <span className="scr-staff__cardfoot">
-                  <span className="scr-staff__next">Next free · {x.next}</span>
+                  <span className="scr-staff__next">
+                    {t("screensB.staff.nextFree", { when: nextFreeLabel(t, x) })}
+                  </span>
                   <span className="scr-staff__view">
-                    View profile
+                    {t("screensB.staff.viewProfile")}
                     <Icon name="arrow-right" size={14} />
                   </span>
                 </span>
@@ -125,6 +132,7 @@ interface ProfileProps {
 }
 
 function Profile({ staff }: ProfileProps) {
+  const { t, number } = useI18n();
   const set = useStore((s) => s.set);
   const go = useStore((s) => s.go);
   const startBooking = useStore((s) => s.startBooking);
@@ -135,7 +143,7 @@ function Profile({ staff }: ProfileProps) {
     .getServices()
     .filter((s) => s.staff.includes(staff.id))
     .slice(0, 5);
-  const years = Math.max(1, new Date().getFullYear() - parseInt(x.since, 10));
+  const years = Math.max(1, new Date().getFullYear() - x.since);
 
   /*
    * The comp's "Book with X" wrote the staff id straight after `startBooking`,
@@ -151,7 +159,9 @@ function Profile({ staff }: ProfileProps) {
 
   return (
     <>
-      <BackLink onClick={() => set({ staffId: null })}>All specialists</BackLink>
+      <BackLink onClick={() => set({ staffId: null })}>
+        {t("screensB.staff.allSpecialists")}
+      </BackLink>
 
       <PlaceholderTile
         tint={staff.tint}
@@ -177,24 +187,29 @@ function Profile({ staff }: ProfileProps) {
             <div className="scr-staff__whotext">
               <h1 className="bk-h1 scr-staff__name">{staff.name}</h1>
               <div className="scr-staff__since">
-                {staff.role} · with the studio since {x.since}
+                {t("screensB.staff.since", {
+                  role: staff.role,
+                  year: x.since,
+                })}
               </div>
             </div>
           </div>
 
           <p className="scr-staff__long">{x.long || staff.bio}</p>
 
-          <h2 className="scr-staff__section">Known for</h2>
+          <h2 className="scr-staff__section">{t("screensB.staff.knownFor")}</h2>
           <div className="scr-staff__known">
-            {x.tags.map((t) => (
-              <span key={t} className="scr-staff__knowntag">
+            {x.tags.map((tag) => (
+              <span key={tag} className="scr-staff__knowntag">
                 <Icon name="check" size={14} />
-                {t}
+                {tag}
               </span>
             ))}
           </div>
 
-          <h2 className="scr-staff__section">What guests say</h2>
+          <h2 className="scr-staff__section">
+            {t("screensB.staff.guestsSay")}
+          </h2>
           <div className="scr-staff__quotes">
             {quotes.map((r) => (
               <article key={r.quote} className="bk-panel scr-staff__quote">
@@ -208,7 +223,10 @@ function Profile({ staff }: ProfileProps) {
                   <span className="scr-staff__quotewho">
                     <span className="scr-staff__quotename">{r.name}</span>
                     <span className="scr-staff__quotemeta">
-                      {r.svc} · {r.date}
+                      {t("screensB.staff.quoteMeta", {
+                        service: r.svc,
+                        date: relativeAgo(r.ago, r.agoUnit),
+                      })}
                     </span>
                   </span>
                   <StarBar value={r.rating} size={13} gap={1} />
@@ -222,9 +240,23 @@ function Profile({ staff }: ProfileProps) {
         <aside className="scr-staff__side">
           <div className="bk-panel scr-staff__cta">
             <div className="scr-staff__stats">
-              <Stat value={x.rating} label="Average rating" />
-              <Stat value={String(x.reviews)} label="Reviews" />
-              <Stat value={`${years} yrs`} label="At the studio" />
+              <Stat
+                value={number(x.rating, { minimumFractionDigits: 1 })}
+                label={t("screensB.staff.statRating")}
+              />
+              <Stat
+                value={number(x.reviews)}
+                label={t("screensB.staff.statReviews")}
+              />
+              {/* `Intl` names the unit, so "yrs" needs no message of its own. */}
+              <Stat
+                value={number(years, {
+                  style: "unit",
+                  unit: "year",
+                  unitDisplay: "short",
+                })}
+                label={t("screensB.staff.statYears")}
+              />
             </div>
             <Button
               icon="calendar-plus"
@@ -233,30 +265,34 @@ function Profile({ staff }: ProfileProps) {
               full
               onClick={book}
             >
-              Book with {staff.name}
+              {t("screensB.common.bookWith", { name: staff.name })}
             </Button>
             <Button variant="ghost" full onClick={() => go("waitlist")}>
-              Join their wait list
+              {t("screensB.staff.joinWaitlist")}
             </Button>
           </div>
 
           <div className="bk-panel scr-staff__hours">
-            <div className="bk-eyebrow scr-staff__hourshead">Usual week</div>
+            <div className="bk-eyebrow scr-staff__hourshead">
+              {t("screensB.staff.usualWeek")}
+            </div>
             {WEEK_ORDER.map((d) => {
               const wins = staff.hours[d] ?? [];
               const open = wins.length > 0;
               return (
                 <div key={d} className="scr-staff__hourrow" data-open={open}>
-                  <span className="scr-staff__hourday">{DOW_LONG[d]}</span>
+                  <span className="scr-staff__hourday">{weekdayName(d)}</span>
                   <span className="scr-staff__hourval bk-mono">
                     {open
                       ? wins
-                          .map(
-                            ([from, to]) =>
-                              `${minutesToTime(from)} – ${minutesToTime(to)}`,
+                          .map(([from, to]) =>
+                            t("screensB.staff.hourRange", {
+                              from: minutesToTime(from),
+                              to: minutesToTime(to),
+                            }),
                           )
                           .join(", ")
-                      : "Off"}
+                      : t("screensB.staff.off")}
                   </span>
                 </div>
               );
@@ -265,7 +301,7 @@ function Profile({ staff }: ProfileProps) {
 
           <div className="scr-staff__svcs">
             <span className="scr-staff__svcstitle">
-              Services {staff.name} offers
+              {t("screensB.staff.servicesOffered", { name: staff.name })}
             </span>
             {services.map((s) => (
               <button

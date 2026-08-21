@@ -9,24 +9,27 @@
 
 import { data } from "../data/source.ts";
 import type { View } from "../data/types.ts";
+import { useT } from "../i18n/index.tsx";
+import type { MessageKey } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 import type { HomeAnchor } from "../state/store.ts";
 import { Button, IconButton } from "./Button.tsx";
 
 interface NavItem {
-  label: string;
+  labelKey: MessageKey;
   view?: View;
   anchor?: HomeAnchor;
 }
 
 const NAV: NavItem[] = [
-  { label: "Services", view: "services" },
-  { label: "Membership", view: "loyalty" },
-  { label: "Team", anchor: "team" },
-  { label: "Visit us", anchor: "visit" },
+  { labelKey: "chrome.menu.services", view: "services" },
+  { labelKey: "chrome.menu.membership", view: "loyalty" },
+  { labelKey: "chrome.menu.team", anchor: "team" },
+  { labelKey: "chrome.menu.visit", anchor: "visit" },
 ];
 
 export function Header() {
+  const t = useT();
   const view = useStore((s) => s.view);
   const theme = useStore((s) => s.theme);
   const go = useStore((s) => s.go);
@@ -45,7 +48,7 @@ export function Header() {
           type="button"
           className="bk-brand"
           onClick={() => go("home")}
-          aria-label={`${loc.name} — home`}
+          aria-label={t("chrome.header.home", { name: loc.name })}
         >
           <span className="bk-logo" aria-hidden="true">
             {loc.shortName.charAt(0)}
@@ -53,10 +56,10 @@ export function Header() {
           <span className="bk-wordmark">{loc.shortName}</span>
         </button>
 
-        <nav className="bk-wide-only bk-header__nav" aria-label="Main">
+        <nav className="bk-wide-only bk-header__nav" aria-label={t("chrome.header.nav")}>
           {NAV.map((item) => (
             <button
-              key={item.label}
+              key={item.labelKey}
               type="button"
               className="bk-nav bk-navlink"
               data-active={item.view && item.view === view ? "true" : "false"}
@@ -65,7 +68,7 @@ export function Header() {
                 item.anchor ? goHomeScroll(item.anchor) : go(item.view as View)
               }
             >
-              {item.label}
+              {t(item.labelKey)}
             </button>
           ))}
         </nav>
@@ -73,7 +76,7 @@ export function Header() {
         <div className="bk-header__actions">
           <IconButton
             icon={theme === "dark" ? "sun" : "moon"}
-            label="Toggle theme"
+            label={t("chrome.theme.toggle")}
             onClick={toggleTheme}
           />
           <Button
@@ -82,13 +85,13 @@ export function Header() {
             onClick={() => startBooking(null)}
             style={{ padding: "10px 18px", fontSize: "14px" }}
           >
-            Book now
+            {t("chrome.header.book")}
           </Button>
           <IconButton
             className="bk-narrow-only"
             icon="menu"
             iconSize={20}
-            label="Open menu"
+            label={t("chrome.header.menu")}
             onClick={() => setMenu(true)}
           />
         </div>

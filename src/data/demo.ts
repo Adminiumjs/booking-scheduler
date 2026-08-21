@@ -14,6 +14,7 @@
 
 import { hash } from "../lib/codes.ts";
 import { initialsOf, isoOf } from "../lib/format.ts";
+import type { MessageKey } from "../i18n/index.tsx";
 import type {
   Appointment,
   Booking,
@@ -40,10 +41,10 @@ import type {
  * ------------------------------------------------------------------ */
 
 export const CATEGORIES: readonly Category[] = [
-  { slug: "hair", name: "Hair", icon: "scissors" },
-  { slug: "spa", name: "Spa", icon: "flower-2" },
-  { slug: "nails", name: "Nails", icon: "hand" },
-  { slug: "move", name: "Movement", icon: "activity" },
+  { slug: "hair", nameKey: "data.cat.hair", icon: "scissors" },
+  { slug: "spa", nameKey: "data.cat.spa", icon: "flower-2" },
+  { slug: "nails", nameKey: "data.cat.nails", icon: "hand" },
+  { slug: "move", nameKey: "data.cat.move", icon: "activity" },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -322,14 +323,22 @@ export const STAFF: readonly StaffMember[] = [
  * Noor and Elin open at 09:00 on Mondays). Staff windows are untouched.
  * ------------------------------------------------------------------ */
 
+/*
+ * Monday-first, carrying minute counts rather than `'9:00 AM – 6:00 PM'`. The
+ * closed row keeps `open`/`close` at the studio's normal opening so nothing
+ * downstream has to guard against a zero it will never draw.
+ */
+/** What a closed day says instead of a pair of times. */
+export const HOURS_CLOSED_KEY: MessageKey = "data.hours.closed";
+
 export const STUDIO_HOURS: readonly StudioHoursRow[] = [
-  { day: "Monday", value: "9:00 AM – 6:00 PM", closed: false },
-  { day: "Tuesday", value: "8:00 AM – 8:00 PM", closed: false },
-  { day: "Wednesday", value: "8:00 AM – 8:00 PM", closed: false },
-  { day: "Thursday", value: "8:00 AM – 8:00 PM", closed: false },
-  { day: "Friday", value: "8:00 AM – 8:00 PM", closed: false },
-  { day: "Saturday", value: "8:00 AM – 5:00 PM", closed: false },
-  { day: "Sunday", value: "Closed", closed: true },
+  { day: 1, open: 540, close: 1080, closed: false },
+  { day: 2, open: 480, close: 1200, closed: false },
+  { day: 3, open: 480, close: 1200, closed: false },
+  { day: 4, open: 480, close: 1200, closed: false },
+  { day: 5, open: 480, close: 1200, closed: false },
+  { day: 6, open: 480, close: 1020, closed: false },
+  { day: 0, open: 540, close: 1020, closed: true },
 ];
 
 export const STUDIO_LOCATION: StudioLocation = {
@@ -338,7 +347,7 @@ export const STUDIO_LOCATION: StudioLocation = {
   addressLine1: "148 Alder Lane, Suite 2",
   addressLine2: "Riverside, Downtown",
   phone: "(415) 555-0148",
-  transit: "2 min from Alder stop",
+  transitMinutes: 2,
   email: "hello@lumenstudio.demo",
   /* The real demo path — the repo, the README and `build:demo` all say
      `booking-scheduler`, so the footer badge has to as well. */
@@ -356,7 +365,8 @@ export const REVIEWS: readonly Review[] = [
     tint: "#b07d9a",
     rating: 5,
     svc: "Balayage",
-    date: "2 weeks ago",
+    ago: 2,
+    agoUnit: "week",
     quote:
       "Elin read exactly what I wanted from one blurry screenshot. Best color I’ve ever had, full stop.",
   },
@@ -366,7 +376,8 @@ export const REVIEWS: readonly Review[] = [
     tint: "#6f8bb0",
     rating: 5,
     svc: "Deep-Tissue Massage",
-    date: "1 month ago",
+    ago: 1,
+    agoUnit: "month",
     quote:
       "Noor found every knot I’d been ignoring for a year. I walked out standing three inches taller.",
   },
@@ -376,7 +387,8 @@ export const REVIEWS: readonly Review[] = [
     tint: "#b0836a",
     rating: 5,
     svc: "Gel Manicure",
-    date: "3 weeks ago",
+    ago: 3,
+    agoUnit: "week",
     quote:
       "Ivy’s detail work is unreal, and it lasted almost three weeks without a single chip.",
   },
@@ -386,33 +398,57 @@ export const REVIEWS: readonly Review[] = [
     tint: "#7d9166",
     rating: 4,
     svc: "Reformer Pilates",
-    date: "6 days ago",
+    ago: 6,
+    agoUnit: "day",
     quote:
       "Marco tailors every session to how my back feels that day. Rebooking is genuinely one tap.",
   },
 ];
 
-/** Marketing caption under the average (`from {REVIEW_COUNT_LABEL}`). */
-export const REVIEW_COUNT_LABEL = "480+ visits";
+/**
+ * The floor the caption under the average counts from — rendered through
+ * `t('data.reviews.countLabel', {}, REVIEW_COUNT_BASE)`, which owns the `+`,
+ * the plural and the word "visits" in each language.
+ */
+export const REVIEW_COUNT_BASE = 480;
+
+/** The caption itself: `t(REVIEW_COUNT_LABEL_KEY, {}, REVIEW_COUNT_BASE)`. */
+export const REVIEW_COUNT_LABEL_KEY: MessageKey = "data.reviews.countLabel";
 
 /* ------------------------------------------------------------------ *
  * 5.8 Loyalty rewards
  * ------------------------------------------------------------------ */
 
+/*
+ * A reward is a benefit the product grants, not something the salon wrote, so
+ * the wording is keyed. `svc` names the treatment the voucher is good for and
+ * is resolved through the seam at render, which keeps the service name spelled
+ * exactly once — the labels used to repeat "Gloss & Tone" by hand.
+ */
 export const REWARDS: readonly LoyaltyReward[] = [
-  { label: "$10 off any service", cost: 200, icon: "ticket-percent", tint: "#7d9166" },
-  { label: "Free Gloss & Tone", cost: 450, icon: "droplet", tint: "#9a7fb0" },
-  { label: "Free Classic Manicure", cost: 500, icon: "hand", tint: "#b0836a" },
-  { label: "Free Signature Facial", cost: 800, icon: "flower-2", tint: "#6f8bb0" },
+  {
+    labelKey: "data.reward.moneyOff",
+    amount: 10,
+    cost: 200,
+    icon: "ticket-percent",
+    tint: "#7d9166",
+  },
+  { labelKey: "data.reward.free", svc: "gloss", cost: 450, icon: "droplet", tint: "#9a7fb0" },
+  { labelKey: "data.reward.free", svc: "mani", cost: 500, icon: "hand", tint: "#b0836a" },
+  { labelKey: "data.reward.free", svc: "facial", cost: 800, icon: "flower-2", tint: "#6f8bb0" },
 ];
 
 export const LOYALTY_START_POINTS = 340;
 export const LOYALTY_THRESHOLD = 500;
 
-export const LOYALTY_HOW_IT_WORKS: readonly string[] = [
-  "Earn 1 point for every $1 you spend.",
-  "Redeem points for services and add-ons.",
-  "Members earn 2× points on every visit.",
+/** The dollar spend that earns one point — filled into `{amount}`. */
+export const LOYALTY_EARN_PER = 1;
+
+/** Message keys, in order. The `{amount}` in the first is `LOYALTY_EARN_PER`. */
+export const LOYALTY_HOW_IT_WORKS: readonly MessageKey[] = [
+  "data.loyalty.howEarn",
+  "data.loyalty.howRedeem",
+  "data.loyalty.howMembers",
 ];
 
 /* ------------------------------------------------------------------ *
@@ -422,8 +458,8 @@ export const LOYALTY_HOW_IT_WORKS: readonly string[] = [
 export const PLANS: readonly MembershipPlan[] = [
   {
     name: "Glow Monthly",
-    price: "$39",
-    cadence: "/mo",
+    price: 39,
+    cadenceKey: "data.plan.perMonth",
     featured: true,
     perks: [
       "One facial or gloss every month",
@@ -434,8 +470,8 @@ export const PLANS: readonly MembershipPlan[] = [
   },
   {
     name: "Glow Annual",
-    price: "$390",
-    cadence: "/yr",
+    price: 390,
+    cadenceKey: "data.plan.perYear",
     featured: false,
     perks: [
       "Everything in Monthly",
@@ -450,36 +486,68 @@ export const PLANS: readonly MembershipPlan[] = [
  * 5.10 Loyalty history ledger (newest first; deltas sum to 340)
  * ------------------------------------------------------------------ */
 
+/*
+ * Row labels are templates, not sentences glued together: `{service}` and
+ * `{staff}` come from the seam so a renamed treatment cannot leave a stale
+ * ledger behind, and word order stays the translator's to decide.
+ */
 export const LOYALTY_HISTORY: readonly LoyaltyHistoryRow[] = [
-  { label: "Balayage with Elin", date: "Jul 14, 2026", delta: 190 },
-  { label: "Signature Facial with Noor", date: "Jun 30, 2026", delta: 110 },
-  { label: "Redeemed — $10 off any service", date: "Jun 18, 2026", delta: -200 },
-  { label: "Gel Manicure with Ivy", date: "Jun 2, 2026", delta: 58 },
-  { label: "Welcome bonus + early visits", date: "May 20, 2026", delta: 182 },
+  {
+    labelKey: "data.ledger.visit",
+    svc: "balayage",
+    staff: "elin",
+    dateISO: "2026-07-14",
+    delta: 190,
+  },
+  {
+    labelKey: "data.ledger.visit",
+    svc: "facial",
+    staff: "noor",
+    dateISO: "2026-06-30",
+    delta: 110,
+  },
+  {
+    labelKey: "data.ledger.redeemedMoneyOff",
+    amount: 10,
+    dateISO: "2026-06-18",
+    delta: -200,
+  },
+  {
+    labelKey: "data.ledger.visit",
+    svc: "gel",
+    staff: "ivy",
+    dateISO: "2026-06-02",
+    delta: 58,
+  },
+  { labelKey: "data.ledger.welcome", dateISO: "2026-05-20", delta: 182 },
 ];
 
 /* ------------------------------------------------------------------ *
  * 5.11 Referral
  * ------------------------------------------------------------------ */
 
+/** What a referral is worth to each side, whole dollars. */
+export const REFERRAL_REWARD = 15;
+
 export const REFERRAL: ReferralData = {
   code: "AVA-LUMEN",
   steps: [
-    { icon: "share-2", label: "Share your code with a friend who hasn’t visited yet." },
-    { icon: "calendar-check", label: "They book & complete their first appointment." },
-    { icon: "gift", label: "You both get $15 off your next visit — no limit." },
+    { icon: "share-2", labelKey: "data.refer.step1" },
+    { icon: "calendar-check", labelKey: "data.refer.step2" },
+    { icon: "gift", labelKey: "data.refer.step3", amount: REFERRAL_REWARD },
   ],
   invites: [
     {
       name: "Jordan P.",
       initials: initialsOf("Jordan P."),
-      status: "Joined · you earned $15",
+      statusKey: "data.refer.inviteJoined",
+      amount: REFERRAL_REWARD,
       done: true,
     },
     {
       name: "Sam K.",
       initials: initialsOf("Sam K."),
-      status: "Invite sent · waiting on first booking",
+      statusKey: "data.refer.inviteWaiting",
       done: false,
     },
   ],
@@ -489,19 +557,26 @@ export const REFERRAL: ReferralData = {
  * 5.12 Intake
  * ------------------------------------------------------------------ */
 
-export const INTAKE_CONCERNS: readonly string[] = [
-  "Sensitive skin",
-  "Color-treated hair",
-  "Recent injury or surgery",
-  "Pregnant or nursing",
-  "Known allergies",
-  "First visit with us",
+/**
+ * Checkbox labels on the intake form — chrome, so message keys.
+ *
+ * The key doubles as the identity `IntakeState.concerns` is keyed by, which it
+ * has to: a translated label as a map key would reset every tick the moment
+ * the reader changed language.
+ */
+export const INTAKE_CONCERNS: readonly MessageKey[] = [
+  "data.intake.sensitiveSkin",
+  "data.intake.colorTreated",
+  "data.intake.recentInjury",
+  "data.intake.pregnant",
+  "data.intake.allergies",
+  "data.intake.firstVisit",
 ];
 
 export const INTAKE_PRESSURES: readonly IntakeOption[] = [
-  { id: "light", label: "Light" },
-  { id: "medium", label: "Medium" },
-  { id: "firm", label: "Firm" },
+  { id: "light", labelKey: "data.intake.pressureLight" },
+  { id: "medium", labelKey: "data.intake.pressureMedium" },
+  { id: "firm", labelKey: "data.intake.pressureFirm" },
 ];
 
 /* ------------------------------------------------------------------ *
@@ -509,10 +584,10 @@ export const INTAKE_PRESSURES: readonly IntakeOption[] = [
  * ------------------------------------------------------------------ */
 
 export const GIFT_THEMES: readonly GiftTheme[] = [
-  { id: "bloom", name: "Bloom", tint: "#b07d9a" },
-  { id: "sea", name: "Sea", tint: "#6f8bb0" },
-  { id: "sage", name: "Sage", tint: "#7d9166" },
-  { id: "amber", name: "Amber", tint: "#c19a5b" },
+  { id: "bloom", nameKey: "data.giftTheme.bloom", tint: "#b07d9a" },
+  { id: "sea", nameKey: "data.giftTheme.sea", tint: "#6f8bb0" },
+  { id: "sage", nameKey: "data.giftTheme.sage", tint: "#7d9166" },
+  { id: "amber", nameKey: "data.giftTheme.amber", tint: "#c19a5b" },
 ];
 
 export const GIFT_AMOUNTS: readonly number[] = [50, 100, 150, 250];
@@ -524,7 +599,7 @@ export const SEEDED_GIFT_CARDS: readonly GiftCard[] = [
     to: "Robin Alvarez",
     toEmail: "robin@email.com",
     status: "sent",
-    date: "Jul 12, 2026",
+    dateISO: "2026-07-12",
   },
 ];
 

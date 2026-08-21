@@ -26,8 +26,10 @@ import {
 } from "../components/index.ts";
 import { cartLines } from "../data/screens/shop.ts";
 import { data } from "../data/source.ts";
+import { useI18n } from "../i18n/index.tsx";
+import type { MessageKey, TFunction } from "../i18n/index.tsx";
 import { hash } from "../lib/codes.ts";
-import { money } from "../lib/format.ts";
+import { durationLabel, minutesToTime, money, weekdayName } from "../lib/format.ts";
 import type { StoreState } from "../state/store.ts";
 import { useStore } from "../state/store.ts";
 
@@ -40,36 +42,57 @@ interface PayMethod {
   sub: string;
 }
 
-const METHODS: readonly PayMethod[] = [
-  {
-    id: "visa",
-    icon: "credit-card",
-    label: "Visa ending 4242",
-    sub: "Saved · expires 04/29",
-  },
-  { id: "apple", icon: "smartphone", label: "Apple Pay", sub: "Face ID on this device" },
-  {
-    id: "gift",
-    icon: "gift",
-    label: "Gift card balance",
-    sub: "$40.00 available · rest on card",
-  },
-  { id: "new", icon: "plus", label: "New card", sub: "Add a different card" },
-];
+/** The gift-card balance the demo pretends is on file. */
+const GIFT_BALANCE = 40;
+
+function payMethods(t: TFunction): readonly PayMethod[] {
+  return [
+    {
+      id: "visa",
+      icon: "credit-card",
+      label: t("screensA.checkout.methodVisa"),
+      sub: t("screensA.checkout.methodVisaSub"),
+    },
+    {
+      id: "apple",
+      icon: "smartphone",
+      /* A product name, not a phrase — never translated. */
+      label: "Apple Pay",
+      sub: t("screensA.checkout.methodAppleSub"),
+    },
+    {
+      id: "gift",
+      icon: "gift",
+      label: t("screensA.checkout.methodGift"),
+      sub: t("screensA.checkout.methodGiftSub", { amount: money(GIFT_BALANCE) }),
+    },
+    {
+      id: "new",
+      icon: "plus",
+      label: t("screensA.checkout.methodNew"),
+      sub: t("screensA.checkout.methodNewSub"),
+    },
+  ];
+}
 
 /** The four card fields, and which store key each writes. */
 type CardKey = "ckNum" | "ckExp" | "ckCvc" | "ckZip";
 
 const CARD_FIELDS: readonly {
   key: CardKey;
-  label: string;
+  labelKey: MessageKey;
   ph: string;
   wide?: boolean;
 }[] = [
-  { key: "ckNum", label: "Card number", ph: "4242 4242 4242 4242", wide: true },
-  { key: "ckExp", label: "Expiry", ph: "04/29" },
-  { key: "ckCvc", label: "CVC", ph: "123" },
-  { key: "ckZip", label: "Postcode", ph: "94110" },
+  {
+    key: "ckNum",
+    labelKey: "screensA.checkout.cardNumber",
+    ph: "4242 4242 4242 4242",
+    wide: true,
+  },
+  { key: "ckExp", labelKey: "screensA.checkout.expiry", ph: "04/29" },
+  { key: "ckCvc", labelKey: "screensA.checkout.cvc", ph: "123" },
+  { key: "ckZip", labelKey: "screensA.checkout.postcode", ph: "94110" },
 ];
 
 const TIPS = [0, 15, 18, 20];
@@ -90,6 +113,7 @@ interface SummaryItem {
 }
 
 export default function Checkout() {
+  const { t, number } = useI18n();
   const ckStep = useStore((s) => s.ckStep);
   const ckMethod = useStore((s) => s.ckMethod);
   const ckTip = useStore((s) => s.ckTip);
@@ -126,6 +150,7 @@ export default function Checkout() {
     ckZip,
   };
 
+  const methods = payMethods(t);
   const lines = cartLines(cart);
 
   /* An empty bag still has something to pay for: the upcoming appointment. */
@@ -134,7 +159,10 @@ export default function Checkout() {
     ? lines.map((l) => ({
         key: l.product.id,
         name: l.product.name,
-        sub: `${l.qty} × ${money(l.product.price)} · collect in studio`,
+        sub: t("screensA.checkout.itemSub", {
+          qty: number(l.qty),
+          price: money(l.product.price),
+        }),
         icon: l.product.icon,
         tint: l.product.tint,
         amount: l.amount,
@@ -144,7 +172,11 @@ export default function Checkout() {
           {
             key: "svc",
             name: upcoming.name,
-            sub: `${upcoming.dur} min with Selma · Tue 2:00 PM`,
+            sub: t("screensA.checkout.apptSub", {
+              duration: durationLabel(upcoming.dur),
+              staff: "Selma",
+              when: `${weekdayName(2, "short")} ${minutesToTime(840)}`,
+            }),
             icon: upcoming.icon,
             tint: upcoming.tint,
             amount: upcoming.price,
@@ -160,16 +192,16 @@ export default function Checkout() {
   const total = sub - discount - promo + tip + tax;
 
   const methodLabel =
-    (METHODS.find((m) => m.id === ckMethod) ?? METHODS[0]).label;
+    (methods.find((m) => m.id === ckMethod) ?? methods[0]).label;
 
   const applyPromo = (): void => {
     const code = ckPromo.trim().toUpperCase();
     if (PROMO_CODES.includes(code)) {
       set({ ckPromoOk: true });
-      showToast("Code applied", "ok");
+      showToast(t("screensA.checkout.promoOk"), "ok");
     } else {
       set({ ckPromoOk: false });
-      showToast("That code isn’t valid on this order", "warn");
+      showToast(t("screensA.checkout.promoBad"), "warn");
     }
   };
 
@@ -180,7 +212,7 @@ export default function Checkout() {
       ckCode: `PAY-${4820 + (hash(String(total)) % 140)}`,
       cart: {},
     });
-    showToast("Payment received · demo only", "ok");
+    showToast(t("screensA.checkout.paidToast"), "ok");
     window.scrollTo(0, 0);
   };
 
@@ -189,16 +221,29 @@ export default function Checkout() {
       <section className="bk-screen bk-page scr-checkout scr-checkout--done">
         <div className="scr-checkout__done">
           <SuccessTile icon="check" size={70} iconSize={34} />
-          <h1 className="bk-h1 scr-checkout__donetitle">Payment received</h1>
+          <h1 className="bk-h1 scr-checkout__donetitle">
+            {t("screensA.checkout.paidTitle")}
+          </h1>
           <p className="scr-checkout__donesub">
-            A receipt is on its way to{" "}
-            <span className="scr-checkout__doneemail">{email}</span>.
+            {t("screensA.checkout.receiptTo", { email })}
           </p>
 
           <div className="bk-panel scr-checkout__donecard">
-            <ReceiptRow label="Reference" value={ckCode ?? "PAY-4821"} mono />
-            <ReceiptRow label="Paid with" value={methodLabel} />
-            <ReceiptRow label="Amount" value={money(paidTotal)} mono large />
+            <ReceiptRow
+              label={t("screensA.checkout.refReference")}
+              value={ckCode ?? "PAY-4821"}
+              mono
+            />
+            <ReceiptRow
+              label={t("screensA.checkout.refPaidWith")}
+              value={methodLabel}
+            />
+            <ReceiptRow
+              label={t("screensA.checkout.refAmount")}
+              value={money(paidTotal)}
+              mono
+              large
+            />
           </div>
 
           <div className="scr-checkout__doneactions">
@@ -207,14 +252,14 @@ export default function Checkout() {
               className="bk-btn scr-checkout__donecta"
               onClick={() => go("orders")}
             >
-              See order history
+              {t("screensA.checkout.orderHistory")}
             </button>
             <button
               type="button"
               className="bk-gi scr-checkout__doneghost"
               onClick={() => go("shop")}
             >
-              Back to the shop
+              {t("screensA.checkout.backToShop")}
             </button>
           </div>
         </div>
@@ -225,20 +270,22 @@ export default function Checkout() {
   return (
     <section className="bk-screen bk-page scr-checkout">
       <BackLink onClick={() => go(lines.length ? "shop" : "services")}>
-        Keep browsing
+        {t("screensA.checkout.keepBrowsing")}
       </BackLink>
-      <h1 className="bk-h1 scr-checkout__title">Checkout</h1>
+      <h1 className="bk-h1 scr-checkout__title">
+        {t("screensA.checkout.title")}
+      </h1>
 
       <div className="scr-checkout__grid">
         <div className="scr-checkout__col">
           <Card radius={20} padding={22} className="scr-checkout__card">
-            <Eyebrow>Pay with</Eyebrow>
+            <Eyebrow>{t("screensA.checkout.payWith")}</Eyebrow>
             <div
               className="scr-checkout__methods"
               role="radiogroup"
-              aria-label="Payment method"
+              aria-label={t("screensA.checkout.payWith")}
             >
-              {METHODS.map((m) => {
+              {methods.map((m) => {
                 const selected = ckMethod === m.id;
                 return (
                   <button
@@ -248,7 +295,10 @@ export default function Checkout() {
                     aria-checked={selected}
                     /* Named explicitly: the label is two nested spans, and a
                      * content-derived name reads as one run-on string. */
-                    aria-label={`${m.label} — ${m.sub}`}
+                    aria-label={t("screensA.checkout.methodAria", {
+                      label: m.label,
+                      sub: m.sub,
+                    })}
                     className="scr-checkout__meth"
                     data-selected={selected ? "true" : "false"}
                     onClick={() => set({ ckMethod: m.id })}
@@ -271,7 +321,7 @@ export default function Checkout() {
                 {CARD_FIELDS.map((f) => (
                   <Field
                     key={f.key}
-                    label={f.label}
+                    label={t(f.labelKey)}
                     className={
                       f.wide
                         ? "scr-checkout__cardfield scr-checkout__cardfield--wide"
@@ -295,31 +345,35 @@ export default function Checkout() {
           </Card>
 
           <Card radius={20} padding={22} className="scr-checkout__card">
-            <Eyebrow>Add a tip for the team</Eyebrow>
+            <Eyebrow>{t("screensA.checkout.tipTitle")}</Eyebrow>
             <div className="scr-checkout__tips">
               {TIPS.map((n) => (
                 <Chip
                   key={n}
-                  label={n === 0 ? "No tip" : `${n}%`}
+                  label={
+                    n === 0
+                      ? t("screensA.common.noTip")
+                      : number(n / 100, { style: "percent" })
+                  }
                   active={ckTip === n}
                   onClick={() => set({ ckTip: n })}
                 />
               ))}
             </div>
             <p className="scr-checkout__note">
-              Tips go straight to the specialist who saw you, in full.
+              {t("screensA.checkout.tipNote")}
             </p>
           </Card>
 
           <Card radius={20} padding={22} className="scr-checkout__card">
-            <Eyebrow>Promo code</Eyebrow>
+            <Eyebrow>{t("screensA.checkout.promo")}</Eyebrow>
             <div className="scr-checkout__promo">
               <TextInput
                 value={ckPromo}
                 onChange={(v) => set({ ckPromo: v.toUpperCase() })}
                 placeholder="PAIRUP25"
                 mono
-                ariaLabel="Promo code"
+                ariaLabel={t("screensA.checkout.promo")}
                 className="scr-checkout__promoinput"
               />
               <button
@@ -327,20 +381,25 @@ export default function Checkout() {
                 className="bk-gi scr-checkout__apply"
                 onClick={applyPromo}
               >
-                Apply
+                {t("screensA.checkout.apply")}
               </button>
             </div>
             {ckPromoOk ? (
               <p className="scr-checkout__promook">
                 <Icon name="check-circle-2" size={14} />
-                PAIRUP25 applied — 25% off this order.
+                {t("screensA.checkout.promoApplied", {
+                  code: PROMO_CODES[0],
+                  percent: number(PROMO_RATE, { style: "percent" }),
+                })}
               </p>
             ) : null}
           </Card>
         </div>
 
         <Card radius={22} padding={24} className="scr-checkout__summary">
-          <h2 className="scr-checkout__sumtitle">Order summary</h2>
+          <h2 className="scr-checkout__sumtitle">
+            {t("screensA.checkout.summary")}
+          </h2>
 
           <div className="scr-checkout__items">
             {items.map((i) => (
@@ -366,36 +425,45 @@ export default function Checkout() {
           <div className="scr-checkout__rule" />
 
           <div className="scr-checkout__totals">
-            <TotalRow label="Subtotal" value={money(sub)} />
+            <TotalRow label={t("screensA.common.subtotal")} value={money(sub)} />
             {discount > 0 ? (
               <TotalRow
-                label="Member discount · 10%"
+                label={t("screensA.checkout.memberDiscount", {
+                  percent: number(MEMBER_RATE, { style: "percent" }),
+                })}
                 value={`−${money(discount)}`}
                 accent
               />
             ) : null}
             {promo > 0 ? (
-              <TotalRow label="PAIRUP25" value={`−${money(promo)}`} accent />
+              <TotalRow label={PROMO_CODES[0]} value={`−${money(promo)}`} accent />
             ) : null}
-            <TotalRow label={`Tip · ${ckTip}%`} value={money(tip)} />
-            <TotalRow label="Tax" value={money(tax)} />
+            <TotalRow
+              label={t("screensA.checkout.tipRow", {
+                percent: number(ckTip / 100, { style: "percent" }),
+              })}
+              value={money(tip)}
+            />
+            <TotalRow label={t("screensA.common.tax")} value={money(tax)} />
           </div>
 
           <div className="scr-checkout__rule" />
 
           <div className="scr-checkout__grand">
-            <span className="scr-checkout__grandlabel">Total</span>
+            <span className="scr-checkout__grandlabel">
+              {t("screensA.common.total")}
+            </span>
             <span className="bk-mono scr-checkout__grandval">{money(total)}</span>
           </div>
 
           <button type="button" className="bk-btn scr-checkout__pay" onClick={pay}>
             <Icon name="lock" size={17} />
-            Pay {money(total)}
+            {t("screensA.checkout.pay", { amount: money(total) })}
           </button>
 
           <p className="scr-checkout__demo">
             <Icon name="shield-check" size={15} />
-            <span>Demo checkout — no card is charged and nothing is stored.</span>
+            <span>{t("screensA.checkout.demoNote")}</span>
           </p>
         </Card>
       </div>

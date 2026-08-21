@@ -22,6 +22,7 @@ import {
 } from "../components/index.ts";
 import type { IntakePressure } from "../data/types.ts";
 import { data } from "../data/source.ts";
+import { useT } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 import "../styles/screen-intake.css";
 
@@ -39,6 +40,7 @@ const DONE_BTN: CSSProperties = {
 };
 
 export default function Intake() {
+  const t = useT();
   const intake = useStore((s) => s.intake);
   const intakeDone = useStore((s) => s.intakeDone);
   const toggleConcern = useStore((s) => s.toggleConcern);
@@ -53,7 +55,7 @@ export default function Intake() {
   const concerns = data.getIntakeConcerns();
   const pressures = data.getIntakePressures().map((p) => ({
     value: p.id,
-    label: p.label,
+    label: t(p.labelKey),
   }));
 
   if (intakeDone) {
@@ -61,10 +63,11 @@ export default function Intake() {
       <main className="bk-screen bk-page bk-intake">
         <div className="bk-intake-done">
           <SuccessTile icon="clipboard-check" iconSize={36} />
-          <h1 className="bk-intake-done__h1">Intake form saved</h1>
+          <h1 className="bk-intake-done__h1">
+            {t("screensB.intake.doneTitle")}
+          </h1>
           <p className="bk-intake-done__body">
-            Thank you — your specialist will review this before your visit. This is
-            a demo, so nothing is actually stored.
+            {t("screensB.intake.doneBody")}
           </p>
           <div className="bk-intake-done__actions">
             <Button
@@ -73,7 +76,7 @@ export default function Intake() {
               style={DONE_BTN}
               onClick={intakeEdit}
             >
-              Edit answers
+              {t("screensB.intake.editAnswers")}
             </Button>
             <Button
               variant="primary"
@@ -82,7 +85,7 @@ export default function Intake() {
               style={DONE_BTN}
               onClick={() => go("home")}
             >
-              Back home
+              {t("screensB.common.backHome")}
             </Button>
           </div>
         </div>
@@ -92,28 +95,30 @@ export default function Intake() {
 
   return (
     <main className="bk-screen bk-page bk-intake">
-      <BackLink onClick={() => go("home")}>Back home</BackLink>
+      <BackLink onClick={() => go("home")}>
+        {t("screensB.common.backHome")}
+      </BackLink>
 
       <div className="bk-intake__intro">
-        <h1 className="bk-h1">Digital intake form</h1>
-        <p className="bk-sub bk-intake__sub">
-          A few quick things so your specialist can tailor the visit. Takes about a
-          minute.
-        </p>
+        <h1 className="bk-h1">{t("screensB.intake.title")}</h1>
+        <p className="bk-sub bk-intake__sub">{t("screensB.intake.sub")}</p>
       </div>
 
       <div className="bk-intake__block">
         <span className="bk-intake__legend" id={concernsId}>
-          Anything that applies to you?
+          {t("screensB.intake.concernsLegend")}
         </span>
         <div className="bk-intake__concerns" role="group" aria-labelledby={concernsId}>
           {concerns.map((c) => (
             <CheckboxRow
               key={c}
+              /* The key is the identity `intake.concerns` is stored under —
+               * stable across a locale switch — and the label is what it
+               * resolves to, which is not. */
               checked={!!intake.concerns[c]}
               onChange={() => toggleConcern(c)}
             >
-              {c}
+              {t(c)}
             </CheckboxRow>
           ))}
         </div>
@@ -121,8 +126,8 @@ export default function Intake() {
 
       <Field
         className="bk-intake__block"
-        label="Allergies or sensitivities"
-        hint="(optional)"
+        label={t("screensB.intake.allergiesLabel")}
+        hint={t("screensB.common.optional")}
       >
         {(c) => (
           <TextArea
@@ -130,16 +135,18 @@ export default function Intake() {
             value={intake.allergies}
             onChange={setAllergies}
             rows={3}
-            placeholder="Fragrances, latex, specific products…"
+            placeholder={t("screensB.intake.allergiesPlaceholder")}
             className="bk-intake__allergies"
           />
         )}
       </Field>
 
       <div className="bk-intake__block">
-        <span className="bk-intake__label">Preferred pressure / intensity</span>
+        <span className="bk-intake__label">
+          {t("screensB.intake.pressureLabel")}
+        </span>
         <Segmented<IntakePressure>
-          label="Preferred pressure / intensity"
+          label={t("screensB.intake.pressureLabel")}
           options={pressures}
           value={intake.pressure}
           onChange={setPressure}
@@ -155,8 +162,7 @@ export default function Intake() {
       >
         <Checkbox checked={intake.consent} />
         <span className="bk-intake-consent__text">
-          I confirm the above is accurate and consent to treatment. I understand I
-          can update this any time before my visit.
+          {t("screensB.intake.consent")}
         </span>
       </button>
 
@@ -168,7 +174,7 @@ export default function Intake() {
         style={SUBMIT_BTN}
         onClick={intakeSubmit}
       >
-        Save intake form
+        {t("screensB.intake.submit")}
       </Button>
     </main>
   );

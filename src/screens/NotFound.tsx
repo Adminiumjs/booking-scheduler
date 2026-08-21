@@ -6,6 +6,7 @@
 import type { CSSProperties } from "react";
 
 import { Button } from "../components/index.ts";
+import { useT } from "../i18n/index.tsx";
 import { useStore } from "../state/store.ts";
 import "../styles/screen-notfound.css";
 
@@ -17,16 +18,15 @@ const HOME_CTA: CSSProperties = {
 };
 
 export default function NotFound() {
+  const t = useT();
   const go = useStore((s) => s.go);
 
   return (
     <main className="bk-screen bk-page bk-notfound">
+      {/* The HTTP status code, not a number a reader counts with. */}
       <div className="bk-mono bk-notfound__numeral">404</div>
-      <h1 className="bk-notfound__h1">This page took a day off.</h1>
-      <p className="bk-notfound__body">
-        We couldn't find what you were looking for — but there's always a fresh
-        look or a little calm waiting on the home page.
-      </p>
+      <h1 className="bk-notfound__h1">{t("screensB.notfound.h1")}</h1>
+      <p className="bk-notfound__body">{t("screensB.notfound.body")}</p>
       <Button
         variant="primary"
         icon="home"
@@ -34,7 +34,7 @@ export default function NotFound() {
         style={HOME_CTA}
         onClick={() => go("home")}
       >
-        Back home
+        {t("screensB.common.backHome")}
       </Button>
     </main>
   );

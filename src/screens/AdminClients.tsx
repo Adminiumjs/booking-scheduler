@@ -20,14 +20,17 @@ import {
   ADMIN_CLIENTS,
   CLIENT_HISTORY,
   CLIENT_SEGMENTS,
+  lastVisitLabel,
 } from "../data/screens/admin-clients.ts";
 import type { AdminClient } from "../data/screens/admin-clients.ts";
-import { firstName, money } from "../lib/format.ts";
+import { useI18n, useT } from "../i18n/index.tsx";
+import { firstName, formatMediumISO, formatNumber, money } from "../lib/format.ts";
 import { useStore } from "../state/store.ts";
 
 import "../styles/screen-admin-clients.css";
 
 export default function AdminClients() {
+  const { t, number } = useI18n();
   const clientFilter = useStore((s) => s.clientFilter);
   const clientSel = useStore((s) => s.clientSel);
   const query = useStore((s) => s.query);
@@ -54,30 +57,35 @@ export default function AdminClients() {
           {CLIENT_SEGMENTS.map((seg) => (
             <Chip
               key={seg.id}
-              label={seg.label}
+              label={t(seg.labelKey)}
               active={clientFilter === seg.id}
               onClick={() => set({ clientFilter: seg.id })}
             />
           ))}
           <span className="scr-admin-clients__count">
-            {rows.length} of {ADMIN_CLIENTS.length} shown
+            {t("screensA.clients.shown", {
+              shown: number(rows.length),
+              total: number(ADMIN_CLIENTS.length),
+            })}
           </span>
         </div>
 
         <div className="scr-admin-clients__head" aria-hidden="true">
           <span className="scr-admin-clients__headav" />
-          <span className="scr-admin-clients__headwho">Client</span>
+          <span className="scr-admin-clients__headwho">
+            {t("screensA.clients.colClient")}
+          </span>
           <span className="scr-admin-clients__cell scr-admin-clients__cell--last">
-            Last visit
+            {t("screensA.clients.colLast")}
           </span>
           <span className="scr-admin-clients__cell scr-admin-clients__cell--visits">
-            Visits
+            {t("screensA.clients.colVisits")}
           </span>
           <span className="scr-admin-clients__cell scr-admin-clients__cell--spend">
-            Spend
+            {t("screensA.clients.colSpend")}
           </span>
           <span className="scr-admin-clients__cell scr-admin-clients__cell--staff">
-            Usually with
+            {t("screensA.clients.colStaff")}
           </span>
         </div>
 
@@ -93,8 +101,8 @@ export default function AdminClients() {
         {rows.length === 0 ? (
           <EmptyState
             icon="search-x"
-            title="No clients match"
-            body="Try another filter or clear the search."
+            title={t("screensA.clients.emptyTitle")}
+            body={t("screensA.clients.emptyBody")}
             className="scr-admin-clients__empty"
           />
         ) : null}
@@ -116,9 +124,17 @@ interface ClientRowProps {
 }
 
 function ClientRow({ client, selected, onSelect }: ClientRowProps) {
-  const summary =
-    `${client.name}, ${client.visits} visits, ${money(client.spend)} lifetime, ` +
-    `last in ${client.last}, usually with ${client.staff}`;
+  const t = useT();
+  const summary = t(
+    "screensA.clients.rowAria",
+    {
+      name: client.name,
+      spend: money(client.spend),
+      last: lastVisitLabel(t, client.lastISO),
+      staff: client.staff,
+    },
+    client.visits,
+  );
 
   return (
     <button
@@ -141,10 +157,10 @@ function ClientRow({ client, selected, onSelect }: ClientRowProps) {
         <span className="scr-admin-clients__email">{client.email}</span>
       </span>
       <span className="scr-admin-clients__cell scr-admin-clients__cell--last">
-        {client.last}
+        {lastVisitLabel(t, client.lastISO)}
       </span>
       <span className="scr-admin-clients__cell scr-admin-clients__cell--visits bk-mono">
-        {client.visits}
+        {formatNumber(client.visits)}
       </span>
       <span className="scr-admin-clients__cell scr-admin-clients__cell--spend bk-mono">
         {money(client.spend)}
@@ -161,6 +177,7 @@ function ClientRow({ client, selected, onSelect }: ClientRowProps) {
  * ------------------------------------------------------------------ */
 
 function ClientRecord({ client }: { client: AdminClient }) {
+  const t = useT();
   const notes = useStore((s) => s.notes);
   const set = useStore((s) => s.set);
   const go = useStore((s) => s.go);
@@ -172,20 +189,28 @@ function ClientRecord({ client }: { client: AdminClient }) {
   const first = firstName(client.name);
 
   const stats = [
-    { label: "Visits", value: String(client.visits) },
-    { label: "Lifetime", value: money(client.spend) },
-    { label: "Last in", value: client.last },
+    { label: t("screensA.clients.statVisits"), value: formatNumber(client.visits) },
+    { label: t("screensA.clients.statLifetime"), value: money(client.spend) },
+    {
+      label: t("screensA.clients.statLast"),
+      value: lastVisitLabel(t, client.lastISO),
+    },
   ];
 
   return (
-    <aside className="scr-admin-clients__record" aria-label="Client record">
+    <aside
+      className="scr-admin-clients__record"
+      aria-label={t("screensA.clients.record")}
+    >
       <div className="scr-admin-clients__rechead">
-        <span className="scr-admin-clients__rectitle">Client record</span>
+        <span className="scr-admin-clients__rectitle">
+          {t("screensA.clients.record")}
+        </span>
         <button
           type="button"
           className="bk-gi scr-admin-clients__close"
           onClick={() => set({ clientSel: null })}
-          aria-label="Close client record"
+          aria-label={t("screensA.clients.closeRecord")}
         >
           <Icon name="x" size={15} />
         </button>
@@ -217,16 +242,18 @@ function ClientRecord({ client }: { client: AdminClient }) {
 
         {client.tags.length > 0 ? (
           <div className="scr-admin-clients__tags">
-            {client.tags.map((t) => (
-              <span key={t} className="scr-admin-clients__flag">
-                {t}
+            {client.tags.map((tag) => (
+              <span key={tag} className="scr-admin-clients__flag">
+                {tag}
               </span>
             ))}
           </div>
         ) : null}
 
         <div>
-          <span className="scr-admin-clients__label">Notes for the team</span>
+          <span className="scr-admin-clients__label">
+            {t("screensA.clients.notes")}
+          </span>
           <TextArea
             value={note}
             /* Merged against the live store rather than this render's copy —
@@ -234,28 +261,32 @@ function ClientRecord({ client }: { client: AdminClient }) {
             onChange={(v) =>
               set({ notes: { ...useStore.getState().notes, [client.id]: v } })
             }
-            placeholder="Allergies, preferences, anything worth knowing."
+            placeholder={t("screensA.clients.notesPlaceholder")}
             rows={3}
-            ariaLabel={`Notes for the team about ${client.name}`}
+            ariaLabel={t("screensA.clients.notesAria", { name: client.name })}
           />
           <button
             type="button"
             className="bk-gi scr-admin-clients__save"
-            onClick={() => showToast(`Note saved to ${first}’s record`)}
+            onClick={() =>
+              showToast(t("screensA.clients.noteSaved", { name: first }))
+            }
           >
-            Save note
+            {t("screensA.clients.saveNote")}
           </button>
         </div>
 
         <div>
-          <span className="scr-admin-clients__label">Visit history</span>
+          <span className="scr-admin-clients__label">
+            {t("screensA.clients.history")}
+          </span>
           <div className="scr-admin-clients__history">
             {CLIENT_HISTORY.map((h) => (
               <div key={h.svc} className="scr-admin-clients__visit">
                 <span className="scr-admin-clients__visitid">
                   <span className="scr-admin-clients__visitsvc">{h.svc}</span>
                   <span className="scr-admin-clients__visitmeta">
-                    {h.date} · {h.staff}
+                    {formatMediumISO(h.dateISO)} · {h.staff}
                   </span>
                 </span>
                 <span className="scr-admin-clients__visitamt bk-mono">
@@ -271,11 +302,11 @@ function ClientRecord({ client }: { client: AdminClient }) {
           className="bk-btn scr-admin-clients__book"
           onClick={() => {
             go("admin-cal");
-            showToast(`Diary open — pick a slot for ${first}`);
+            showToast(t("screensA.clients.diaryOpen", { name: first }));
           }}
         >
           <Icon name="calendar-plus" size={16} />
-          Book {first} in
+          {t("screensA.clients.bookIn", { name: first })}
         </button>
       </div>
     </aside>

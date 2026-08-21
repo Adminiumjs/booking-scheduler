@@ -11,6 +11,11 @@
  * in the demo, not fidelity to the comp.
  */
 
+import type { MessageKey } from "../../i18n/index.tsx";
+
+/** Ratings below this need a personal call, per the studio's own KPI. */
+export const LOW_RATING = 4;
+
 export interface AdminReview {
   id: string;
   /** Public display name, as the guest left it. */
@@ -21,7 +26,13 @@ export interface AdminReview {
   /** Service name (display copy), not an id. */
   svc: string;
   staff: string;
-  date: string;
+  /**
+   * How long ago the review was left — an offset, not a phrase. `'2 weeks ago'`
+   * is a sentence with a plural and (in Arabic) a dual in it; `relativeAgo()`
+   * builds the right one per locale from these two fields.
+   */
+  ago: number;
+  agoUnit: Intl.RelativeTimeFormatUnit;
   quote: string;
   /** Seeded studio reply; empty means the queue still owes one. */
   reply: string;
@@ -38,7 +49,8 @@ export const ADMIN_REVIEWS: readonly AdminReview[] = [
     rating: 5,
     svc: "Balayage",
     staff: "Elin",
-    date: "2 weeks ago",
+    ago: 2,
+    agoUnit: "week",
     quote:
       "Elin read exactly what I wanted from one blurry screenshot. Best color I’ve ever had, full stop.",
     reply: "",
@@ -52,7 +64,8 @@ export const ADMIN_REVIEWS: readonly AdminReview[] = [
     rating: 3,
     svc: "Gloss & Tone",
     staff: "Elin",
-    date: "3 months ago",
+    ago: 3,
+    agoUnit: "month",
     quote:
       "Lovely result but I’d hoped for a bigger change from a gloss. My expectations, not their work.",
     reply: "",
@@ -66,7 +79,8 @@ export const ADMIN_REVIEWS: readonly AdminReview[] = [
     rating: 5,
     svc: "Deep-Tissue Massage",
     staff: "Noor",
-    date: "1 month ago",
+    ago: 1,
+    agoUnit: "month",
     quote:
       "Noor found every knot I’d been ignoring for a year. I walked out standing three inches taller.",
     reply: "",
@@ -80,7 +94,8 @@ export const ADMIN_REVIEWS: readonly AdminReview[] = [
     rating: 4,
     svc: "Reformer Pilates",
     staff: "Marco",
-    date: "6 days ago",
+    ago: 6,
+    agoUnit: "day",
     quote:
       "Marco tailors every session to how my back feels that day. Rebooking is genuinely one tap.",
     reply: "Glad the back is behaving. Bring the physio notes next time.",
@@ -94,7 +109,8 @@ export const ADMIN_REVIEWS: readonly AdminReview[] = [
     rating: 5,
     svc: "Gel Manicure",
     staff: "Ivy",
-    date: "3 weeks ago",
+    ago: 3,
+    agoUnit: "week",
     quote:
       "Ivy’s detail work is unreal, and it lasted almost three weeks without a single chip.",
     reply: "Thank you Dana — see you at the next fill.",
@@ -106,17 +122,16 @@ export type ReviewQueueFilter = "todo" | "all" | "low";
 
 export interface ReviewFilterOption {
   id: ReviewQueueFilter;
-  label: string;
+  labelKey: MessageKey;
+  /** Fills `{count}` in the "N stars & under" filter. */
+  count?: number;
 }
 
 export const REVIEW_FILTERS: readonly ReviewFilterOption[] = [
-  { id: "todo", label: "Needs a reply" },
-  { id: "all", label: "All reviews" },
-  { id: "low", label: "Three stars & under" },
+  { id: "todo", labelKey: "data.adminReviews.filterTodo" },
+  { id: "all", labelKey: "data.adminReviews.filterAll" },
+  { id: "low", labelKey: "data.adminReviews.filterLow", count: LOW_RATING - 1 },
 ];
-
-/** Ratings below this need a personal call, per the studio's own KPI. */
-export const LOW_RATING = 4;
 
 /** Who a reply posted from this screen is signed by. */
 export const REPLY_AUTHOR = "Selma";

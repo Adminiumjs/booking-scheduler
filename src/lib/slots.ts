@@ -17,6 +17,12 @@
  *   R3  Reschedule excludes the booking being moved from its own overlap
  *       check (`SlotContext.excludeCode`) instead of deleting its appointment
  *       up front — so backing out of a reschedule leaks nothing.
+ *
+ * The engine is still pure in the sense that matters — same context in, same
+ * schedule out — but the handful of strings it labels its output with go
+ * through `i18n/ambient`, exactly as `lib/format.ts` does. `daySummaries` is
+ * called from a `useMemo` keyed on the locale, so a language switch rebuilds
+ * the strip rather than leaving last language's chips behind.
  */
 
 import type {
@@ -27,7 +33,8 @@ import type {
   StaffSelection,
   Weekday,
 } from "../data/types.ts";
-import { isoOf, minutesToTime, parseISO } from "./format.ts";
+import { t } from "../i18n/ambient.ts";
+import { formatNumber, isoOf, minutesToTime, parseISO, weekdayName } from "./format.ts";
 
 /* ------------------------------------------------------------------ *
  * Types
@@ -86,14 +93,26 @@ export interface DaySummary {
   openCount: number;
   /** Chip is not selectable. */
   disabled: boolean;
-  /** `'Closed'` / `'3 open'` / `'—'`. */
+  /** Translated: `'Closed'` / `'3 open'` / `'—'`. */
   subLabel: string;
 }
 
 /** The 30-minute grid step, always, regardless of service duration. */
 export const SLOT_STEP = 30;
 
-const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+/** A day nobody works. Punctuation, not prose — the same glyph in all eight. */
+const EM_DASH = "\u2014";
+
+/**
+ * `3` → `'3 open'`.
+ *
+ * The raw count drives plural selection while a `{count}` param overrides the
+ * substitution, so Czech picks the right of its three forms and ar-EG renders
+ * Arabic-Indic digits instead of ASCII ones.
+ */
+function openLabel(openCount: number): string {
+  return t("chrome.day.open", { count: formatNumber(openCount) }, openCount);
+}
 
 /* ------------------------------------------------------------------ *
  * Lookups
@@ -264,9 +283,9 @@ export function slotsFor(
 /** Morning < 12:00 ≤ Afternoon < 17:00 ≤ Evening. Empty groups are dropped. */
 export function groupSlots(slots: readonly Slot[]): SlotGroup[] {
   const groups: SlotGroup[] = [
-    { key: "morning", label: "Morning", icon: "sunrise", slots: [] },
-    { key: "afternoon", label: "Afternoon", icon: "sun", slots: [] },
-    { key: "evening", label: "Evening", icon: "sunset", slots: [] },
+    { key: "morning", label: t("chrome.slots.morning"), icon: "sunrise", slots: [] },
+    { key: "afternoon", label: t("chrome.slots.afternoon"), icon: "sun", slots: [] },
+    { key: "evening", label: t("chrome.slots.evening"), icon: "sunset", slots: [] },
   ];
   for (const s of slots) {
     const i = s.min < 720 ? 0 : s.min < 1020 ? 1 : 2;
@@ -316,14 +335,18 @@ export function daySummaries(
       index,
       date,
       iso: isoOf(date),
-      dow: DOW_SHORT[date.getDay()],
+      dow: weekdayName(date.getDay(), "short"),
       dayNum: date.getDate(),
       isToday: index === 0,
       isClosed,
       hasWindows,
       openCount,
       disabled: isClosed || !hasWindows,
-      subLabel: isClosed ? "Closed" : hasWindows ? `${openCount} open` : "—",
+      subLabel: isClosed
+        ? t("chrome.day.closed")
+        : hasWindows
+          ? openLabel(openCount)
+          : EM_DASH,
     };
   });
 }
@@ -339,14 +362,18 @@ export function simpleDaySummaries(week: readonly Date[]): DaySummary[] {
       index,
       date,
       iso: isoOf(date),
-      dow: DOW_SHORT[date.getDay()],
+      dow: weekdayName(date.getDay(), "short"),
       dayNum: date.getDate(),
       isToday: index === 0,
       isClosed,
       hasWindows: !isClosed,
       openCount: 0,
       disabled: isClosed,
-      subLabel: isClosed ? "Closed" : index === 0 ? "Today" : "",
+      subLabel: isClosed
+        ? t("chrome.day.closed")
+        : index === 0
+          ? t("chrome.day.today")
+          : "",
     };
   });
 }
@@ -446,5 +473,7 @@ export function seriesDates(
 
 /** `'weekly' | 'every 2 weeks' | 'every 4 weeks'` — the summary copy. */
 export function recurLabel(freq: RecurFreq): string {
-  return freq === "4w" ? "every 4 weeks" : freq === "2w" ? "every 2 weeks" : "weekly";
+  if (freq === "4w") return t("chrome.recur.4w");
+  if (freq === "2w") return t("chrome.recur.2w");
+  return t("chrome.recur.1w");
 }
