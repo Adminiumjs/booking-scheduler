@@ -10,6 +10,7 @@
  * mounted once, around the switch, so a view change never remounts it.
  */
 
+import { isConnected } from "../data/source.ts";
 import { useEffect } from "react";
 import type { ComponentType } from "react";
 
@@ -184,7 +185,7 @@ export default function App() {
 
   return (
     <>
-      <DemoDock />
+      {!isConnected() && <DemoDock />}
       <Shell />
       <ToastLayer />
       <CancelModal />

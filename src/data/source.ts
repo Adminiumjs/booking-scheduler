@@ -329,7 +329,10 @@ export function createDemoDataSource(today?: Date): DataSource {
   return new DemoDataSource(today);
 }
 
-let current: DataSource = createDemoDataSource();
+/** The demo implementation, kept so `isConnected()` can tell it apart. */
+const DEMO: DataSource = createDemoDataSource();
+
+let current: DataSource = DEMO;
 
 /** The active data source. Screens should call this, not import `demo.ts`. */
 export function getDataSource(): DataSource {
@@ -337,6 +340,17 @@ export function getDataSource(): DataSource {
 }
 
 /** Swap the implementation (tests, or a future real backend). */
+/**
+ * True once a real backend is behind the seam.
+ *
+ * Read by the demo dock, which resets the diary, moves the clock and books
+ * fictional guests: against a salon's real appointments those controls either
+ * lie or do damage, so it does not render.
+ */
+export function isConnected(): boolean {
+  return current !== DEMO;
+}
+
 export function setDataSource(next: DataSource): void {
   current = next;
 }
