@@ -17,7 +17,7 @@
     "hospitality"
   ],
   "compatibility": {
-    "minAdminiumVersion": "1.0.0",
+    "minAdminiumVersion": "0.2.8",
     "engines": [
       "postgres",
       "mysql",
@@ -205,13 +205,13 @@
             "ref": "weekday",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat",
+              "sun"
             ]
           },
           {
@@ -322,10 +322,10 @@
             "ref": "status",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "booked",
+              "completed",
+              "cancelled",
+              "no_show"
             ]
           },
           {
@@ -344,9 +344,9 @@
             "ref": "remind_when",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "24h",
+              "2h",
+              "both"
             ]
           },
           {
@@ -403,20 +403,20 @@
             "ref": "theme",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "bloom",
+              "sea",
+              "sage",
+              "amber"
             ]
           },
           {
             "ref": "status",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "scheduled",
+              "sent",
+              "redeemed",
+              "expired"
             ]
           },
           {
@@ -460,10 +460,10 @@
             "ref": "status",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "waiting",
+              "notified",
+              "converted",
+              "released"
             ]
           },
           {
@@ -498,10 +498,10 @@
             "ref": "kind",
             "type": "enum",
             "enum": [
-              "[object Object]",
-              "[object Object]",
-              "[object Object]",
-              "[object Object]"
+              "earn",
+              "redeem",
+              "bonus",
+              "adjustment"
             ]
           },
           {
@@ -545,6 +545,9 @@
         "group": "manifest:bookings",
         "icon": "calendar-days",
         "order": 2
+      },
+      "bindings": {
+        "rows": "appointments"
       }
     },
     {
@@ -558,6 +561,9 @@
         "group": "manifest:bookings",
         "icon": "calendar-check",
         "order": 3
+      },
+      "bindings": {
+        "rows": "appointments"
       }
     },
     {
@@ -571,6 +577,9 @@
         "group": "manifest:bookings",
         "icon": "sparkles",
         "order": 4
+      },
+      "bindings": {
+        "rows": "services"
       }
     },
     {
@@ -584,11 +593,14 @@
         "group": "manifest:bookings",
         "icon": "users",
         "order": 5
+      },
+      "bindings": {
+        "rows": "staff"
       }
     },
     {
       "ref": "bookings-schedule",
-      "template": "page-scheduler",
+      "template": "page-board",
       "title": {
         "key": "mft.bookings.page.schedule",
         "fallback": "Schedule"
@@ -597,11 +609,14 @@
         "group": "manifest:bookings",
         "icon": "clock",
         "order": 6
+      },
+      "bindings": {
+        "rows": "appointments"
       }
     },
     {
       "ref": "bookings-guests",
-      "template": "page-directory",
+      "template": "page-crud",
       "title": {
         "key": "mft.bookings.page.guests",
         "fallback": "Guests"
@@ -610,6 +625,9 @@
         "group": "manifest:bookings",
         "icon": "contact",
         "order": 7
+      },
+      "bindings": {
+        "rows": "customers"
       }
     },
     {
@@ -623,6 +641,9 @@
         "group": "manifest:bookings",
         "icon": "gift",
         "order": 8
+      },
+      "bindings": {
+        "rows": "gift_cards"
       }
     }
   ],
