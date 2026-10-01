@@ -2,8 +2,8 @@
  * Today (view: 'admin-today').
  *
  * Two auto-fit grids and nothing else: the KPI strip and the two panel
- * columns reflow on their own, so the comp's `S.vw` branches are not ported
- * (ruling R8). Per-record tints arrive as a `--tint` custom property and are
+ * columns reflow on their own, so the comp's `S.vw` branches are not ported.
+ * Per-record tints arrive as a `--tint` custom property and are
  * mixed against the surface here — the only reason this file names a colour
  * it did not get from a token.
  */

@@ -1,5 +1,5 @@
 /*
- * SERVICES (spec §3.2) — category chips over a grid of full service cards.
+ * SERVICES — category chips over a grid of full service cards.
  * Every category has at least two entries, so there is deliberately no
  * empty state here.
  */

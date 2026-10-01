@@ -2,7 +2,7 @@
  * The app shell.
  *
  * Routing is a plain state-based switch over `store.view` (no react-router).
- * Ruling R1 ships every one of the 16 views, so no header, sheet, or footer
+ * All 16 views ship as real screens, so no header, sheet, or footer
  * link can land on a route that does not exist; anything the union does not
  * cover falls through to the 404 screen.
  *
@@ -84,7 +84,7 @@ import AdminSettings from "../screens/AdminSettings.tsx";
 /**
  * Every routable view, mapped to its screen. Keyed by the `View` union so a
  * new view cannot be added to `types.ts` without the compiler asking for a
- * screen here — that is what keeps ruling R1 true over time.
+ * screen here — that is what keeps every view shipping over time.
  */
 const SCREENS: Record<View, ComponentType> = {
   home: Home,

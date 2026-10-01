@@ -1,14 +1,14 @@
 /*
- * MANAGE BOOKING (view: 'manage') — port spec §3.5, §6.6–6.8.
+ * MANAGE BOOKING (view: 'manage').
  *
  * Two modes driven by `store.foundCode`:
  *   find mode — code + email lookup (pre-filled with the seeded LMN-1039)
  *   card mode — the booking, with Reschedule / Cancel, or the cancelled note.
  *
- * Ruling R3: "Reschedule" only calls `startReschedule()`. The store never
+ * "Reschedule" only calls `startReschedule()`. The store never
  * deletes the original appointment up front — the slot engine excludes the
  * booking being moved — so backing out of the flow leaks nothing.
- * The cancellation-window copy lives in the shared <CancelModal/> (§4.21),
+ * The cancellation-window copy lives in the shared <CancelModal/>,
  * which the app shell renders; this screen just opens it.
  */
 

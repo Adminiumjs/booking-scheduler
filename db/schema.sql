@@ -1,4 +1,4 @@
--- Booking Scheduler — PostgreSQL schema (§10.3 contract).
+-- Booking Scheduler — PostgreSQL schema.
 --
 -- This is the real database that backs the full self-host stack: the booking
 -- site reads it (through Adminium's records API) and the auto-generated
@@ -9,8 +9,8 @@
 -- appointments) so the booking site and the dashboard run the same studio.
 --
 -- Time-of-day note: `availability_rules.opens`/`closes` are zero-padded 24-hour
--- "HH:MM" text rather than `time`, per the §10.3 contract (Adminium's manifest
--- schema has no time-of-day type yet). Appointment instants are `timestamptz`.
+-- "HH:MM" text rather than `time` (Adminium's manifest schema has no
+-- time-of-day type yet). Appointment instants are `timestamptz`.
 
 DROP TABLE IF EXISTS loyalty_ledger CASCADE;
 DROP TABLE IF EXISTS waitlist_entries CASCADE;

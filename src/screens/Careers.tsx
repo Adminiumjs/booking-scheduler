@@ -55,7 +55,7 @@ export default function Careers() {
   const scrollToForm = (): void => {
     const el = formRef.current;
     if (!el) return;
-    /* R10 — the options bag beats the CSS for programmatic scrolls. */
+    /* Reduced motion: the options bag beats CSS for programmatic scrolls. */
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
     window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });

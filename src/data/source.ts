@@ -209,7 +209,7 @@ class DemoDataSource implements DataSource {
     return REVIEWS;
   }
 
-  /** R6 — computed from the seeded ratings rather than hardcoded "4.9". */
+  /** Computed from the seeded ratings rather than hardcoded "4.9". */
   getReviewSummary(): ReviewSummary {
     const total = REVIEWS.reduce((sum, r) => sum + r.rating, 0);
     const average = REVIEWS.length ? total / REVIEWS.length : 0;

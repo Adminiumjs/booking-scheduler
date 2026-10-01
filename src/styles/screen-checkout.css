@@ -3,7 +3,7 @@
  * the end side, and the receipt panel once `ckStep` flips to 'done'.
  *
  * The two panes are one `auto-fit` track list, so the summary drops under the
- * form on narrow screens without any JS measuring the viewport (R8).
+ * form on narrow screens without any JS measuring the viewport.
  */
 
 .scr-checkout {

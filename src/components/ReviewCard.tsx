@@ -1,4 +1,4 @@
-/* Review card (spec §4.6) — "Loved by regulars" on the home screen. */
+/* Review card — "Loved by regulars" on the home screen. */
 
 import type { Review } from "../data/types.ts";
 import { relativeAgo } from "../lib/format.ts";

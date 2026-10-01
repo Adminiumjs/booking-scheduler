@@ -1,8 +1,8 @@
 /*
- * Refer a friend (spec §3.7, §5.11) — view `refer`.
+ * Refer a friend — view `refer`.
  *
- * The comp only toasted; the port actually writes to the clipboard (§6.12).
- * The avatar shows initials rather than the comp's full name (§8.10 bug fix) —
+ * The comp only toasted; the port actually writes to the clipboard.
+ * The avatar shows initials rather than the comp's full name (a bug fix) —
  * `ReferralInvite.initials` already carries them.
  */
 

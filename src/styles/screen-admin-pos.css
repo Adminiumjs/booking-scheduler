@@ -5,8 +5,7 @@
  * scroller. Inside StudioChrome the body already scrolls and already has
  * padding, so the panes are two panels in a grid instead and the ticket sticks
  * under the topbar rather than owning a scroller of its own. Below 1000px the
- * ticket drops under the catalogue — a media query, never a measured viewport
- * (R8).
+ * ticket drops under the catalogue — a media query, never a measured viewport.
  */
 
 .scr-admin-pos {

@@ -1,5 +1,5 @@
 /*
- * Booking / group / gift code generation (port spec §6.5, §6.9; ruling R7).
+ * Booking / group / gift code generation.
  *
  * - Booking + group codes share one monotonic counter that starts at 1043,
  *   so the first in-session booking is LMN-1043 (the seeds are LMN-1039 and

@@ -2,7 +2,7 @@
  * Find us — map, contact card, travel, opening hours.
  *
  * The two columns are an `auto-fit` grid rather than a measured breakpoint,
- * so they stack whenever the content no longer fits (ruling R8).
+ * so they stack whenever the content no longer fits.
  */
 
 .scr-location {

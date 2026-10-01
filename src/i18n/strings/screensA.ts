@@ -13,7 +13,7 @@
  *
  * In-fiction demo content is deliberately absent: service and treatment names,
  * staff and client names, blog bodies, review text, gift codes, package names
- * and addresses stay English (18-marketplace-launch.md §3.4). Everything here
+ * and addresses stay English. Everything here
  * is product chrome.
  */
 import type { LocaleTag } from '../locales';

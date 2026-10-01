@@ -1,5 +1,5 @@
 /*
- * Booking screen (spec §3.3). Everything here is scoped under `.bk-booking`
+ * Booking screen. Everything here is scoped under `.bk-booking`
  * so it can never leak into another screen. Logical properties throughout —
  * the port stays RTL-ready by construction.
  */
@@ -417,7 +417,7 @@
   margin-block-start: 1px;
 }
 
-/* The summary un-sticks once it stacks under the form (ruling R8). */
+/* The summary un-sticks once it stacks under the form. */
 @media (max-width: 899.98px) {
   .bk-booking__summary {
     position: static;

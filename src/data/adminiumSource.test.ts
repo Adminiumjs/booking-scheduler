@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /**
- * Connected mode (28-public-surface.md §5.2, 28-T28 wave 3).
+ * Connected mode.
  *
  * ── WHY THIS DRIVES A REAL CLIENT ──────────────────────────────────────────
  * `createPublicClient` takes an injectable `fetch`, so these run the SHIPPED
@@ -197,7 +197,7 @@ describe("the catalogue", () => {
     expect(service.dur).toBe(60);
     // Specialists in the salon's own order, not the join table's.
     expect(service.staff).toEqual(["elin", "noor"]);
-    // WS-I G-5: `image_url` is the only column of the chip's shape.
+    // Gap G-5: `image_url` is the only column of the chip's shape.
     expect(service.fname).toBe("cut.webp");
     // A category's own word renders literally: `t()` falls back to its argument.
     expect(snap!.categories.map((c) => c.nameKey)).toEqual(["Hair", "Spa"]);
@@ -215,7 +215,7 @@ describe("the catalogue", () => {
 
   it("derives the studio's hours from who is actually in", async () => {
     const snap = await snapshot();
-    // WS-I G-2: there is no studio-wide hours table, only per-specialist rules.
+    // Gap G-2: there is no studio-wide hours table, only per-specialist rules.
     // Tuesday is Elin's 09:00 to Noor's 19:00; every other day is closed.
     expect(snap!.hours[2]).toEqual({ day: 2, open: 540, close: 1140, closed: false });
     expect(snap!.hours[0]!.closed).toBe(true);
@@ -268,10 +268,10 @@ describe("the connected source answers every method the seam declares", () => {
 
   it("blanks the studio and the loyalty ledger rather than inventing them", async () => {
     const connected = snapshotSource((await snapshot())!);
-    // WS-I G-1: no name, address, phone or URL anywhere in the schema.
+    // Gap G-1: no name, address, phone or URL anywhere in the schema.
     expect(connected.getLocation().name).toBe("");
     expect(connected.getLocation().shortName).toBe("");
-    // WS-I G-4: the ledger is per customer and nothing knows who is reading.
+    // Gap G-4: the ledger is per customer and nothing knows who is reading.
     expect(connected.getLoyaltyLedger()).toEqual([]);
   });
 

@@ -1,4 +1,4 @@
-/* Filter chip (spec §4.11) — the category rows on Services and booking step 0. */
+/* Filter chip — the category rows on Services and booking step 0. */
 
 import type { CSSProperties } from "react";
 

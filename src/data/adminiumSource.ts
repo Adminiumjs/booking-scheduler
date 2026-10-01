@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /**
- * A `DataSource` backed by a real Adminium instance (28-public-surface.md §5.2,
- * 28-T28 wave 3).
+ * A `DataSource` backed by a real Adminium instance.
  *
  * ── READS DO NOT BECOME ASYNC ──────────────────────────────────────────────
  * `loadSnapshot` fetches the whole read-set once, before React mounts, and the
@@ -16,10 +15,10 @@
  * the product ships, with no table anywhere in `db/schema.sql`. So the class
  * holds a demo instance and delegates those, rather than inventing empty
  * versions of them. Every delegated method is listed at the bottom of this file
- * and each is a WS-I finding: a salon cannot change its own membership plans.
+ * and each is a schema gap: a salon cannot change its own membership plans.
  *
  * ── THE SIDE OF THE KEY DECIDES WHAT IS READ, AND THAT IS THE POINT ────────
- * §4's staff/customer split is a branch here, not documentation. A CUSTOMER-side
+ * The staff/customer split is a branch here, not documentation. A CUSTOMER-side
  * scope reads the catalogue and the BUSY GRID — which service, which specialist,
  * from when to when — because a booking page cannot offer a slot without
  * knowing what is taken. It does not read a guest's name, e-mail, phone,
@@ -32,11 +31,11 @@
  * their own clock against the salon's diary, and the slot they picked would be
  * the wrong one — with no error anywhere.
  *
- * ── WHAT THE SCHEMA CANNOT SAY (WS-I gaps, marked not hidden) ──────────────
+ * ── WHAT THE SCHEMA CANNOT SAY (gaps, marked not hidden) ───────────────────
  * G-1 THE STUDIO HAS NO RECORD: no name, address, phone, e-mail or URL. The
  *     header wordmark and the footer therefore render blank rather than
- *     Selma's. This is the third repo in this wave to need §5.5's settings
- *     record and the argument is now overwhelming.
+ *     Selma's. This is the third app to need a tenant settings record, and
+ *     the argument is now overwhelming.
  * G-2 There are no studio-wide opening hours — `availability_rules` are PER
  *     SPECIALIST. The hours strip is DERIVED as the union of everybody's
  *     windows, which is what a guest can actually book, and is truer than a
@@ -45,8 +44,8 @@
  *     prepaid packages have no tables at all. They are the app's copy and come
  *     across unchanged — a salon cannot price its own membership.
  * G-4 The loyalty ledger IS a table, and it is per customer. Nothing here knows
- *     who is reading, so the balance and its history are empty until the claim
- *     flow lands (§3.4, O2).
+ *     who is reading, so the balance and its history are empty until the
+ *     end-customer claim flow lands.
  * G-5 `services.image_url` is read as the placeholder tile's filename chip
  *     because it is the only column of that shape.
  */
@@ -208,7 +207,7 @@ const STAFF_APPOINTMENT_COLUMNS = [
   "code", "customer_id", "price", "notes", "remind_email", "remind_sms", "remind_when",
 ];
 
-/** WS-I G-1 — the studio itself, which `db/schema.sql` has nowhere to put. */
+/** Gap G-1 — the studio itself, which `db/schema.sql` has nowhere to put. */
 const NO_LOCATION: StudioLocation = {
   name: "",
   shortName: "",
@@ -361,7 +360,7 @@ export async function loadSnapshot(client: PublicClient): Promise<Snapshot | nul
             icon: row.icon ?? "sparkles",
             tint: row.tint ?? "#c7b8a8",
             blurb: row.description ?? "",
-            // WS-I G-5: `image_url` is the only column of this shape.
+            // Gap G-5: `image_url` is the only column of this shape.
             fname: row.image_url ?? `${row.slug}.webp`,
           },
         ];
@@ -391,7 +390,7 @@ export async function loadSnapshot(client: PublicClient): Promise<Snapshot | nul
         hours: hoursByStaff.get(row.id) ?? {},
       }));
 
-    /* WS-I G-2: the union of everybody's windows, which is what a guest can
+    /* Gap G-2: the union of everybody's windows, which is what a guest can
      * actually book. A posted sign with no table behind it would be a second
      * source of truth that disagrees with the diary. */
     const hours: StudioHoursRow[] = [0, 1, 2, 3, 4, 5, 6].map((day) => {
@@ -569,7 +568,7 @@ function nextCodeFrom(appointments: readonly WireAppointment[]): number {
  * A synchronous `DataSource` over an already-fetched snapshot.
  *
  * Every method NOT overridden below is delegated to a demo instance, and each
- * of those is a WS-I finding rather than an oversight — see the file header's
+ * of those is a schema gap rather than an oversight — see the file header's
  * G-3. They are, in full: reviews and their summary, the referral programme,
  * loyalty rewards, membership plans, prepaid packages, the loyalty rules and
  * their explanation, the intake questionnaire and the gift-card themes and
@@ -582,7 +581,7 @@ export function snapshotSource(snap: Snapshot): DataSource {
   const staffById = new Map(snap.staff.map((s) => [s.id, s]));
 
   return {
-    /* ── DELEGATED, AND EACH ONE IS A WS-I FINDING ────────────────────────
+    /* ── DELEGATED, AND EACH ONE IS A SCHEMA GAP ──────────────────────────
      *
      * Written out rather than spread. `createDemoDataSource()` returns a CLASS
      * INSTANCE, so `{ ...copy }` would copy its own properties and none of its
@@ -637,10 +636,10 @@ export function snapshotSource(snap: Snapshot): DataSource {
         .join(" / "),
 
     /* the studio */
-    // WS-I G-2: derived from who is actually in, not from a posted sign.
+    // Gap G-2: derived from who is actually in, not from a posted sign.
     getStudioHours: () => snap.hours,
     getTodayHoursIndex: () => (new Date(`${snap.todayISO}T00:00:00Z`).getUTCDay() + 6) % 7,
-    // WS-I G-1: blank, not Selma's. See the header.
+    // Gap G-1: blank, not Selma's. See the header.
     getLocation: (): StudioLocation => ({ ...NO_LOCATION }),
 
     /* the diary */
@@ -652,7 +651,7 @@ export function snapshotSource(snap: Snapshot): DataSource {
     getSeedGiftCards: () => snap.giftCards.map((g) => ({ ...g })),
     getFirstCodeNumber: () => snap.firstCode,
 
-    // WS-I G-4: the ledger is per customer and nothing here knows who is
+    // Gap G-4: the ledger is per customer and nothing here knows who is
     // reading. Empty until the claim flow lands.
     getLoyaltyLedger: (): LoyaltyLedgerRow[] => [],
   };

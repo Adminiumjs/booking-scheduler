@@ -1,5 +1,5 @@
 /*
- * The 24px radio dot used by the service rows and staff rows (spec §4.7).
+ * The 24px radio dot used by the service rows and staff rows.
  * Presentational only — the enclosing row owns the click target and the
  * `role="radio"` / `aria-checked` semantics.
  */

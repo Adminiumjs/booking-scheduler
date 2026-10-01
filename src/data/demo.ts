@@ -1,13 +1,13 @@
 /*
- * The seeded demo dataset (port spec §5), transcribed verbatim except where
- * an orchestrator ruling says otherwise:
+ * The seeded demo dataset, transcribed verbatim except for three deliberate
+ * changes:
  *
- *   R4 — LMN-1041 is seeded into the appointment list as well as the booking
- *        list, so the slot grid and the displayed booking agree.
- *   R5 — the *published* weekly hours are widened to cover the staff windows
- *        as authored (Marco 08:00–20:00, Ivy to 19:00); staff availability is
- *        never clamped.
- *   R6 — the review average is computed from the ratings, not hardcoded.
+ *   - LMN-1041 is seeded into the appointment list as well as the booking
+ *     list, so the slot grid and the displayed booking agree.
+ *   - the *published* weekly hours are widened to cover the staff windows
+ *     as authored (Marco 08:00–20:00, Ivy to 19:00); staff availability is
+ *     never clamped.
+ *   - the review average is computed from the ratings, not hardcoded.
  *
  * Nothing outside `source.ts` should import this file.
  */
@@ -37,7 +37,7 @@ import type {
 } from "./types.ts";
 
 /* ------------------------------------------------------------------ *
- * 5.1 Categories
+ * Categories
  * ------------------------------------------------------------------ */
 
 export const CATEGORIES: readonly Category[] = [
@@ -48,7 +48,7 @@ export const CATEGORIES: readonly Category[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.2 Services (12)
+ * Services (12)
  * ------------------------------------------------------------------ */
 
 export const SERVICES: readonly Service[] = [
@@ -207,7 +207,7 @@ export const POPULAR_SERVICE_IDS: readonly string[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.3 Staff (4)
+ * Staff (4)
  * ------------------------------------------------------------------ */
 
 export const STAFF: readonly StaffMember[] = [
@@ -316,9 +316,9 @@ export const STAFF: readonly StaffMember[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.6 Studio hours & location
+ * Studio hours & location
  *
- * R5: the published hours are widened to cover the staff windows as authored
+ * The published hours are widened to cover the staff windows as authored
  * (Marco starts at 08:00 and finishes at 20:00 Tue–Fri; Ivy runs to 19:00;
  * Noor and Elin open at 09:00 on Mondays). Staff windows are untouched.
  * ------------------------------------------------------------------ */
@@ -355,7 +355,7 @@ export const STUDIO_LOCATION: StudioLocation = {
 };
 
 /* ------------------------------------------------------------------ *
- * 5.7 Reviews (4)
+ * Reviews (4)
  * ------------------------------------------------------------------ */
 
 export const REVIEWS: readonly Review[] = [
@@ -416,7 +416,7 @@ export const REVIEW_COUNT_BASE = 480;
 export const REVIEW_COUNT_LABEL_KEY: MessageKey = "data.reviews.countLabel";
 
 /* ------------------------------------------------------------------ *
- * 5.8 Loyalty rewards
+ * Loyalty rewards
  * ------------------------------------------------------------------ */
 
 /*
@@ -452,7 +452,7 @@ export const LOYALTY_HOW_IT_WORKS: readonly MessageKey[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.9 Membership plans
+ * Membership plans
  * ------------------------------------------------------------------ */
 
 export const PLANS: readonly MembershipPlan[] = [
@@ -483,7 +483,7 @@ export const PLANS: readonly MembershipPlan[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.10 Loyalty history ledger (newest first; deltas sum to 340)
+ * Loyalty history ledger (newest first; deltas sum to 340)
  * ------------------------------------------------------------------ */
 
 /*
@@ -523,7 +523,7 @@ export const LOYALTY_HISTORY: readonly LoyaltyHistoryRow[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.11 Referral
+ * Referral
  * ------------------------------------------------------------------ */
 
 /** What a referral is worth to each side, whole dollars. */
@@ -554,7 +554,7 @@ export const REFERRAL: ReferralData = {
 };
 
 /* ------------------------------------------------------------------ *
- * 5.12 Intake
+ * Intake
  * ------------------------------------------------------------------ */
 
 /**
@@ -580,7 +580,7 @@ export const INTAKE_PRESSURES: readonly IntakeOption[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 5.13 Gift-card themes & amounts
+ * Gift-card themes & amounts
  * ------------------------------------------------------------------ */
 
 export const GIFT_THEMES: readonly GiftTheme[] = [
@@ -604,7 +604,7 @@ export const SEEDED_GIFT_CARDS: readonly GiftCard[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * 6.2 The rolling 7-day window — index 0 is always today
+ * The rolling 7-day window — index 0 is always today
  * ------------------------------------------------------------------ */
 
 export function buildWeek(from: Date = new Date()): Date[] {
@@ -618,7 +618,7 @@ export function buildWeek(from: Date = new Date()): Date[] {
 }
 
 /**
- * §5.4 `biso` — the first day in the window that falls Tue–Fri, else the first
+ * `biso` — the first day in the window that falls Tue–Fri, else the first
  * Mon–Sat, else index 1. Everything seeded lands on this day.
  */
 export function seedDateISO(week: readonly Date[]): string {
@@ -628,7 +628,7 @@ export function seedDateISO(week: readonly Date[]): string {
 }
 
 /* ------------------------------------------------------------------ *
- * 5.5 Seeded bookings
+ * Seeded bookings
  * ------------------------------------------------------------------ */
 
 export function buildSeedBookings(week: readonly Date[]): Booking[] {
@@ -685,23 +685,23 @@ export function buildSeedWaitlist(week: readonly Date[]): WaitlistEntry[] {
 }
 
 /* ------------------------------------------------------------------ *
- * 5.4 Seeded appointments
+ * Seeded appointments
  *
  * The comp's pseudo-random fill marks ~30% of the 30-minute points inside
  * every staff window as busy, deterministic in the *relative* day index. Each
- * marked point becomes a 30-minute appointment; ruling R2's interval-overlap
- * engine reads them as real intervals. The two seeded bookings are pushed
+ * marked point becomes a 30-minute appointment; the slot engine's interval
+ * overlap reads them as real intervals. The two seeded bookings are pushed
  * first so their real durations win over any fill that would collide with them
- * (ruling R4 — LMN-1041 is included, which the comp forgot).
+ * (LMN-1041 is included, which the comp forgot).
  *
  * The de-duplication is by INTERVAL, not by start minute. Keying on the start
  * alone is not enough once durations are real: LMN-1039 runs [840, 885) and the
  * fill would otherwise drop a separate 30-minute block at [870, 900) on the same
  * calendar. Two overlapping appointments for one staff member are impossible in
- * reality, and that particular pair also breaks ruling R3 — the overlapping fill
- * is not the booking being moved, so excluding LMN-1039 would still not let it
- * be rescheduled onto its own current slot. Skipping any fill that intersects
- * something already placed keeps the seed internally consistent.
+ * reality, and that particular pair also breaks rescheduling — the overlapping
+ * fill is not the booking being moved, so excluding LMN-1039 would still not
+ * let it be rescheduled onto its own current slot. Skipping any fill that
+ * intersects something already placed keeps the seed internally consistent.
  * ------------------------------------------------------------------ */
 
 export const SEED_FILL_STEP = 30;

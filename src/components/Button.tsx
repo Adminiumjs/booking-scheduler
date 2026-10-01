@@ -25,7 +25,7 @@ export interface ButtonProps {
   disabled?: boolean;
   onClick?: () => void;
   type?: "button" | "submit";
-  /** Required when the button has no text (icon-only) — ruling R10. */
+  /** Required when the button has no text (icon-only). */
   ariaLabel?: string;
   title?: string;
   className?: string;
@@ -80,7 +80,7 @@ export function Button({
 
 export interface IconButtonProps {
   icon: string;
-  /** Required — icon-only controls must have an accessible name (R10). */
+  /** Required — icon-only controls must have an accessible name. */
   label: string;
   onClick?: () => void;
   size?: number;

@@ -1,9 +1,8 @@
 /*
  * Base styles: self-hosted fonts, a light reset, the handful of theme
  * variables the comp derived but tokens.css doesn't ship, the comp's
- * keyframes and `sm-*` behaviour classes, the reduced-motion guard (ruling
- * R10), and the 900px media query that replaces the comp's JS width
- * breakpoint (ruling R8).
+ * keyframes and `sm-*` behaviour classes, the reduced-motion guard, and the
+ * 900px media query that replaces the comp's JS width breakpoint.
  *
  * Import order in main.tsx: tokens.css → base.css → components.css → screens.
  */
@@ -67,7 +66,7 @@
   --shadow-toast: 0 12px 34px rgba(10, 10, 20, 0.32);
   --shadow-hover: 0 16px 34px -18px rgba(20, 20, 40, 0.34);
   --shadow-tile-hover: 0 16px 34px -20px rgba(20, 20, 40, 0.3);
-  /* Page gutter + max content widths (spec §7.2). */
+  /* Page gutter + max content widths. */
   --gutter: clamp(16px, 4vw, 32px);
   --sticky-top: 82px;
 }
@@ -155,7 +154,7 @@ svg {
   background: transparent;
 }
 
-/* --- keyframes (spec §4.23) --- */
+/* --- keyframes --- */
 @keyframes bk-fade {
   from {
     opacity: 0;
@@ -203,7 +202,7 @@ svg {
   }
 }
 
-/* --- behaviour classes (spec §4.23) --- */
+/* --- behaviour classes --- */
 .bk-screen {
   animation: bk-fade 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
@@ -297,7 +296,7 @@ svg {
   animation: bk-shimmer 1.35s linear infinite;
 }
 
-/* --- responsive helpers: the comp's single JS breakpoint, as CSS (R8) --- */
+/* --- responsive helpers: the comp's single JS breakpoint, as CSS --- */
 /* Both force `inline-flex`, so put them only on flex-friendly elements. */
 .bk-wide-only {
   display: inline-flex !important;
@@ -314,7 +313,7 @@ svg {
   }
 }
 
-/* --- reduced motion (ruling R10) --- */
+/* --- reduced motion --- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

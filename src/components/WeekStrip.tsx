@@ -1,5 +1,5 @@
 /*
- * Week strip + day chip (spec §4.9). One component for both call sites — the
+ * Week strip + day chip. One component for both call sites — the
  * booking date step and the group screen's "Preferred date" — driven by the
  * `DaySummary[]` the slot engine produces (`daySummaries` / `simpleDaySummaries`).
  */

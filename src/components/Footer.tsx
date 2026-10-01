@@ -1,5 +1,5 @@
 /*
- * Footer (spec §4.2). Links to every routable view — ruling R1 ships all 16,
+ * Footer. Links to every routable view — all 16 ship as real screens,
  * so nothing here is a dead route.
  */
 

@@ -1524,7 +1524,7 @@
  * header/footer entirely when the studio half is showing.
  *
  * Every layout switch below is a real media query. Nothing measures the
- * viewport in JavaScript (ruling R8, carried from the original port).
+ * viewport in JavaScript (a rule carried from the original port).
  * ===================================================================== */
 
 /* ------------------------------------------------------------- the dock */

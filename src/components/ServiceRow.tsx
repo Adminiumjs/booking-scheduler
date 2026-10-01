@@ -1,4 +1,4 @@
-/* Service row (spec §4.7) — booking step 0. Selecting one advances the flow. */
+/* Service row — booking step 0. Selecting one advances the flow. */
 
 import type { Service } from "../data/types.ts";
 import { durationLabel, money } from "../lib/format.ts";

@@ -1,7 +1,7 @@
 /*
- * Gift cards screen (spec §3.6). Logical properties throughout so the port
+ * Gift cards screen. Logical properties throughout so the port
  * stays RTL-ready; the only breakpoint in the app is the 900px query in
- * base.css (ruling R8) — this screen's two columns are intrinsic instead.
+ * base.css — this screen's two columns are intrinsic instead.
  */
 
 .bk-gift-page {

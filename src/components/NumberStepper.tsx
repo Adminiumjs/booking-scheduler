@@ -1,4 +1,4 @@
-/* −/+ stepper (spec §4.19) — the recurrence visit count. */
+/* −/+ stepper — the recurrence visit count. */
 
 import type { CSSProperties } from "react";
 

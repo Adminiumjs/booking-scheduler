@@ -3,7 +3,7 @@
  *
  * The comp branched the featured card and the grid on `S.w`; both are plain
  * `auto-fit` / `auto-fill` grids here, so the layout is decided by available
- * inline size rather than by a measured viewport (ruling R8).
+ * inline size rather than by a measured viewport.
  */
 
 .scr-blog {

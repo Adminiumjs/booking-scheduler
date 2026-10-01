@@ -4,7 +4,7 @@
  * The diary is one scroll container: column heads stick to its top, and the
  * whole thing scrolls sideways once there are more chairs than fit. The
  * appointment panel sits beside it on a desk and stacks underneath on a
- * phone — a media query, never a measured viewport (ruling R8).
+ * phone — a media query, never a measured viewport.
  *
  * `--row` (the half-hour row height) is handed in by the screen so the drag
  * arithmetic and the grid cannot drift apart. `--tint` is the per-record

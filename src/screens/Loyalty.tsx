@@ -1,5 +1,5 @@
 /*
- * LOYALTY / MEMBERSHIP — view `loyalty` (spec §3.7, §5.8, §5.9, §6.12).
+ * LOYALTY / MEMBERSHIP — view `loyalty`.
  *
  * Points card + progress to the next tier, "How it works", the reward grid
  * (redeem goes through the store so the "Not enough points yet" guard and the

@@ -464,7 +464,7 @@ export type View = GuestView | AdminView;
  * Which half of the product a screen belongs to.
  *
  * The studio half exists because the 2026-07-28 Admin comp designed one. It
- * refines the 19 D4 "portal-only" ruling the same way 20 D4 did for the LMS:
+ * refines the original "portal-only" call the same way the LMS app did:
  * the app owns the surfaces someone works in all day, the dashboard Adminium
  * generates still owns the records behind them.
  */

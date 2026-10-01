@@ -1,20 +1,20 @@
 /*
- * THE SLOT ENGINE (port spec §6.3, rulings R2 + R3).
+ * THE SLOT ENGINE.
  *
  * Pure, deterministic, side-effect free: every function takes a `SlotContext`
  * — the catalogue plus the list of occupied intervals — and returns a fresh
  * value. Nothing here reads the store, the clock, or the DOM, so the whole
  * file is unit-testable in isolation.
  *
- * The two rulings that make this differ from the comp:
+ * The two rules that make this differ from the comp:
  *
- *   R2  Real interval overlap. A candidate start `s` for a service of length
+ *   1.  Real interval overlap. A candidate start `s` for a service of length
  *       `dur` is valid iff `s + dur <= windowEnd` AND `[s, s + dur)` intersects
  *       no appointment for that staff member on that date. The comp keyed a
  *       `booked` map by start minute only, which let a 90-minute booking block
  *       nothing after its own start.
  *
- *   R3  Reschedule excludes the booking being moved from its own overlap
+ *   2.  Reschedule excludes the booking being moved from its own overlap
  *       check (`SlotContext.excludeCode`) instead of deleting its appointment
  *       up front — so backing out of a reschedule leaks nothing.
  *
@@ -45,7 +45,7 @@ export interface SlotContext {
   staff: readonly StaffMember[];
   appointments: readonly Appointment[];
   /**
-   * Booking code to ignore while checking overlap (ruling R3). Set it to the
+   * Booking code to ignore while checking overlap. Set it to the
    * code being rescheduled so the booking's own interval does not block it.
    */
   excludeCode?: string | null;
@@ -200,7 +200,7 @@ export function slotStarts(
 }
 
 /* ------------------------------------------------------------------ *
- * Overlap (ruling R2)
+ * Overlap
  * ------------------------------------------------------------------ */
 
 /** Half-open interval intersection: `[aStart, aStart+aDur) ∩ [bStart, …)`. */
@@ -215,7 +215,7 @@ export function overlaps(
 
 /**
  * Is `staffId` free for `[start, start + dur)` on `dateISO`?
- * `ctx.excludeCode` (ruling R3) is skipped.
+ * `ctx.excludeCode` is skipped.
  */
 export function isStaffFree(
   ctx: SlotContext,
@@ -431,7 +431,7 @@ export function resolveStaffId(
 }
 
 /**
- * Slot selected-state (spec §6.3 rule 6): with `'first'` the same minute can
+ * Slot selected-state: with `'first'` the same minute can
  * belong to different specialists, so the resolved staff must match too.
  */
 export function isSlotSelected(

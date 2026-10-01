@@ -1,5 +1,5 @@
 /*
- * HOME (spec §3.1) — hero, popular services, team strip, reviews band,
+ * HOME — hero, popular services, team strip, reviews band,
  * hours + location, all inside 1180px sections.
  *
  * The two anchored sections ("team" / "visit") are the scroll targets the
@@ -43,7 +43,7 @@ export default function Home() {
     if (!homeScroll) return;
     const el = homeScroll === "team" ? teamRef.current : visitRef.current;
     if (el) {
-      /* R10 — honour prefers-reduced-motion; the options bag beats the CSS. */
+      /* Honour prefers-reduced-motion; the options bag beats the CSS. */
       const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({
         top: Math.max(0, el.offsetTop - SCROLL_OFFSET),

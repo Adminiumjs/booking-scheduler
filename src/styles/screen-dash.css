@@ -2,8 +2,7 @@
  * Your dashboard (view: 'dash').
  *
  * Every grid here is `auto-fit`/`auto-fill` over a `min()` floor, so the
- * screen reflows on its own — the comp's JS width branch is not ported
- * (ruling R8).
+ * screen reflows on its own — the comp's JS width branch is not ported.
  */
 
 .scr-dash {

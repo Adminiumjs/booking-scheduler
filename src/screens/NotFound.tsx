@@ -1,5 +1,5 @@
 /*
- * 404 — view `notfound` (spec §3.7). Ruling R1 ships it as a real view so the
+ * 404 — view `notfound`. It ships as a real view so the
  * footer's links all resolve rather than falling through to a blank shell.
  */
 

@@ -1,5 +1,5 @@
 /*
- * Slot button (spec §4.10) — one 30-minute start in the time grid.
+ * Slot button — one 30-minute start in the time grid.
  * Taken slots are disabled and struck through.
  */
 

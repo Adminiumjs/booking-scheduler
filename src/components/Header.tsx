@@ -1,8 +1,8 @@
 /*
- * Sticky header (spec §4.1). Reads everything from the store — screens just
+ * Sticky header. Reads everything from the store — screens just
  * render it once, at the top of the app shell.
  *
- * Ruling R8: the 900px breakpoint is pure CSS. The desktop nav and the "Book
+ * The 900px breakpoint is pure CSS. The desktop nav and the "Book
  * now" button carry `.bk-wide-only`, the hamburger `.bk-narrow-only`; no
  * viewport width is tracked in state.
  */

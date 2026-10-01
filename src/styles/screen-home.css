@@ -1,5 +1,5 @@
 /*
- * Home screen (spec §3.1). Section-scoped rules only — every class is
+ * Home screen. Section-scoped rules only — every class is
  * prefixed `bk-home-` so no other screen can collide. Logical properties
  * throughout, one 900px breakpoint policy inherited from base.css (this
  * screen needs no media query at all: every grid is intrinsic).

@@ -1,4 +1,4 @@
-/* Staff tile (spec §4.5) — the "Meet the team" grid on the home screen. */
+/* Staff tile — the "Meet the team" grid on the home screen. */
 
 import type { StaffMember } from "../data/types.ts";
 import { Avatar } from "./PlaceholderTile.tsx";

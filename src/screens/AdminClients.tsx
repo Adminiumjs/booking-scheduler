@@ -5,8 +5,8 @@
  * same `query` field the comp used, so typing up there narrows this list.
  *
  * Two translations from the comp:
- *  - it hid the middle columns by branching on `S.vw`; ruling R8 forbids
- *    reading the viewport in JS, so the markup always renders and CSS decides
+ *  - it hid the middle columns by branching on `S.vw`; this port never
+ *    reads the viewport in JS, so the markup always renders and CSS decides
  *    (a media query for the width half of the condition, `[data-detail]` for
  *    the "record panel is open" half);
  *  - it drew rows as unlabelled buttons full of bare numbers. Each row now

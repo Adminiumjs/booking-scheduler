@@ -1,5 +1,5 @@
 /*
- * Star rating (spec §4.6): two ★★★★★ runs, the filled one clipped to
+ * Star rating: two ★★★★★ runs, the filled one clipped to
  * `value / max` of the width. Fill colour is `--star` (#f5a623), which is
  * deliberately theme-independent.
  */

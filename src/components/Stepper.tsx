@@ -1,5 +1,5 @@
 /*
- * Booking stepper (spec §4.8) and the simpler gift-card variant.
+ * Booking stepper and the simpler gift-card variant.
  *
  * Reachability is computed by the caller: `maxReachable` comes from
  * `reachMax(state)` in the store, and `lockedBelow` is 2 during a reschedule
@@ -76,7 +76,7 @@ export interface GiftStepperProps {
   className?: string;
 }
 
-/** Read-only 26px-dot variant used by the gift-card flow (spec §4.8). */
+/** Read-only 26px-dot variant used by the gift-card flow. */
 export function GiftStepper({ steps, current, className }: GiftStepperProps) {
   const t = useT();
   return (

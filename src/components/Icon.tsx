@@ -1,5 +1,5 @@
 /*
- * The Lucide icon set the comp uses (spec §6.15), addressed by the same
+ * The Lucide icon set the comp uses, addressed by the same
  * kebab-case names the data files carry. Tree-shaken named imports — no UMD
  * script, no dynamic import.
  *

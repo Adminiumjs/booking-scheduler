@@ -1,6 +1,6 @@
 /*
  * Surfaces: panels, header bands, banners, empty states, success tiles, code
- * pills and status pills (spec §4.15).
+ * pills and status pills.
  */
 
 import type { CSSProperties, ReactNode } from "react";
@@ -106,7 +106,7 @@ const BANNER_ICON: Record<BannerTone, string> = {
   pos: "check-circle-2",
 };
 
-/** Tinted notice block. `tone="danger"` is the form error banner (§4.14). */
+/** Tinted notice block. `tone="danger"` is the form error banner. */
 export function Banner({ children, tone = "info", icon, className, style }: BannerProps) {
   return (
     <div

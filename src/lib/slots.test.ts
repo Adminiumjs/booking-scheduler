@@ -1,5 +1,5 @@
 /*
- * The slot engine (spec 19 D5 — "the port's hardest logic").
+ * The slot engine — the port's hardest logic.
  *
  * This is the code that decides whether the app offers a time you can actually
  * have. Everything it does is a pure function of a `SlotContext`, so the whole
@@ -19,7 +19,7 @@
  *      when *someone* actually is. Those are different questions, and conflating
  *      them makes a fully-booked day vanish instead of showing as struck through.
  *   4. `excludeCode` exists so a booking being rescheduled does not block its
- *      own slot (ruling R3).
+ *      own slot.
  */
 
 import { describe, expect, it } from "vitest";
@@ -221,7 +221,7 @@ describe("overlap", () => {
     expect(isStaffFree(c, "elin", "2026-08-04", 540, 60)).toBe(true);
   });
 
-  it("ignores the booking being rescheduled (ruling R3)", () => {
+  it("ignores the booking being rescheduled", () => {
     const busy = [appt("elin", "2026-08-03", 540, 60, "SLM-9")];
     expect(isStaffFree(ctx(busy), "elin", "2026-08-03", 540, 60)).toBe(false);
     expect(isStaffFree(ctx(busy, "SLM-9"), "elin", "2026-08-03", 540, 60)).toBe(true);

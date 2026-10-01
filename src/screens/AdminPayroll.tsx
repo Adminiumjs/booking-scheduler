@@ -26,7 +26,7 @@ import "../styles/screen-admin-payroll.css";
 
 /*
  * Whole dollars. `money()` in lib/format is the guest-facing two-decimal
- * formatter (ruling R9); "$4,820.00" in every cell would drown the table.
+ * formatter; "$4,820.00" in every cell would drown the table.
  * `wholeMoney()` groups and places the symbol per the active locale — the
  * `toLocaleString("en-US")` this used to pin was a promise to one reader.
  */

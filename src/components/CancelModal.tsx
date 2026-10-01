@@ -1,6 +1,6 @@
 /*
- * Cancel-appointment modal (spec §4.21). Open iff `store.cancelCode` is set.
- * Ruling R10: `role="dialog"` + `aria-modal`, focus trapped and restored,
+ * Cancel-appointment modal. Open iff `store.cancelCode` is set.
+ * Accessibility: `role="dialog"` + `aria-modal`, focus trapped and restored,
  * Escape and scrim click close it.
  */
 

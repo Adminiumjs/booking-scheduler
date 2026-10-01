@@ -1,5 +1,5 @@
 /*
- * DIGITAL INTAKE FORM — view `intake` (spec §3.7, §5.12, §6.12).
+ * DIGITAL INTAKE FORM — view `intake`.
  *
  * Six concern checkboxes, a free-text allergies note, a pressure segmented
  * control and the consent gate. `intakeSubmit()` owns both the consent guard

@@ -1,6 +1,6 @@
 /*
- * Mobile menu sheet (spec §4.22) — drops from the top below 900px.
- * Ruling R10: `role="dialog"` + `aria-modal`, focus trapped, Escape closes,
+ * Mobile menu sheet — drops from the top below 900px.
+ * Accessibility: `role="dialog"` + `aria-modal`, focus trapped, Escape closes,
  * focus restored to the hamburger on close.
  */
 

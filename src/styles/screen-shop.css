@@ -4,8 +4,8 @@
  * The two-pane split is the comp's: one `auto-fit` track list where the
  * product grid spans two tracks and the bag takes one. Below ~940px the track
  * list drops to two columns and the bag falls under the grid on its own row;
- * below ~640px everything is one column. Nothing measures the viewport in JS
- * (R8) — the track list does all of it.
+ * below ~640px everything is one column. Nothing measures the viewport in
+ * JS — the track list does all of it.
  */
 
 .scr-shop {

@@ -1,5 +1,5 @@
 /*
- * Form primitives (spec §4.14): label + control + inline error, in one place
+ * Form primitives: label + control + inline error, in one place
  * so every screen's fields line up and share the `.bk-fld` focus ring.
  */
 

@@ -1,5 +1,5 @@
 /*
- * Confirmation screen (spec §3.4). Scoped under `.bk-confirm`; logical
+ * Confirmation screen. Scoped under `.bk-confirm`; logical
  * properties throughout so the mock email/SMS previews mirror correctly in RTL.
  */
 

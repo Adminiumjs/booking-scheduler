@@ -1,7 +1,6 @@
 /*
- * The single Zustand store (port spec §6.0), minus the window width — ruling
- * R8 makes the 900px breakpoint a real CSS media query, so no viewport size
- * lives in state.
+ * The single Zustand store, minus the window width — the 900px
+ * breakpoint is a real CSS media query, so no viewport size lives in state.
  *
  * Everything the comp mutated imperatively (`this.week`, `this.booked`,
  * `this.myBookings`, `this.myGifts`) lives here too, so React always sees the
@@ -68,7 +67,7 @@ import {
  * Constants
  * ------------------------------------------------------------------ */
 
-/** Artificial slot-grid latency, in ms (spec §6.4). */
+/** Artificial slot-grid latency, in ms. */
 export const SKELETON_MS = 560;
 
 /**
@@ -82,7 +81,7 @@ export function personaOf(view: View): Persona {
 }
 /** The smallest gift card the demo will sell, in whole dollars. */
 export const GIFT_MIN_AMOUNT = 10;
-/** Toast lifetime, in ms (spec §6.13). */
+/** Toast lifetime, in ms. */
 export const TOAST_MS = 2600;
 /** Where a "smooth scroll to section" lands: 66px header + 16px. */
 export const SCROLL_OFFSET = 82;
@@ -491,7 +490,7 @@ export function selectSlotContext(state: StoreState): SlotContext {
   };
 }
 
-/** How far the stepper may jump (spec §4.8). */
+/** How far the stepper may jump. */
 export function reachMax(state: Pick<StoreState, "svcId" | "staffSel" | "time">): number {
   if (state.svcId && state.staffSel && state.time !== null) return 3;
   if (state.svcId && state.staffSel) return 2;
@@ -1037,7 +1036,7 @@ export const useStore = create<Store>()((set, get) => {
     },
 
     /*
-     * R3 — nothing is deleted up front. The booking keeps its appointment and
+     * Nothing is deleted up front. The booking keeps its appointment and
      * the slot engine simply ignores it while `rescheduleCode` is set, so
      * backing out of the flow leaks nothing.
      */

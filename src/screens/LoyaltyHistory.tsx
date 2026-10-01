@@ -1,5 +1,5 @@
 /*
- * LOYALTY HISTORY — view `lhistory` (spec §3.7, §5.10).
+ * LOYALTY HISTORY — view `lhistory`.
  *
  * The balance card reads the live store points (so a redemption on the Loyalty
  * screen is reflected here); the ledger itself is seeded history from the

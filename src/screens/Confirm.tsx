@@ -1,5 +1,5 @@
 /*
- * Confirm (view: 'confirm') — port spec §3.4.
+ * Confirm (view: 'confirm').
  *
  * The success screen for the booking that was just written: code pill,
  * appointment card, the optional recurring series, mock email/SMS previews of

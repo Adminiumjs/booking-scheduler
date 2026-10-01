@@ -1,5 +1,5 @@
 /*
- * Staff row (spec §4.12) — booking step 1.
+ * Staff row — booking step 1.
  *
  * The same row renders the "First available" option: pass no `staff`, an
  * `icon` of `'zap'`, and the title/note copy.

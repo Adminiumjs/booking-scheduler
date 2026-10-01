@@ -1,5 +1,5 @@
 /*
- * Service card (spec §4.4). Two variants:
+ * Service card. Two variants:
  *   preview — home "Popular services": duration / price meta, full-width Book
  *   full    — services grid: duration + specialists, divider, price + Book
  */

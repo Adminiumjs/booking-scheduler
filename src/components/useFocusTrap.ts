@@ -1,6 +1,6 @@
 /*
- * Focus management for the modal and the mobile sheet (ruling R10 — the comp
- * had none). While `active` is true the hook:
+ * Focus management for the modal and the mobile sheet (the comp had none).
+ * While `active` is true the hook:
  *   - moves focus into the container,
  *   - cycles Tab / Shift+Tab inside it,
  *   - calls `onEscape` on Escape,

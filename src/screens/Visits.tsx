@@ -1,10 +1,10 @@
 /*
- * MY UPCOMING VISITS (view: 'visits') — port spec §3.7.
+ * MY UPCOMING VISITS (view: 'visits').
  *
  * A read-only list of confirmed bookings. "Reschedule or cancel" hands the
  * booking to the Manage screen with the lookup already satisfied
  * (`openManage` pre-fills the code + email and sets `foundCode`), which is
- * where reschedule (R3) and the cancel modal live.
+ * where reschedule and the cancel modal live.
  */
 
 import { useMemo } from "react";

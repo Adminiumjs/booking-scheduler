@@ -1,11 +1,11 @@
 /*
- * Booking (view: 'booking') — port spec §3.3.
+ * Booking (view: 'booking').
  *
  * Four steps behind one stepper: Service → Staff → Date & time → Your details.
- * Every transition and every validation message lives in the store (§6.4); this
+ * Every transition and every validation message lives in the store; this
  * screen only renders and calls actions. Availability comes exclusively from
- * the `useSlots*` hooks — ruling R2 (real interval overlap) and R3 (a
- * reschedule excludes its own booking) are already baked into them.
+ * the `useSlots*` hooks — real interval overlap and a reschedule excluding
+ * its own booking are already baked into them.
  */
 
 import type { ReactNode } from "react";

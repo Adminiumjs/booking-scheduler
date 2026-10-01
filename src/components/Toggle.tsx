@@ -1,4 +1,4 @@
-/* Switch (spec §4.16) — 42×24 track, 20px knob, logical-property offset. */
+/* Switch — 42×24 track, 20px knob, logical-property offset. */
 
 import type { CSSProperties } from "react";
 

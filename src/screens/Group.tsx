@@ -1,5 +1,5 @@
 /*
- * Group booking (spec §3.7, §6.11) — view `group`.
+ * Group booking — view `group`.
  *
  * A request form, not a booking: `grpSubmit()` validates, mints `GRP-{nextNum}`
  * and reserves nothing (no appointments are written, so no slots are held).

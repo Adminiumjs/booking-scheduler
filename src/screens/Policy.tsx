@@ -1,8 +1,8 @@
 /*
- * CANCELLATION POLICY (view: 'policy') — port spec §3.7.
+ * CANCELLATION POLICY (view: 'policy').
  *
  * Static copy: four tinted cards plus the standard demo banner. The 24-hour
- * window here is the same one the cancel modal quotes (§4.21).
+ * window here is the same one the cancel modal quotes.
  */
 
 import { BackLink, Banner, Icon } from "../components/index.ts";

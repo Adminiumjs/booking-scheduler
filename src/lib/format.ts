@@ -1,5 +1,5 @@
 /*
- * Formatters (port spec §6.1).
+ * Formatters.
  *
  * These were hand-rolled against en-US: literal `["Sunday", …]` name tables, a
  * 12-hour AM/PM clock, `$${n.toFixed(2)}`, and a pluraliser that appended "s".
@@ -263,7 +263,7 @@ export function durationLabel(mins: number): string {
   return nf({ style: "unit", unit: "minute", unitDisplay: "short" }).format(mins);
 }
 
-/** A summed span: `150` → `'2h 30m'`, `45` → `'45 min'` (spec §6.11). */
+/** A summed span: `150` → `'2h 30m'`, `45` → `'45 min'`. */
 export function spanLabel(mins: number): string {
   if (mins < 60) return durationLabel(mins);
   const h = Math.floor(mins / 60);

@@ -10,8 +10,8 @@
  * order each locale expects; shared counted nouns (`count.*`) already live
  * there — reuse them rather than re-declaring them here.
  *
- * In-fiction demo content is deliberately absent (18-marketplace-launch.md
- * §3.4): treatment names, staff and client names, journal bodies, review text,
+ * In-fiction demo content is deliberately absent: treatment names, staff and
+ * client names, journal bodies, review text,
  * promo codes, package names and the studio address stay English. So do the
  * brand names — `Lumen Studio`, `Studio Circle`, `Circle`, `iPhone`,
  * `Android` — which are never translated in any locale.

@@ -1,5 +1,5 @@
 /*
- * Purchased gift cards (spec §3.7) — view `mygifts`.
+ * Purchased gift cards — view `mygifts`.
  *
  * A read-only list of `store.gifts`: the seeded GIFT-4821 plus anything bought
  * this session (the gift flow unshifts new cards, so newest is first).

@@ -4,7 +4,7 @@
  * A real table needs its columns to line up, so head and rows share one grid
  * template. Below 860px the "Booked 30d" column is dropped (head and cells
  * together, which is why the template also drops a track) and the table keeps
- * a floor width it can scroll to — no JavaScript measures anything (R8).
+ * a floor width it can scroll to — no JavaScript measures anything.
  */
 
 .scr-admin-services__panel {

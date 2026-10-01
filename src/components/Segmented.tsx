@@ -1,5 +1,5 @@
 /*
- * Segmented control (spec §4.17): reminder timing, recurrence frequency,
+ * Segmented control: reminder timing, recurrence frequency,
  * gift delivery, intake pressure.
  */
 

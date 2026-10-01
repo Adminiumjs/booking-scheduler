@@ -1,6 +1,6 @@
 /*
- * Toast layer (spec §4.20). One toast at a time, auto-dismissed by the store
- * after 2600 ms. Ruling R10: the region is always mounted and announced with
+ * Toast layer. One toast at a time, auto-dismissed by the store
+ * after 2600 ms. The region is always mounted and announced with
  * `aria-live="polite"` so the message is read when it appears.
  */
 

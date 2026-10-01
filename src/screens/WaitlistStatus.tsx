@@ -1,5 +1,5 @@
 /*
- * WAITLIST STATUS (view: 'waitliststatus') — port spec §3.7 and §6.10.
+ * WAITLIST STATUS (view: 'waitliststatus').
  *
  * Every day the visitor is waiting on, keyed `${iso}|${staffId}`. The staff id
  * may be the literal 'first', which reads back as "First available".

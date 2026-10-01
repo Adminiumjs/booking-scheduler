@@ -1,5 +1,5 @@
 /*
- * Waitlist nudge under the slot grid (spec §4.13). Three copy states —
+ * Waitlist nudge under the slot grid. Three copy states —
  * already joined, day fully booked, and the neutral "don't see the right
  * time?" — are chosen by the caller and passed in.
  */

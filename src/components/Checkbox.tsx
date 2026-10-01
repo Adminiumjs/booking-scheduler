@@ -1,5 +1,5 @@
 /*
- * Checkbox (spec §4.18). `Checkbox` is the 22px box on its own; `CheckboxRow`
+ * Checkbox. `Checkbox` is the 22px box on its own; `CheckboxRow`
  * is the tappable row that wraps it (intake concerns, the consent notice).
  */
 

@@ -1,11 +1,11 @@
 /*
- * Gift cards (spec §3.6, §6.9) — view `giftcards`.
+ * Gift cards — view `giftcards`.
  *
  * Four sub-steps driven by `gcStep`: design → details → pay → done. The store
- * owns every transition, validation string and the collision-free code (R7);
+ * owns every transition, validation string and the collision-free code;
  * this screen is a pure view over it.
  *
- * Ruling R9: the amount chips keep the comp's `money()` formatting, so they
+ * The amount chips keep the comp's `money()` formatting, so they
  * read "$50.00" rather than "$50" — deliberate fidelity, not a bug.
  */
 
@@ -55,7 +55,7 @@ const SEND_KEYS: readonly { value: GiftSend; key: MessageKey }[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * The live card preview (spec §4.15 "Gift preview")
+ * The live card preview
  * ------------------------------------------------------------------ */
 
 interface GiftPreviewProps {
