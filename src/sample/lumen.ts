@@ -276,7 +276,7 @@ export function sampleBundle(): SampleBundle {
       { ref: "gift_amounts", rows: WORLD.giftAmounts.map((a, i) => ({ "@label": `gift:${String(a)}`, amount: a, position: i + 1, active: true })) },
       {
         ref: "pack_products",
-        rows: WORLD.packs.map((p, i) => ({ "@label": `pack:${p.id}`, name: p.name, price: p.price, uses: p.uses, service_id: ref(`service:${p.service}`), position: i + 1, active: true })),
+        rows: WORLD.packs.map((p, i) => ({ "@label": `pack:${p.id}`, name: p.name, price: p.price, uses: p.uses, service_id: ref(`service:${p.service}`), what: "item", position: i + 1, active: true })),
       },
       {
         ref: "purchases",
