@@ -251,6 +251,14 @@ export function nearestTimes(free: readonly number[], lost: number, n = 3): numb
   return [...free].sort((a, b) => Math.abs(a - lost) - Math.abs(b - lost) || a - b).slice(0, n).sort((a, b) => a - b);
 }
 
+// ── what a pack has left ────────────────────────────────────────────────────
+
+/** Offers leaves `uses_left` empty until the first use: an unused pack has all of them. */
+export function usesLeft(pack: { uses_left?: unknown; uses_total?: unknown }): number {
+  const left = pack.uses_left;
+  return left === null || left === undefined || left === "" ? Number(pack.uses_total ?? 0) : Number(left);
+}
+
 // ── small proofs of what a form holds ───────────────────────────────────────
 
 export const looksLikeEmail = (text: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(text.trim());

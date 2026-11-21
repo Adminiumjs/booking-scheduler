@@ -13,7 +13,7 @@ import { A, useApp, type Service } from "../app.tsx";
 import type { Booked, Held, Row } from "../door.ts";
 import { addDays, dayNumber, dayOf, firstName, fmtDay, fmtMoney, fmtRange, fmtTime, hhmm, initials, momentOf, monthShort, weekdayShort } from "../format.ts";
 import { Err, Icon, Rows } from "../parts.tsx";
-import { doorFor, dueNow, looksLikeEmail, nearestTimes, nextFreeDay, partOf, refusalOf, type DayPart, type Refusal, type StripDay } from "../rules.ts";
+import { doorFor, dueNow, looksLikeEmail, nearestTimes, nextFreeDay, partOf, refusalOf, usesLeft, type DayPart, type Refusal, type StripDay } from "../rules.ts";
 import { keepBooking } from "../session.ts";
 import type { Word } from "../words/index.ts";
 
@@ -820,7 +820,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
             {!moving && packs.length > 0 ? (
               <label className="lm-use">
                 <input type="checkbox" checked={pack !== null} onChange={(e) => setUsePack(e.target.checked ? String(packs[0]!["id"]) : null)} />
-                {t("usePack", { pack: String(packs[0]!["public_name"] ?? ""), n: Number(packs[0]!["uses_left"] ?? 0) })}
+                {t("usePack", { pack: String(packs[0]!["public_name"] ?? ""), n: usesLeft(packs[0]!) })}
               </label>
             ) : null}
             {!moving && due > 0 && !coveredByPack && cards.length > 0 ? (
@@ -877,7 +877,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
  * from the studio's own row of the same name; the save is judged by Offers whatever this says.
  */
 function packCovers(pack: Row, service: Service, products: readonly Row[]): boolean {
-  if (pack["worth"] !== "pack" || Number(pack["uses_left"] ?? 0) <= 0) return false;
+  if (pack["worth"] !== "pack" || usesLeft(pack) <= 0) return false;
   const product = products.find((p) => p["name"] === pack["public_name"]);
   if (product === undefined) return false;
   if (product["service_id"] !== null && product["service_id"] !== undefined) return String(product["service_id"]) === service.id;

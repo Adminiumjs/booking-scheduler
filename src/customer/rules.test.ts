@@ -16,6 +16,7 @@ import {
   payViewOf,
   refusalOf,
   statusOf,
+  usesLeft,
   type BookingFacts,
 } from "./rules.ts";
 
@@ -167,6 +168,14 @@ describe("the way back from paying", () => {
     expect(payViewOf("confirming", "paying")).toBe("confirming");
     expect(payViewOf("failed", "paying")).toBe("failed");
     expect(payViewOf("expired", "paying")).toBe("failed");
+  });
+});
+
+describe("what a pack has left", () => {
+  it("reads an unused pack as whole, and a used-up one as none", () => {
+    expect(usesLeft({ uses_left: null, uses_total: 10 })).toBe(10);
+    expect(usesLeft({ uses_left: 7, uses_total: 10 })).toBe(7);
+    expect(usesLeft({ uses_left: 0, uses_total: 10 })).toBe(0);
   });
 });
 

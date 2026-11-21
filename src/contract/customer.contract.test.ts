@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { LumenDoor, type Row, type Served } from "../customer/door.ts";
-import { refusalOf } from "../customer/rules.ts";
+import { refusalOf, usesLeft } from "../customer/rules.ts";
 import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, until, type Engine } from "./harness.ts";
 import { ADD_ONS, dbName, inbox, num, retryKey, standUp, yes, type Stand } from "./stand.ts";
 
@@ -258,6 +258,130 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
         // Taken once: the same link cannot take it again.
         await expect(door.takeOffer(read["id"], false)).rejects.toThrow();
       }, 60_000);
+
+      describe("with payments on, as somebody rehearsing the checkout", () => {
+        let money: () => LumenDoor;
+        let nell: LumenDoor;
+        const email = () => `nell.${engine}@lumen-guests.dev`;
+        const product = async (name: string) => (await stand.rows("pack_products")).find((p) => p["name"] === name)!;
+        const voucher = async (door: LumenDoor) => (await door.held()).packs.find((p) => p["public_name"] === "Movement Ten")!;
+        const paidPurchase = (id: unknown) => until(async () => {
+          const row = await stand.row("purchases", id);
+          return row["state"] === "paid" ? row : undefined;
+        }, "the purchase paid", 60_000);
+        /** A free time for the Reformer on a day, through the door the page uses. */
+        const freeOn = async (door: LumenDoor, day: string) => (await door.times(String(services["Reformer Pilates, private"]!["id"]), null, day)).find((t) => t.state === "free")!.time;
+        const reformer = (day: string, time: string) => values("Reformer Pilates, private", pdt(day, time), "Nell Pack", { email: email() });
+
+        beforeAll(async () => {
+          await nextHour();
+          await setSetting({ online_payments: "on" });
+          ok(await stand.staff.post("/api/v1/payments/apps/switch", { connectionId: stand.connectionId, appKey: "bookings", enabled: true }));
+          const guest = await stand.rehearsing();
+          const rehearsal = guest as unknown as { rehearsal: { cookie: string; csrf: string } };
+          money = () => {
+            const fetcher: typeof fetch = (input, init) => {
+              const headers = new Headers(init?.headers);
+              headers.set("origin", stand.server.base);
+              headers.set("cookie", rehearsal.rehearsal.cookie);
+              return fetch(input, { ...init, headers });
+            };
+            return new LumenDoor({ ...served, baseUrl: stand.server.base, rehearsalToken: rehearsal.rehearsal.csrf }, { fetch: fetcher });
+          };
+          // Known to the studio by a first booking, so a code can be mailed to them.
+          const first = await tab().book("studio", values("Cut & Style", pdt("2026-10-08", "10:00"), "Nell Pack", { email: email() }), retryKey("n0"));
+          await tab().openLink(first.token!);
+          nell = money();
+          await signIn(nell, email());
+        }, 180_000);
+
+        it("buys a pack signed in: nothing exists until it is paid, and the holder is the proved customer", async () => {
+          const pack = await product("Movement Ten");
+          const made = await nell.buyPack(String(pack["id"]), { buyer_name: "Someone Else", buyer_email: `other.${engine}@lumen-guests.dev`, language: "en-US" }, retryKey("p1"));
+          expect(made.row["state"]).toBe("paying");
+          expect(await voucher(nell)).toBeUndefined();
+          await stand.payDemo(made.payUrl!);
+          const row = await paidPurchase(made.row["id"]);
+          expect(String(row["holder_email"]).toLowerCase()).toBe(email());
+          const held = await until(() => voucher(nell), "the pack held");
+          expect([num(held["uses_total"]), usesLeft(held)]).toEqual([10, 10]);
+        }, 180_000);
+
+        it("refuses a pack to someone who is not signed in", async () => {
+          const pack = await product("Movement Ten");
+          await expect(tab().buyPack(String(pack["id"]), { buyer_name: "Gus", buyer_email: `gus2.${engine}@lumen-guests.dev`, language: "en-US" }, retryKey("p2"))).rejects.toThrow();
+        }, 60_000);
+
+        it("gives a pack use back on a free cancel (CR-OFF-1)", async () => {
+          const held = await voucher(nell);
+          const made = await nell.book("studio", reformer("2026-10-06", await freeOn(nell, "2026-10-06")), retryKey("u1"), { codes: [`held:${String(held["id"])}`] });
+          expect(num(made.row["discount"])).toBe(40);
+          expect(usesLeft(await voucher(nell))).toBe(9);
+          await nell.cancelBooking(made.row["id"], true);
+          await until(async () => (usesLeft(await voucher(nell)) === 10 ? true : undefined), "the use given back");
+        }, 120_000);
+
+        it("keeps a pack use on a late cancel (cQ31)", async () => {
+          const held = await voucher(nell);
+          const before = usesLeft(held);
+          const made = await nell.book("studio", reformer("2026-09-16", await freeOn(nell, "2026-09-16")), retryKey("u2"), { codes: [`held:${String(held["id"])}`] });
+          const row = await stand.row("bookings", made.row["id"]);
+          const late = new Date(String(row["free_until"])).getTime() <= clock;
+          expect(late, "this visit must already be inside the 24 hours").toBe(true);
+          await nell.cancelBooking(made.row["id"], true);
+          expect(yes((await stand.row("bookings", made.row["id"]))["late_cancel"])).toBe(true);
+          expect(usesLeft(await voucher(nell))).toBe(before - 1);
+        }, 120_000);
+
+        it("sells a gift card to anyone, and it pays a deposit in full with nothing left to pay online (R2, MON-3)", async () => {
+          const amount = (await stand.rows("gift_amounts")).find((a) => num(a["amount"]) === 100)!;
+          const buyer = money();
+          const bought = await buyer.buyCard({ gift_amount_id: amount["id"], to_name: "Nell Pack", to_email: email() }, { buyer_name: "A Friend", buyer_email: `friend.${engine}@lumen-guests.dev`, language: "en-US" }, retryKey("g1"));
+          await stand.payDemo(bought.payUrl!);
+          await paidPurchase(bought.row["id"]);
+          const card = await until(async () => (await nell.held()).cards.find((c) => num(c["balance"]) === 100), "the card held");
+
+          const balayage = String(services["Balayage"]!["id"]);
+          const open = (await nell.days(balayage, null, "2026-10-05", 14)).find((d) => d.state === "open" && d.open > 0)!.date;
+          const at = (await nell.times(balayage, null, open)).find((t) => t.state === "free")!.time;
+          const made = await nell.book("money", values("Balayage", pdt(open, at), "Nell Pack", { email: email() }), retryKey("g2"), { card: `held:${String(card["id"])}` });
+          expect([made.row["state"], num(made.row["pay_due"])]).toEqual(["paying", 0]);
+          await nell.nothingDue(made.row["id"], true);
+          expect((await stand.row("bookings", made.row["id"]))["state"]).toBe("booked");
+          expect(num((await nell.held()).cards.find((c) => c["id"] === card["id"])!["balance"])).toBe(50);
+
+          // A free cancel gives the card's part back.
+          await nell.cancelBooking(made.row["id"], true);
+          await until(async () => (num((await nell.held()).cards.find((c) => c["id"] === card["id"])?.["balance"]) === 100 ? true : undefined), "the card's part given back");
+        }, 180_000);
+
+        it("takes a pack back only through the owner's cancel of its sale (T10)", async () => {
+          const pack = await product("Glow Five");
+          const made = await nell.buyPack(String(pack["id"]), { buyer_name: "Nell Pack", buyer_email: email(), language: "en-US" }, retryKey("p3"));
+          await stand.payDemo(made.payUrl!);
+          await paidPurchase(made.row["id"]);
+          const glow = () => nell.held().then((h) => h.packs.find((p) => p["public_name"] === "Glow Five"));
+          await until(glow, "the second pack");
+          await stand.patch("purchases", made.row["id"], { state: "cancelled" });
+          await until(async () => ((await glow()) === undefined ? true : undefined), "the pack recalled");
+        }, 180_000);
+
+        // Last: it moves the clock past the visit, which outlives the customer's session.
+        it("keeps a pack use on a no-show (cQ31)", async () => {
+          const held = await voucher(nell);
+          const before = usesLeft(held);
+          const kind = String(services["Reformer Pilates, private"]!["id"]);
+          const day = (await nell.days(kind, null, "2026-09-16", 14)).find((d) => d.state === "open" && d.open > 0)!.date;
+          const time = await freeOn(nell, day);
+          const made = await nell.book("studio", reformer(day, time), retryKey("u3"), { codes: [`held:${String(held["id"])}`] });
+          expect(usesLeft(await voucher(nell))).toBe(before - 1);
+          clock = new Date(pdt(day, time)).getTime() + 5 * 60_000;
+          await stand.server.setClock(clock);
+          await stand.patch("bookings", made.row["id"], { state: "no_show" });
+          const row = (await stand.rows("offers_vouchers")).find((v) => v["id"] === held["id"])!;
+          expect(usesLeft(row)).toBe(before - 1);
+        }, 120_000);
+      });
     });
   });
 });

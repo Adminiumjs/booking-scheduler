@@ -6093,8 +6093,8 @@
             "needs": "offers",
             "via": "purchase_id",
             "only": {
-              "column": "kind",
-              "eq": "pack"
+              "column": "pack_what",
+              "eq": "item"
             },
             "reserve": {
               "on": {
@@ -6124,7 +6124,62 @@
               "name": "pack_name",
               "uses": "pack_uses",
               "what": "pack_what",
-              "target": "target_id",
+              "target": "pack_service",
+              "holder_email": {
+                "parent": "holder_email"
+              },
+              "holder_name": {
+                "parent": "holder_name"
+              },
+              "language": "language",
+              "proved": {
+                "parent": "customer_proved"
+              },
+              "tax_later": "tax_later"
+            }
+          },
+          {
+            "id": "pack-make-category",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "sell-pack"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "pack_what",
+              "eq": "category"
+            },
+            "reserve": {
+              "on": {
+                "create": true
+              }
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "cancelled",
+                  "lapsed"
+                ],
+                "from": [
+                  "paying"
+                ]
+              }
+            },
+            "map": {
+              "amount": "sale_amount",
+              "name": "pack_name",
+              "uses": "pack_uses",
+              "what": "pack_what",
+              "target": "pack_category",
               "holder_email": {
                 "parent": "holder_email"
               },
@@ -6443,8 +6498,8 @@
           },
           {
             "ref": "pack_service",
-            "type": "int",
-            "nullable": true,
+            "type": "fk",
+            "references": "services",
             "label": {
               "en-US": "Service",
               "de-DE": "Versandart",
@@ -6455,6 +6510,7 @@
               "zh-CN": "寄送方式",
               "zh-TW": "寄送方式"
             },
+            "nullable": true,
             "rules": {
               "copy": {
                 "via": "pack_id",
@@ -6465,8 +6521,8 @@
           },
           {
             "ref": "pack_category",
-            "type": "int",
-            "nullable": true,
+            "type": "fk",
+            "references": "categories",
             "label": {
               "en-US": "Category",
               "de-DE": "Kategorie",
@@ -6477,34 +6533,12 @@
               "zh-CN": "分类",
               "zh-TW": "分類"
             },
+            "nullable": true,
             "rules": {
               "copy": {
                 "via": "pack_id",
                 "from": "category_id",
                 "mode": "always"
-              }
-            }
-          },
-          {
-            "ref": "target_id",
-            "type": "int",
-            "nullable": true,
-            "label": {
-              "en-US": "Covers",
-              "de-DE": "Gilt für",
-              "fr-FR": "Couvre",
-              "da-DK": "Dækker",
-              "cs-CZ": "Pokrývá",
-              "ar-EG": "يشمل",
-              "zh-CN": "适用于",
-              "zh-TW": "適用於"
-            },
-            "rules": {
-              "formula": {
-                "coalesce": [
-                  "pack_service",
-                  "pack_category"
-                ]
               }
             }
           },

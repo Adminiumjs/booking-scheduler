@@ -13,6 +13,7 @@ import { A, useApp, yes } from "../app.tsx";
 import type { Held, Row } from "../door.ts";
 import { dayOf, fmtDay, fmtDayYear, fmtMoney, fmtWhen } from "../format.ts";
 import { Blank, Icon, Tile } from "../parts.tsx";
+import { usesLeft } from "../rules.ts";
 
 const UPCOMING = new Set(["booked", "paying", "offered"]);
 
@@ -270,7 +271,7 @@ export default function Account() {
               ) : null}
               {packs.map((p) => {
                 const total = Number(p["uses_total"] ?? 0);
-                const left = Number(p["uses_left"] ?? 0);
+                const left = usesLeft(p);
                 const product = studio.rows.packs.find((row) => row["name"] === p["public_name"]);
                 const covers = studio.services.find((s) => s.id === String(product?.["service_id"] ?? ""))?.name ?? studio.categories.find((c) => c.id === String(product?.["category_id"] ?? ""))?.name ?? "";
                 const label = t("packLeft", { n: left, total });
