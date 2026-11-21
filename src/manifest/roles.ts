@@ -104,6 +104,14 @@ const REVIEWS_MODERATE = [
   { addOn: "forms", table: "review_totals", actions: ["read"] },
 ];
 
+/** A client's packs and gift cards, as the desk's panel shows them: never a whole code or a card's link. */
+export const VOUCHER_READS = ["id", "code_last4", "public_name", "what", "uses_total", "uses_taken", "uses_left", "holder_email", "holder_key", "holder_name", "status", "expires_on", "issued_at"];
+export const GIFT_CARD_READS = ["id", "kind", "label", "owner_email", "owner_key", "status", "opening", "taken", "balance", "expires_on", "recipient_name", "recipient_email", "sender_name", "send_on", "issued_at"];
+const OFFERS_READ = [
+  { addOn: "offers", table: "vouchers", actions: ["read"], limit: { readable: VOUCHER_READS } },
+  { addOn: "offers", table: "gift_cards", actions: ["read"], limit: { readable: GIFT_CARD_READS } },
+];
+
 /** What the desk writes when it makes a booking. The state's moves are held to the table's own. */
 const DESK_BOOKING_MAKES = typed("bookings", ...NOT_TYPED_ON_A_BOOKING);
 /**
@@ -131,6 +139,10 @@ export const ROLES = [
       "privacy:@:people",
       "payments:@:refund",
       "addOn:holiday-calendars:settings",
+      // Anyone's calendar: connect, send or copy a link, disconnect (§7).
+      "accounts:@:connect",
+      "accounts:@:send-link",
+      "accounts:@:disconnect",
     ],
     limits: {
       bookings: {
@@ -145,7 +157,7 @@ export const ROLES = [
         creatableValues: { method: ["cash", "card"] },
       },
     },
-    tables: REVIEWS_MODERATE,
+    tables: [...REVIEWS_MODERATE, ...OFFERS_READ],
   },
   {
     key: "front-desk",
@@ -160,6 +172,8 @@ export const ROLES = [
       ...grant("bookings", "create", "update"),
       ...grant("customers", "create", "update"),
       ...grant("waitlist", "update"),
+      // Sends a connect link to the address on the row; never copies one, never disconnects (cQ12).
+      "accounts:@:send-link",
     ],
     limits: {
       bookings: {
@@ -172,7 +186,7 @@ export const ROLES = [
       waitlist: { writable: ["state"], writableValues: { state: ["closed"] } },
       team: { readable: allBut("team", "email") },
     },
-    tables: REVIEWS_READ,
+    tables: [...REVIEWS_READ, ...OFFERS_READ],
   },
   {
     key: "specialist",
@@ -184,6 +198,10 @@ export const ROLES = [
       ...["settings", "opening_hours", "closures", "categories", "services", "team", "team_services", "team_hours", "time_off", "bookings", "customers"].flatMap((table) => grant(table, "read")),
       ...grant("bookings", "update"),
       ...grant("time_off", "create", "delete"),
+      // Their own calendar. Connecting asks for update on the row, so they hold it on their own row, and may write none of it.
+      ...grant("team", "update"),
+      "accounts:@:connect",
+      "accounts:@:disconnect",
     ],
     limits: {
       bookings: {
@@ -194,7 +212,8 @@ export const ROLES = [
         writableFrom: { state: ["booked", "arrived"] },
       },
       customers: { rows: { read: { reach: "own" } }, readable: ["id", "name", "staff_note"] },
-      team: { rows: { read: { reach: "own" } }, readable: allBut("team", "user_id") },
+      // `writable` takes at least one column: the key, which nobody can change.
+      team: { rows: { read: { reach: "own" }, update: { reach: "own" } }, readable: allBut("team", "user_id"), writable: ["id"] },
       team_hours: { rows: { read: { reach: "own" } } },
       team_services: { rows: { read: { reach: "own" } } },
       time_off: { rows: { read: { reach: "own" }, delete: { reach: "own" } }, creatable: ["team_id", "starts_at", "ends_at", "why"] },
