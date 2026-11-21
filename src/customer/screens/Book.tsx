@@ -787,7 +787,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
         </div>
 
         {showSummary ? (
-          <aside aria-label={t("sumTitle")} className="lm-summary" style={step < 4 ? { display: "var(--lm-summary-display, block)" } : undefined} data-step={step}>
+          <aside aria-label={t("sumTitle")} className="lm-summary" data-step={step}>
             <div className="lm-summary-h">
               <span className="lm-eyebrow">{t("sumTitle")}</span>
             </div>

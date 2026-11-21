@@ -1055,6 +1055,12 @@ textarea.lm-input {
     display: none !important;
   }
 }
+/* On a phone the summary is the sticky bar on steps 2 and 3, and the whole card under the form on step 4 (L1a-D4). */
+@container (max-width: 899px) {
+  .lm-summary:not([data-step="4"]) {
+    display: none;
+  }
+}
 .lm-chips {
   display: flex;
   flex-wrap: wrap;
