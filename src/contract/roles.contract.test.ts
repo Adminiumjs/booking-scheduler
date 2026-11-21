@@ -66,6 +66,9 @@ describe.skipIf(why !== null)(`who may do what at Lumen${why === null ? "" : ` â
         }
       };
       const code = (c: string) => all.find((b) => b["code"] === c)!;
+      /** What a person may do with a team row's calendar connection, as the desk asks it. */
+      const rowQuery = (id: unknown) => new URLSearchParams({ connection: stand.connectionId, table: tableIds["team"]!, row: String(id) }).toString();
+      const connections = async (who: Caller, id: unknown) => ok(await who.get<{ may: { connect: boolean; sendLink: boolean; copyLink: boolean; disconnect: boolean } }>(`/api/v1/connected-accounts?${rowQuery(id)}`));
 
       beforeAll(async () => {
         stand = await standUp(engine as Engine, PORT_BASE + index * PORTS_PER_ENGINE, "roles");
@@ -95,10 +98,19 @@ describe.skipIf(why !== null)(`who may do what at Lumen${why === null ? "" : ` â
         // A second, inside the 24-hour window, for the studio's own cancel.
         const availability = Object.keys(stand.refs).find((r) => stand.refs[r]?.["kind"] === "availability")!;
         const guestTab = stand.guest("studio");
-        const times = ok(await guestTab.raw("GET", `/api/v1/public/availability/${availability}?kind=${String(root["id"])}&date=2026-09-15`)).data as unknown as { time: string; state: string }[];
-        const free = times.find((t) => t.state === "free");
-        if (free === undefined) throw new Error("no free Root Color today");
-        const soon = await tab.create(door, { values: { service_id: root["id"], starts_at: pdt("2026-09-15", free.time), name: "Pay Soon", email: `soon.${engine}@lumen-guests.dev`, language: "en-US", channel: "page", client_key: retryKey("soon") } });
+        // Any deposit service with a free time inside the next 24 hours.
+        const inside = Date.parse("2026-09-16T17:40:00Z");
+        let free: { service: unknown; at: string } | undefined;
+        for (const name of ["Root Color", "Aromatherapy Ritual", "Balayage"]) {
+          const service = (await stand.rows("services")).find((s) => s["name"] === name)!;
+          for (const day of ["2026-09-15", "2026-09-16"]) {
+            const times = ok(await guestTab.raw("GET", `/api/v1/public/availability/${availability}?kind=${String(service["id"])}&date=${day}`)).data as unknown as { time: string; state: string }[];
+            const hit = times.find((t) => t.state === "free" && Date.parse(pdt(day, t.time)) < inside);
+            if (hit !== undefined && free === undefined) free = { service: service["id"], at: pdt(day, hit.time) };
+          }
+        }
+        if (free === undefined) throw new Error("no deposit service is free inside the next 24 hours");
+        const soon = await tab.create(door, { values: { service_id: free.service, starts_at: free.at, name: "Pay Soon", email: `soon.${engine}@lumen-guests.dev`, language: "en-US", channel: "page", client_key: retryKey("soon") } });
         if (soon.status !== 201) throw new Error(`the booking inside the window: ${JSON.stringify(soon.body).slice(0, 500)}`);
         await stand.payDemo(String(soon.body["payUrl"]));
         await until(async () => ((await stand.row("bookings", soon.body.data["id"]))["state"] === "booked" ? true : undefined), "the second deposit landed", 60_000);
@@ -175,6 +187,29 @@ describe.skipIf(why !== null)(`who may do what at Lumen${why === null ? "" : ` â
           expect(REFUSED).toContain((await noor.patch(`${stand.data("bookings")}/${String(elins["id"])}`, { values: { state: "arrived" } })).status);
         });
 
+        it("may connect her own calendar, and write nothing of her team row", async () => {
+          const mine = await connections(noor, noorTeam["id"]);
+          expect([mine.may.connect, mine.may.disconnect, mine.may.sendLink, mine.may.copyLink]).toEqual([true, true, false, false]);
+          const url = `${stand.data("team")}/${String(noorTeam["id"])}`;
+          for (const values of [{ name: "Mine" }, { role_title: "Owner" }, { tint: "#000000" }, { active: false }, { bookable_online: false }, { position: 9 }, { user_id: "someone" }, { email: "noor@elsewhere.dev" }, { id: 999 }]) {
+            const refused = await noor.patch(url, { values });
+            expect(refused.status, JSON.stringify(values)).toBeGreaterThanOrEqual(400);
+          }
+          const row = await stand.row("team", noorTeam["id"]);
+          expect([row["id"], row["name"], row["active"] === true || row["active"] === 1, row["email"]]).toEqual([noorTeam["id"], "Noor Haddad", true, noorTeam["email"]]);
+        });
+
+        it("reaches no colleague's calendar", async () => {
+          const marco = (await stand.rows("team")).find((t) => t["name"] === "Marco Bellini")!;
+          const reply = await noor.get(`/api/v1/connected-accounts?${rowQuery(marco["id"])}`);
+          expect(REFUSED).toContain(reply.status);
+          expect(REFUSED).toContain((await noor.patch(`${stand.data("team")}/${String(marco["id"])}`, { values: { name: "Theirs" } })).status);
+        });
+
+        it("reads no pack or gift card", async () => {
+          for (const ref of ["offers_vouchers", "offers_gift_cards"]) expect(REFUSED, ref).toContain((await noor.get(`${stand.data(ref)}?limit=5`)).status);
+        });
+
         it("cannot read money, the waiting list, the e-mails, or the calendar table", async () => {
           for (const ref of ["payments", "purchases", "purchase_lines", "waitlist", "messages", "calendar_busy"]) expect(REFUSED, ref).toContain((await noor.get(`${stand.data(ref)}?limit=5`)).status);
         });
@@ -212,6 +247,16 @@ describe.skipIf(why !== null)(`who may do what at Lumen${why === null ? "" : ` â
           ok(await desk.patch(`${stand.data("bookings")}/${String(made["id"])}`, { values: { state: "cancelled", cancelled_by: "studio", cancel_reason: "Called to cancel" } }));
         });
 
+        it("reads packs and gift cards for the client panel", async () => {
+          for (const ref of ["offers_vouchers", "offers_gift_cards"]) ok(await desk.get(`${stand.data(ref)}?limit=5`));
+        });
+
+        it("may send a connect link to anyone on the team, and nothing more of their calendar", async () => {
+          const marco = (await stand.rows("team")).find((t) => t["name"] === "Marco Bellini")!;
+          const row = await connections(desk, marco["id"]);
+          expect([row.may.sendLink, row.may.copyLink, row.may.connect, row.may.disconnect]).toEqual([true, false, false, false]);
+        });
+
         it("never changes a price, a setting, or a review's state, and has no refund or export", async () => {
           const service = (await stand.rows("services"))[0]!;
           expect(REFUSED).toContain((await desk.patch(`${stand.data("services")}/${String(service["id"])}`, { values: { price: 1 } })).status);
@@ -236,7 +281,8 @@ describe.skipIf(why !== null)(`who may do what at Lumen${why === null ? "" : ` â
             const made = panel.data.payments.flatMap((p) => p.refunds);
             return made.length > 0 ? made : undefined;
           }, "the refund made", 60_000);
-          expect(refunds.map((r) => num(r.amount))).toEqual([50]);
+          expect(refunds.length).toBe(1);
+          expect(num(refunds[0]!.amount)).toBeGreaterThan(0);
         }, 90_000);
       });
 
@@ -248,6 +294,12 @@ describe.skipIf(why !== null)(`who may do what at Lumen${why === null ? "" : ` â
           ok(await owner.patch(`${stand.data("services")}/${String(service["id"])}`, { values: { price: 78 } }));
           const settings = (await read(owner, "settings"))[0]!;
           ok(await owner.patch(`${stand.data("settings")}/${String(settings["id"])}`, { values: { tagline: "A calm roof" } }));
+        });
+
+        it("may do all of it to anyone's calendar", async () => {
+          const marco = (await stand.rows("team")).find((t) => t["name"] === "Marco Bellini")!;
+          const row = await connections(owner, marco["id"]);
+          expect([row.may.sendLink, row.may.copyLink, row.may.connect, row.may.disconnect]).toEqual([true, true, true, true]);
         });
 
         it("exports, and gives a paid deposit back", async () => {

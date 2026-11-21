@@ -129,6 +129,16 @@ describe.skipIf(why !== null)(`Lumen's doors${why === null ? "" : ` — skipped:
           expect(desk["state"]).toBe("booked");
         }, 60_000);
 
+        it("a sample visit can be moved through its own link: its stamps came with it", async () => {
+          const ava = (await stand.rows("bookings")).find((b) => b["code"] === "LMN-1807")!;
+          expect(new Date(String(ava["free_until"])).toISOString()).toBe(pdt("2026-09-16", "17:00"));
+          expect(new Date(String(ava["link_expires"])).toISOString()).toBe(pdt("2026-10-17", "17:00"));
+          const tab = stand.guest("link");
+          ok(await tab.openLink(await linkCodeOf(engine as Engine, PORT_BASE + index * PORTS_PER_ENGINE, ava["id"])));
+          const moved = await tab.patch(linkWrite("move"), ava["id"], { starts_at: pdt("2026-10-13", "17:00") });
+          expect(moved.status, say(moved)).toBe(200);
+        }, 60_000);
+
         it("a customer's cancel inside 24 hours is late", async () => {
           const gel = services["Gel Manicure"]!["id"];
           const availability = Object.keys(stand.refs).find((r) => stand.refs[r]?.["kind"] === "availability")!;

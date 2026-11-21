@@ -136,10 +136,13 @@ describe.skipIf(why !== null)(`Lumen's sample on a built Adminium${why === null 
         expect(asked.filter((b) => !said.get(String(b["customer_id"]))).length).toBe(Number(figure("Not asked (said no to review e-mails)")));
       });
 
-      it("seeds no calendar: the demo's busy times are the demo's", async () => {
-        const schema = ok(await stand.staff.get<{ model: { tables: { name: string }[] } }>(`/api/v1/connections/${stand.connectionId}/schema`));
-        expect(schema.model.tables.map((t) => t.name)).toContain("bookings_calendar_busy");
-        expect((await stand.rows("calendar_busy")).length).toBe(0);
+      it("seeds the eight busy times through the sample, and the free times read them", async () => {
+        const gel = [...services.values()].find((s) => s["name"] === "Gel Manicure")!;
+        const ivy = [...team.entries()].find(([, n]) => n === "Ivy")![0];
+        const availability = Object.keys(stand.refs).find((r) => stand.refs[r]?.["kind"] === "availability")!;
+        const times = (await stand.guest("studio").raw("GET", `/api/v1/public/availability/${availability}?kind=${String(gel["id"])}&resource=${ivy}&date=2026-09-19`)).body.data as unknown as { time: string; state: string }[];
+        // Ivy's calendar is busy 15:00 to 17:00 that Saturday.
+        expect(times.filter((t) => t.state === "free").some((t) => t.time >= "14:15")).toBe(false);
       });
 
       it("gives the studio's next own booking the next code", async () => {

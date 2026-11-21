@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { buildManifest, manifestText, MIN_ADMINIUM, UPDATES_FROM, VERSION } from "./build.ts";
 import { untranslated } from "./labels.ts";
 import { BOOKING_SELECT, MADE_SELECT, PUBLIC_ACCESS } from "./public.ts";
-import { NOT_THE_SPECIALISTS, ROLES, SPECIALIST_BOOKING_READS } from "./roles.ts";
+import { GIFT_CARD_READS, NOT_THE_SPECIALISTS, ROLES, SPECIALIST_BOOKING_READS, VOUCHER_READS } from "./roles.ts";
 import { HOLDS_TIME, TABLES } from "./tables.ts";
 
 const table = (ref: string) => TABLES.find((t) => t.ref === ref)!;
@@ -136,6 +136,20 @@ describe("no gate on reviews (REV-13)", () => {
     const word = manifest.requiredSchema.tables.find((t) => t.ref === "bookings")!.review as { when: { in: string[] }; proved: string[] };
     expect(word.when.in).toEqual(["arrived", "done"]);
     expect(word.proved).toEqual(["customer_proved"]);
+  });
+});
+
+describe("what the desk reads of Offers", () => {
+  it("holds no whole code and no card's link", () => {
+    for (const name of ["code", "link_token"]) {
+      expect(VOUCHER_READS).not.toContain(name);
+      expect(GIFT_CARD_READS).not.toContain(name);
+    }
+  });
+
+  it("is not the specialist's", () => {
+    const specialist = ROLES.find((r) => r.key === "specialist") as { tables?: unknown };
+    expect(specialist.tables).toBeUndefined();
   });
 });
 

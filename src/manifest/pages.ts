@@ -2,10 +2,10 @@
  * The studio's section in Adminium's console (plan §5, r3): the records, and
  * the lists the owner manages the studio with. The day's work is the desk.
  * Hours and time off are child rows on a person's form (cT11, R4). "Days off"
- * and "Closures" are two pages over the one closures table. The Overview joins
- * these once its core is in (T08, cQ27).
+ * and "Closures" are two pages over the one closures table.
  */
 import { l, titles } from "./labels.ts";
+import { OVERVIEW_LAYOUT } from "./overview.ts";
 
 export const NAV_GROUPS = [
   { key: "records", label: l("Records"), order: 1 },
@@ -28,15 +28,25 @@ const form = (...sections: Field[][]) => ({
 
 interface PageSpec {
   ref: string;
+  template?: string;
   title: string;
   group: string;
   icon: string;
   order: number;
-  table: string;
+  table?: string;
   config: Record<string, unknown>;
 }
 
 const SPECS: PageSpec[] = [
+  {
+    ref: "bookings-overview",
+    template: "page-dashboard",
+    title: "Overview",
+    group: "overview",
+    icon: "layout-dashboard",
+    order: 0,
+    config: { layout: OVERVIEW_LAYOUT },
+  },
   {
     ref: "bookings-bookings",
     title: "Bookings",
@@ -231,11 +241,11 @@ const SPECS: PageSpec[] = [
 
 const pageOf = (spec: PageSpec) => ({
   ref: spec.ref,
-  template: "page-crud",
+  template: spec.template ?? "page-crud",
   title: { key: `mft.${spec.ref.replaceAll("-", ".")}`, fallback: spec.title },
   titles: titles(spec.title),
   nav: { group: spec.group, icon: spec.icon, order: spec.order },
-  bindings: { rows: spec.table },
+  ...(spec.table === undefined ? {} : { bindings: { rows: spec.table } }),
   config: spec.config,
 });
 
