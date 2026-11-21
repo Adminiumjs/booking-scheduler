@@ -271,7 +271,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
     keepBooking({ id, token: made.token, name: form.name.trim(), email: form.email.trim(), fresh: true });
     // A card or a pack that left nothing due: booked at once, with no trip to the pay page (MON-3).
     if (made.row["state"] === "paying" && Number(made.row["pay_due"] ?? 0) <= 0) {
-      await door.nothingDue(id, false);
+      await door.nothingDue(id, !door.holdsLink());
       finish(made);
       return;
     }
@@ -279,7 +279,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
       finish(made);
       return;
     }
-    const payUrl = made.payUrl ?? (await door.startPaying(id, false));
+    const payUrl = made.payUrl ?? (await door.startPaying(id, !door.holdsLink()));
     if (frame !== null) {
       // The pay page can never be framed: a real link, in its own tab, and this frame watches the row (EMB-3).
       setFrameWait({ payUrl, row: made.row, token: made.token });

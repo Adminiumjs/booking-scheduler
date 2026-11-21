@@ -28,7 +28,9 @@
 import { setting } from "./tables.ts";
 
 export const LINK_KEY = "link";
-export const PUBLIC_KEYS = { [LINK_KEY]: {} };
+/** One sale of a gift card or a pack, for the way back from the pay page: a key opens one kind of row by its link. */
+export const SALE_KEY = "sale";
+export const PUBLIC_KEYS = { [LINK_KEY]: {}, [SALE_KEY]: {} };
 
 /** What a guest sees of a booking: never the staff note, the retry key or the link's code. */
 export const BOOKING_SELECT = [
@@ -247,6 +249,8 @@ const SALE_DOOR = {
   humanCheck: true,
   level: "verified",
   clientKey: "client_key",
+  // The way back from the pay page reads the sale through its own link: a guest has no other session.
+  shareLink: "link_token",
 };
 /** A gift card, by anyone (G12). The amount is the studio's own row; the page names which. */
 const BUY_CARD = {
@@ -339,6 +343,8 @@ export const PUBLIC_ACCESS = [
   { table: "bookings", ...OWN_LINK, ...OWN_MOVE },
   { table: "bookings", ...OWN_LINK, ...OWN_PAY },
   { table: "bookings", ...OWN_LINK, ...OWN_GOOGLE },
+  // A sale, by its own link: only whether it was paid, for the way back from the pay page.
+  { table: "purchases", methods: ["GET"], key: SALE_KEY, claim: { by: "token", column: "link_token", expires: "link_expires", stopped: "link_stopped", own: true, address: "buyer_email" }, select: SALE_SELECT },
   // An offer from the waiting list, while it is open: taken as it is, or through paying when the service asks for money,
   // which starts the usual minutes (MOD-8, ACC-4). The table's moves say which fits.
   { table: "bookings", ...OWN_LINK, methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["booked"] }, writableWhen: { state: ["offered"], offer_until: "from-now" } },

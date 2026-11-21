@@ -107,7 +107,7 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
         served = {
           baseUrl: stand.server.base,
           publishableKey: stand.studioKey,
-          publicKeys: { link: stand.linkKey },
+          publicKeys: doc["publicKeys"] as Record<string, string>,
           tables: doc["tables"] as Record<string, string>,
           addOns: doc["addOns"] as Record<string, { present?: boolean }>,
         };
@@ -428,6 +428,39 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
           await nell.cancelBooking(made.row["id"], true);
           await until(async () => (num((await nell.held()).cards.find((c) => c["id"] === card["id"])?.["balance"]) === 100 ? true : undefined), "the card's part given back");
         }, 180_000);
+
+        it("a guest comes back to a deposit by its link, pays it, and the row says so", async () => {
+          const guest = money();
+          const balayage = String(services["Balayage"]!["id"]);
+          const open = (await guest.days(balayage, null, "2026-10-05", 14)).filter((d) => d.state === "open" && d.open > 0)[1]!.date;
+          const at = (await guest.times(balayage, null, open)).find((t) => t.state === "free")!.time;
+          const made = await guest.book("money", values("Balayage", pdt(open, at), "Pia Deposit"), retryKey("d1"));
+          expect([made.row["state"], num(made.row["pay_due"])]).toEqual(["paying", 50]);
+          // Nothing started at the service until the pay page is opened: "Nothing was taken" stays true.
+          expect((await guest.payState(made.row["id"], false)).state).toBe("none");
+
+          const back = money();
+          expect(await back.openLink(made.token!)).toBe("opened");
+          const payUrl = await back.startPaying(made.row["id"], false);
+          await stand.payDemo(payUrl);
+          const paid = await until(async () => {
+            const row = await back.linkBooking();
+            return row?.["state"] === "booked" ? row : undefined;
+          }, "the deposit paid", 60_000);
+          expect([num(paid["paid"]), num(paid["pay_due"])]).toEqual([50, 0]);
+          expect((await back.payState(made.row["id"], false)).state).toBe("paid");
+        }, 120_000);
+
+        it("the way back from a sale reads only that sale, through its own link", async () => {
+          const amount = (await stand.rows("gift_amounts")).find((a) => num(a["amount"]) === 50)!;
+          const buyer = money();
+          const bought = await buyer.buyCard({ gift_amount_id: amount["id"], to_name: "Ola Gift", to_email: `ola.${engine}@lumen-guests.dev` }, { buyer_name: "A Friend", buyer_email: `friend.${engine}@lumen-guests.dev`, language: "en-US" }, retryKey("g3"));
+          expect(await buyer.purchaseState(String(bought.row["id"]))).not.toBe("paid");
+          await stand.payDemo(bought.payUrl!);
+          await until(async () => ((await buyer.purchaseState(String(bought.row["id"]))) === "paid" ? true : undefined), "the sale read as paid", 60_000);
+          // Another visitor's tab reads nothing of it.
+          await expect(tab().purchaseState(String(bought.row["id"]))).rejects.toThrow();
+        }, 120_000);
 
         it("takes a pack back only through the owner's cancel of its sale (T10)", async () => {
           const pack = await product("Glow Five");

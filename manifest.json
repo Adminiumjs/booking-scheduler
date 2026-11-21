@@ -9797,7 +9797,8 @@
     }
   ],
   "publicKeys": {
-    "link": {}
+    "link": {},
+    "sale": {}
   },
   "publicAccess": [
     {
@@ -11059,6 +11060,7 @@
       "humanCheck": true,
       "level": "verified",
       "clientKey": "client_key",
+      "shareLink": "link_token",
       "writable": [
         "buyer_name",
         "buyer_email",
@@ -11149,6 +11151,7 @@
       "humanCheck": true,
       "level": "verified",
       "clientKey": "client_key",
+      "shareLink": "link_token",
       "writable": [
         "buyer_name",
         "buyer_email",
@@ -11510,6 +11513,29 @@
           "done"
         ]
       }
+    },
+    {
+      "table": "purchases",
+      "methods": [
+        "GET"
+      ],
+      "key": "sale",
+      "claim": {
+        "by": "token",
+        "column": "link_token",
+        "expires": "link_expires",
+        "stopped": "link_stopped",
+        "own": true,
+        "address": "buyer_email"
+      },
+      "select": [
+        "id",
+        "code",
+        "state",
+        "total",
+        "due",
+        "pay_until"
+      ]
     },
     {
       "table": "bookings",

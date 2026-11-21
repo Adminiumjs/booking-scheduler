@@ -33,7 +33,8 @@ export async function resolveServed(framed: boolean): Promise<Served | null> {
   const key = env["VITE_ADMINIUM_PUBLISHABLE_KEY"];
   if (baseUrl && key) {
     const link = env["VITE_ADMINIUM_LINK_KEY"];
-    return { baseUrl, publishableKey: key, publicKeys: link ? { link } : {} };
+    const sale = env["VITE_ADMINIUM_SALE_KEY"];
+    return { baseUrl, publishableKey: key, publicKeys: { ...(link ? { link } : {}), ...(sale ? { sale } : {}) } };
   }
   const mount = mountOf(window.location.pathname);
   try {

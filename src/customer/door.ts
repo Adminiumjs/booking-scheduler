@@ -266,6 +266,8 @@ export interface ReviewLink {
 export class LumenDoor {
   readonly client: PublicClient;
   readonly linkClient: PublicClient | null;
+  /** One sale, by its own link: only for the way back from the pay page. */
+  readonly saleClient: PublicClient | null;
   readonly served: Served;
   private readonly store: Store;
   private readonly fetchImpl: typeof fetch;
@@ -300,6 +302,8 @@ export class LumenDoor {
     this.client = main;
     const linkKey = served.publicKeys?.["link"];
     this.linkClient = linkKey === undefined ? null : make(linkKey, "link");
+    const saleKey = served.publicKeys?.["sale"];
+    this.saleClient = saleKey === undefined ? null : make(saleKey, "sale");
   }
 
   refs(): Promise<CustomerRefs> {
@@ -354,10 +358,19 @@ export class LumenDoor {
       ...(children?.card ? { payments: [{ values: { card_code: children.card } }] } : {}),
     };
     const made = await this.client.createTree<Row>(refs.doors[door], { values: write, ...(Object.keys(kids).length === 0 ? {} : { children: kids }) });
-    if (made.link?.session !== null && made.link?.session !== undefined && this.linkClient !== null) {
-      this.linkClient.adoptSession({ token: made.link.session, expiresAt: made.link.expiresAt ?? Date.now() + 3_600_000, level: "verified" });
-    }
+    this.holdLink(made.link);
     return { row: made.data, token: made.link?.token ?? null, payUrl: made.payUrl, replayed: made.replayed };
+  }
+
+  /** The session a create handed over on the row's own link. */
+  private holdLink(link: { session: string | null; expiresAt: number | null } | null, client: PublicClient | null = this.linkClient): void {
+    if (link?.session == null || client === null) return;
+    client.adoptSession({ token: link.session, expiresAt: link.expiresAt ?? Date.now() + 3_600_000, level: "verified" });
+  }
+
+  /** Whether this tab holds the booking's own link, which is how a page just made goes on. */
+  holdsLink(): boolean {
+    return this.linkClient?.session() != null;
   }
 
   newKey(): string {
@@ -530,11 +543,26 @@ export class LumenDoor {
     return v.client.update<Row>(v.move!, String(id), { starts_at: startsAt, team_id: team ?? null });
   }
 
+  /**
+   * A ref the visitor can read this row through: what a payment is started and asked after on. Signed in there are two reads,
+   * by whether "Anyone" is said yet, so it is the one that answers for this row.
+   */
+  private async readable(id: unknown, signedIn: boolean): Promise<{ client: PublicClient; ref: string }> {
+    if (!signedIn) return { client: this.linkClient!, ref: (await this.linkRefs()).read };
+    const refs = (await this.refs()).myBookings;
+    for (const ref of refs) {
+      const found = await this.client.get<Row>(ref, String(id)).then(() => true, () => false);
+      if (found) return { client: this.client, ref };
+    }
+    return { client: this.client, ref: refs[0]! };
+  }
+
   /** The moment Pay is pressed: the usual minutes start (MON-5). */
   async startPaying(id: unknown, signedIn: boolean): Promise<string> {
     const v = await this.via(signedIn);
     await v.client.update<Row>(v.pay!, String(id), { pay_started: true });
-    return (await v.client.payments.start(v.pay!, String(id))).payUrl;
+    const on = await this.readable(id, signedIn);
+    return (await on.client.payments.start(on.ref, String(id))).payUrl;
   }
 
   /** A deposit a card or a pack covered in full: nothing due, so it is booked with no payment (MON-3). */
@@ -544,8 +572,8 @@ export class LumenDoor {
   }
 
   async payState(id: unknown, signedIn: boolean) {
-    const v = await this.via(signedIn);
-    return v.client.payments.state(v.pay!, String(id));
+    const on = await this.readable(id, signedIn);
+    return on.client.payments.state(on.ref, String(id));
   }
 
   async pressedGoogle(id: unknown, signedIn: boolean): Promise<void> {
@@ -632,25 +660,38 @@ export class LumenDoor {
   async buyCard(line: Row, buyer: Row, clientKey: string): Promise<{ row: Row; payUrl: string | null }> {
     const refs = await this.refs();
     const made = await this.client.createTree<Row>(refs.buyCard!, { values: { ...buyer, client_key: clientKey }, children: { purchase_lines: [{ values: line }] } });
+    this.holdLink(made.link, this.saleClient);
     return { row: made.data, payUrl: made.payUrl };
   }
 
   async buyPack(packId: string, buyer: Row, clientKey: string): Promise<{ row: Row; payUrl: string | null }> {
     const refs = await this.refs();
     const made = await this.client.createTree<Row>(refs.buyPack!, { values: { ...buyer, client_key: clientKey }, children: { purchase_lines: [{ values: { pack_id: packId } }] } });
+    this.holdLink(made.link, this.saleClient);
     return { row: made.data, payUrl: made.payUrl };
   }
 
-  async payPurchase(id: unknown): Promise<string> {
-    const refs = await this.refs();
-    return (await this.client.payments.start(refs.myPurchases ?? refs.buyCard!, String(id))).payUrl;
+  private async purchaseRef(): Promise<{ client: PublicClient; ref: string } | null> {
+    if (this.saleClient === null) return null;
+    const config = await this.saleClient.config();
+    const table = this.served.tables?.["purchases"] ?? `${PREFIX}purchases`;
+    const ref = entriesOf(config, table).find(([, e]) => has(e, "read"))?.[0] ?? null;
+    return ref === null ? null : { client: this.saleClient, ref };
   }
 
+  async payPurchase(id: unknown): Promise<string> {
+    const via = await this.purchaseRef();
+    if (via === null) throw new PublicApiError("PUBLIC_REF_NOT_FOUND" as never, 404, "no way to pay this", undefined, {});
+    return (await via.client.payments.start(via.ref, String(id))).payUrl;
+  }
+
+  /** How the sale's payment stands, through its own link. The sale's row wins: paid is paid. */
   async purchaseState(id: string): Promise<string | null> {
-    const refs = await this.refs();
-    const ref = refs.myPurchases ?? refs.buyCard;
-    if (ref === null) return null;
-    return (await this.client.payments.state(ref, id)).state;
+    const via = await this.purchaseRef();
+    if (via === null) return null;
+    const row = await via.client.get<Row>(via.ref, id).catch(() => null);
+    if (row?.["state"] === "paid") return "paid";
+    return (await via.client.payments.state(via.ref, id)).state;
   }
 
   // ── the waiting list ──────────────────────────────────────────────────────
