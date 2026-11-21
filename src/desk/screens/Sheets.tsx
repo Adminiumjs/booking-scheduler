@@ -502,7 +502,7 @@ function LetGoSheet({ bookingId }: { bookingId: Id }) {
       <p>{t("letGo.lead", { name, service: text(byId(data.services, booking["service_id"])?.["name"]) ?? "", day: fmt.day(booking["starts_at"]), time: fmt.time(booking["starts_at"]) })}</p>
       <p className="lm-sheet-line">
         <Info size={15} aria-hidden="true" />
-        {t("letGo.nothingTaken")}
+        {t("letGo.nothingTaken", { name })}
       </p>
     </Frame>
   );
@@ -741,7 +741,7 @@ function CalendarSheet({ teamId }: { teamId: Id }) {
         </div>
       )}
       <fieldset className="lm-fieldset">
-        <legend>{t("calset.says", { who })}</legend>
+        <legend>{t("calset.says", { who, studio: text(data.settings?.["studio_name"]) ?? "" })}</legend>
         {(["first-name+initial", "none"] as const).map((value) => (
           <label key={value} className="lm-check">
             <input type="radio" name={`lm-says-${String(teamId)}`} checked={detail === value} onChange={() => setDetail(value)} />
