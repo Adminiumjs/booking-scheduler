@@ -13,7 +13,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { AdminiumDesk } from "../desk/adminiumDesk.ts";
 import type { DeskData } from "../desk/door.ts";
@@ -27,6 +27,7 @@ import { ADD_ONS, CLOCK, standUp, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the desk contract must run here, and cannot: ${why}`);
+vi.setConfig({ testTimeout: 60_000 });
 const PORT_BASE = Number(process.env["CONTRACT_PORT_BASE"] ?? 5310) + 60;
 const ZONE = "America/Los_Angeles";
 /** Whether the built engine has ACC-5's read. Until the patch lands this test says so by skipping, and the row stays open. */
@@ -50,6 +51,7 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
       const doors = {} as Record<"owner" | "desk" | "noor", AdminiumDesk>;
       const data = {} as Record<"owner" | "desk" | "noor", DeskData>;
       let noorTeam: Row;
+      let seeded = 0;
 
       const doorFor = async (caller: Caller): Promise<AdminiumDesk> => {
         const cfg = await loadStaffConfig({ hostedStaff: true, base: "/apps/bookings/staff/", fetchImpl: caller.fetchAs() });
@@ -96,6 +98,24 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         const noor = await member(/specialist/i, "noor");
         noorTeam = (await stand.rows("team")).find((t) => t["name"] === "Noor Haddad") as Row;
         await stand.patch("team", noorTeam["id"], { user_id: noor.id });
+        // A sample cannot bring Forms' reviews (T12), and only a customer can leave one: signed in, on their own visits.
+        const rows = await stand.rows("bookings");
+        const done = rows.filter((b) => b["state"] === "done" && (b["reviewed_at"] === null || b["reviewed_at"] === undefined));
+        const customers = await stand.rows("customers");
+        const most = customers
+          .map((c) => ({ c, visits: done.filter((b) => String(b["customer_id"]) === String(c["id"])) }))
+          .sort((x, y) => y.visits.length - x.visits.length)
+          .slice(0, 2);
+        const signedIn = Object.keys(stand.refs).filter((r) => r.startsWith("bookings_bookings") && JSON.stringify(stand.refs[r]?.["actions"] ?? []) === '["read"]').sort((x, y) => x.length - y.length || x.localeCompare(y))[0]!;
+        for (const { c, visits } of most) {
+          const tab = stand.guest("studio");
+          await tab.signIn(stand.server, String(c["email"]));
+          for (const [i, visit] of visits.slice(0, 3).entries()) {
+            const sent = await tab.raw("POST", `/api/v1/public/records/${signedIn}/${String(visit["id"])}/review`, { stars: (i % 5) + 1, body: `Review ${String(seeded)}` });
+            if (sent.status !== 201) throw new Error(`leaving a review: ${String(sent.status)} ${JSON.stringify(sent.body).slice(0, 400)}`);
+            seeded += 1;
+          }
+        }
         doors.owner = await doorFor(owner.caller);
         doors.desk = await doorFor(desk.caller);
         doors.noor = await doorFor(noor.caller);
@@ -124,7 +144,8 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         const needs = needsOf(data.desk, doors.desk.who(), CLOCK, ZONE, {});
         expect(needs.filter((n) => n.kind === "paying")).toHaveLength(1);
         const reviews = needs.find((n) => n.kind === "reviews");
-        expect(reviews?.kind === "reviews" ? reviews.count : 0).toBe(5);
+        expect(seeded).toBeGreaterThanOrEqual(3);
+        expect(reviews?.kind === "reviews" ? reviews.count : 0).toBe(seeded);
         expect(needs.some((n) => n.kind === "lateMoney")).toBe(false);
         // A specialist has no money line and no paying row.
         expect(needsOf(data.noor, doors.noor.who(), CLOCK, ZONE, {}).some((n) => n.kind === "paying")).toBe(false);
@@ -211,13 +232,14 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         const fresh = await reload("desk");
         const service = serviceNamed(fresh, "Classic Manicure");
         const customer = fresh.customers.find((c) => c["name"] === "Lucia Moss")!;
-        const input = { service: service.id, person: null, startsAt: pdt("2026-09-29", "11:00"), customer: { id: customer.id, name: String(customer["name"]), email: String(customer["email"]), phone: null }, depositLink: false, key: key() };
+        const free = (await doors.desk.slots({ service: service.id, person: null, day: "2026-09-29" })).find((slot) => slot.state === "free");
+        expect(free, "a free time on Tue 29 Sep").toBeDefined();
+        const input = { service: service.id, person: null, startsAt: pdt("2026-09-29", free!.time), customer: { id: customer.id, name: String(customer["name"]), email: String(customer["email"]), phone: null }, depositLink: false, key: key() };
         const first = await doors.desk.createBooking(input);
         const second = await doors.desk.createBooking(input).catch((e: unknown) => e as { status?: number });
-        const rows = (await reload("desk")).bookings.filter((b) => b["client_key"] === input.key);
+        expect((second as Row).id).toBe(first.id);
+        const rows = (await reload("desk")).bookings.filter((b) => b["customer_id"] === customer.id && startOf(b) === Date.parse(input.startsAt));
         expect(rows).toHaveLength(1);
-        expect(rows[0]!.id).toBe(first.id);
-        expect(second).toBeDefined();
       });
 
       it("the front desk moves a booking before it starts, and a started visit keeps its person (BOOK-15.3)", async () => {

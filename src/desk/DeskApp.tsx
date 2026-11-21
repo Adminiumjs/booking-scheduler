@@ -11,7 +11,7 @@ import { CalendarDays, House, IdCard, ListOrdered, Menu, Plus, Search, Settings,
 import { useEffect, useState, type ReactNode } from "react";
 
 import type { DeskData, Person } from "./door.ts";
-import { useData, useEnv } from "./env.tsx";
+import { reload, useData, useEnv } from "./env.tsx";
 import { byId, initials, needsOf, search } from "./facts.ts";
 import { useFmt } from "./format.ts";
 import { useDeskT } from "./i18n/index.ts";
@@ -234,12 +234,17 @@ export function DeskApp() {
   const data = useDesk((s) => s.data);
   const failure = useDesk((s) => s.failure);
   const theme = useDesk((s) => s.theme);
+  const { door } = useEnv();
   const [, tick] = useState(0);
-  // Today's moves change with the clock ("Due in 5 minutes", "Not arrived"): redraw each minute.
+  // Today's moves change with the clock ("Due in 5 minutes", "Not arrived"), and a colleague's desk changes the rows:
+  // each minute the screen is in view, read them again and redraw.
   useEffect(() => {
-    const id = setInterval(() => tick((n) => n + 1), 60_000);
+    const id = setInterval(() => {
+      tick((n) => n + 1);
+      if (document.visibilityState === "visible") void reload(door);
+    }, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [door]);
   useEffect(() => {
     const root = document.documentElement;
     if (theme === null) root.removeAttribute("data-theme");

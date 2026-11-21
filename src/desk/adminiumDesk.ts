@@ -39,6 +39,12 @@ import { ApiError, type Id, type Row } from "./wire.ts";
 
 export const APP_KEY = "bookings";
 const PAGE = 200;
+/**
+ * A person has 300 requests a minute, and the rows are read again after every write. What changes all day (bookings, the
+ * waiting list, money, mail) is read each time; what rarely does is kept briefly, and dropped at once when this desk writes it.
+ */
+const KEPT_MS = 120_000;
+const RARELY_CHANGES: ReadonlySet<string> = new Set(["settings", "opening_hours", "closures", "categories", "services", "team", "team_services", "team_hours", "time_off"]);
 
 /** The moments each table holds: SQLite hands them back without a zone. */
 export const MOMENTS: Readonly<Partial<Record<string, readonly string[]>>> = {
@@ -87,6 +93,7 @@ export class AdminiumDesk implements DeskDoor {
   private readonly t: SessionTransport;
   private readonly cfg: StaffConfig;
   private readonly skew: number;
+  private readonly kept = new Map<string, { at: number; value: unknown }>();
 
   constructor(transport: SessionTransport, config: StaffConfig, options: DeskDoorOptions = {}) {
     this.t = transport;
@@ -140,7 +147,16 @@ export class AdminiumDesk implements DeskDoor {
   }
   private async list(table: Table, order?: string): Promise<Row[]> {
     if (!this.who().can(table, "read")) return [];
-    return this.listReal(table, this.real(table), order === undefined ? {} : { order });
+    const read = () => this.listReal(table, this.real(table), order === undefined ? {} : { order });
+    return RARELY_CHANGES.has(table) ? this.keep(table, read) : read();
+  }
+  /** A read that rarely changes, kept for a moment. */
+  private async keep<T>(name: string, read: () => Promise<T>): Promise<T> {
+    const held = this.kept.get(name);
+    if (held !== undefined && Date.now() - held.at < KEPT_MS) return held.value as T;
+    const value = await read();
+    this.kept.set(name, { at: Date.now(), value });
+    return value;
   }
   private async listAddOn(addOn: string, table: string, query: { where?: unknown; order?: string } = {}): Promise<Row[] | null> {
     if (!this.readsAddOn(addOn, table)) return null;
@@ -151,14 +167,19 @@ export class AdminiumDesk implements DeskDoor {
       throw error;
     }
   }
-  private async create(table: Table, values: Record<string, unknown>): Promise<Row> {
-    return this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table)), "POST", { values })).data);
+  /** `clientKey` is the engine's retry key: the same press sent twice answers with the first row (cT18). */
+  private async create(table: Table, values: Record<string, unknown>, clientKey?: string): Promise<Row> {
+    this.kept.delete(table);
+    const body = clientKey === undefined ? { values } : { values, clientKey };
+    return this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table)), "POST", body)).data);
   }
   private async change(table: Table, id: Id, values: Record<string, unknown>, from?: string): Promise<Row> {
+    this.kept.delete(table);
     const body = from === undefined ? { values } : { values, from };
     return this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table), `/${encodeURIComponent(String(id))}`), "PATCH", body)).data);
   }
   private async remove(table: Table, id: Id): Promise<void> {
+    this.kept.delete(table);
     await this.t.mutate(await this.path(this.real(table), `/${encodeURIComponent(String(id))}`), "DELETE");
   }
   /** A person's row, as the calendar routes name it. */
@@ -234,7 +255,7 @@ export class AdminiumDesk implements DeskDoor {
         this.list("payments", "id.asc"),
         this.list("messages", "id.asc"),
       ]);
-      const [reviews, offers, calendars, clashes, capReached] = await Promise.all([this.reviews(), this.offers(customers), this.calendars(team), this.clashes(), this.capReached()]);
+      const [reviews, offers, calendars, clashes, capReached] = await Promise.all([this.keep("reviews", () => this.reviews()), this.keep("offers", () => this.offers(customers)), this.keep("calendars", () => this.calendars(team)), this.clashes(), this.capReached()]);
       return { settings: settings[0] ?? null, openingHours, closures, categories, services, team, teamServices, teamHours, timeOff, customers, waitlist, bookings, payments, messages, reviews, offers, calendars, clashes, capReached };
     });
   }
@@ -361,9 +382,8 @@ export class AdminiumDesk implements DeskDoor {
         phone: input.customer.phone,
         starts_at: input.startsAt,
         channel: "desk",
-        client_key: input.key,
         ...(input.depositLink ? { state: "paying", ask_online: true, deposit_link: true } : {}),
-      }),
+      }, input.key),
     );
   }
 
@@ -460,8 +480,7 @@ export class AdminiumDesk implements DeskDoor {
         language: entry["language"] ?? null,
         starts_at: input.startsAt,
         channel: "desk",
-        client_key: input.key,
-      }),
+      }, input.key),
     );
   }
   closeWaiting(entry: Row): Promise<Row> {
@@ -469,6 +488,7 @@ export class AdminiumDesk implements DeskDoor {
   }
   saveReview(review: Row, values: Record<string, unknown>): Promise<Row> {
     return this.run(async () => {
+      this.kept.delete("reviews");
       const real = this.realAddOn("forms", "reviews");
       const path = await this.path(real, `/${encodeURIComponent(String(review.id))}`);
       return this.row("reviews", (await this.t.mutate<{ data: Row }>(path, "PATCH", { values })).data);
@@ -496,11 +516,13 @@ export class AdminiumDesk implements DeskDoor {
   }
   syncNow(team: Id): Promise<void> {
     return this.run(async () => {
+      this.kept.delete("calendars");
       await this.t.mutate("/api/v1/calendar-sync/row/sync-now", "POST", await this.teamRef(team));
     });
   }
   saveCalendarChoices(team: Id, choices: { readCalendars?: string[] | null; countAllDay?: boolean; detail?: "first-name+initial" | "none"; resume?: true }): Promise<void> {
     return this.run(async () => {
+      this.kept.delete("calendars");
       await this.t.mutate("/api/v1/calendar-sync/row/choices", "POST", { ...(await this.teamRef(team)), ...choices });
     });
   }
@@ -550,6 +572,7 @@ export class AdminiumDesk implements DeskDoor {
   }
   disconnectCalendar(team: Id, addOn: string): Promise<void> {
     return this.run(async () => {
+      this.kept.delete("calendars");
       await this.t.mutate("/api/v1/connected-accounts/disconnect", "POST", { ...(await this.teamRef(team)), addOn });
     });
   }
