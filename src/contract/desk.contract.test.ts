@@ -365,36 +365,50 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
       });
 
       it.skipIf(!hasDemoRoute || !staffReachCalendars)(`one clash raises one row, "Keep it" holds until the overlap changes (SYN-6)${hasDemoRoute && staffReachCalendars ? "" : " — skipped: this engine cannot attach a demo calendar, or screens-only staff cannot reach its routes"}`, async () => {
-        const attach = (busy: [string, string][]) =>
-          callers.owner.post("/api/v1/calendar-sync/row/demo", {
+        const schema = ok(await stand.staff.get<{ model: { tables: { id: string; name: string }[] } }>(`/api/v1/connections/${stand.connectionId}/schema`));
+        const teamTable = schema.model.tables.find((t) => t.name === "bookings_team")!.id;
+        // The sync reads one account at most every 15 seconds: the clock moves on, and the block is checked, so a read that
+        // was skipped cannot pass for a clash that stayed the same.
+        const attach = async (busy: [string, string][]) => {
+          await stand.server.setClock((await doorFor(callers.owner)).now() + 20_000);
+          const reply = await callers.owner.post("/api/v1/calendar-sync/row/demo", {
             connection: stand.connectionId,
-            table: "bookings_team",
+            table: teamTable,
             row: String(noorTeam["id"]),
             busy: busy.map(([start, end]) => ({ start: pdt("2026-09-17", start), end: pdt("2026-09-17", end) })),
           });
-        ok(await attach([["09:00", "11:00"]]));
-        doors.desk = await doorFor(callers.desk);
+          doors.desk = await doorFor(callers.desk);
+          const blocks = await doors.desk.busy(noorTeam["id"] as string, "2026-09-17", "2026-09-18");
+          expect(blocks).toContainEqual({ start: Date.parse(pdt("2026-09-17", busy[0]![0])), end: Date.parse(pdt("2026-09-17", busy[0]![1])) });
+          return reply;
+        };
+        // The sample's own busy row (Noor, 9–11 AM) already sits over Lucia's 10 AM, and stays whatever this calendar says.
+        ok(await attach([["12:00", "13:00"]]));
         doors.noor = await doorFor(callers.noor);
         const before = await reload("desk");
         const lucia = code(before, "LMN-1779");
-        const open = (before.clashes ?? []).filter((c) => String(c.row) === String(lucia.id) && !c.kept);
-        expect(open).toHaveLength(1);
-        expect(open[0]!.block).toEqual({ start: Date.parse(pdt("2026-09-17", "09:00")), end: Date.parse(pdt("2026-09-17", "11:00")) });
+        const kenji = code(before, "LMN-1850");
+        const of = (d: DeskData, row: Row) => (d.clashes ?? []).filter((c) => String(c.row) === String(row.id));
+        expect(of(before, lucia)).toHaveLength(1);
+        expect(of(before, lucia)[0]!.block).toEqual({ start: Date.parse(pdt("2026-09-17", "09:00")), end: Date.parse(pdt("2026-09-17", "11:00")) });
         expect(needsOf(before, doors.desk.who(), CLOCK, ZONE, {}).filter((n) => n.kind === "clash" && String(n.booking.id) === String(lucia.id))).toHaveLength(1);
-        expect(((await reload("noor")).clashes ?? []).some((c) => String(c.row) === String(lucia.id))).toBe(true);
+        expect(of(await reload("noor"), lucia)).toHaveLength(1);
         expect(before.calendars[String(noorTeam["id"])]?.accounts[0]?.state).toBe("connected");
 
-        await doors.desk.keepClash(open[0]!);
+        await doors.desk.keepClash(of(before, lucia)[0]!);
         const kept = await reload("desk");
-        expect((kept.clashes ?? []).find((c) => String(c.row) === String(lucia.id))?.kept).toBe(true);
+        expect(of(kept, lucia)[0]?.kept).toBe(true);
         expect(needsOf(kept, doors.desk.who(), CLOCK, ZONE, {}).some((n) => n.kind === "clash" && String(n.booking.id) === String(lucia.id))).toBe(false);
 
+        // Kenji's 12:30–1:30 PM: the busy time covers its first half.
+        expect(of(kept, kenji)).toHaveLength(1);
+        await doors.desk.keepClash(of(kept, kenji)[0]!);
         // A longer busy time over the same part of the booking is the same clash: it stays kept.
-        ok(await attach([["09:00", "12:00"]]));
-        expect(((await reload("desk")).clashes ?? []).find((c) => String(c.row) === String(lucia.id))?.kept).toBe(true);
+        ok(await attach([["11:45", "13:00"]]));
+        expect(of(await reload("desk"), kenji)[0]?.kept).toBe(true);
         // A changed overlap is a new clash, and it is raised again.
-        ok(await attach([["10:30", "12:00"]]));
-        const raised = ((await reload("desk")).clashes ?? []).filter((c) => String(c.row) === String(lucia.id));
+        ok(await attach([["12:00", "14:00"]]));
+        const raised = of(await reload("desk"), kenji);
         expect(raised).toHaveLength(1);
         expect(raised[0]!.kept).toBe(false);
       });

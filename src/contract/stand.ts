@@ -169,7 +169,7 @@ export interface Stand {
 const tableName = (ref: string) => (ref.includes("_") && /^(offers|forms)_/.test(ref) ? ref : `${PREFIX}${ref}`);
 
 /** Boot, install with its add-ons, set San Francisco's clock and dollars, add the sample (unless asked not to), and open the shop. */
-export async function standUp(engine: Engine, port: number, name: string, options: { sample?: boolean; clock?: number; addOns?: readonly string[] } = {}): Promise<Stand> {
+export async function standUp(engine: Engine, port: number, name: string, options: { sample?: boolean; clock?: number; addOns?: readonly string[]; manifest?: string } = {}): Promise<Stand> {
   const clock = options.clock ?? CLOCK;
   const server = await boot(engine, port, clock - 60_000, { database: dbName(name, engine) });
   try {
@@ -189,7 +189,7 @@ export async function standUp(engine: Engine, port: number, name: string, option
       const staged = await staff.post(`/api/v1/add-ons/upload?expectedSha512=${encodeURIComponent(addOn.integrity)}`, addOn.buffer);
       if (![200, 201].includes(staged.status)) throw new Error(`${addOn.key} upload: ${JSON.stringify(staged.body).slice(0, 600)}`);
     }
-    const app = appBundle({ manifest: MANIFEST_TEXT });
+    const app = appBundle({ manifest: options.manifest ?? MANIFEST_TEXT });
     const staged = await staff.post(`/api/v1/apps/upload?expectedSha512=${encodeURIComponent(app.integrity)}`, app.buffer);
     if (![200, 201].includes(staged.status)) throw new Error(`upload: ${JSON.stringify(staged.body).slice(0, 1500)}`);
     const body = { key: app.key, version: app.version, connectionId };
