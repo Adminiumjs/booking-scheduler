@@ -12,7 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { A, useApp, yes } from "../app.tsx";
 import type { Held, Row } from "../door.ts";
 import { dayOf, fmtDay, fmtDayYear, fmtMoney, fmtWhen } from "../format.ts";
-import { Icon, Tile } from "../parts.tsx";
+import { Blank, Icon, Tile } from "../parts.tsx";
 
 const UPCOMING = new Set(["booked", "paying", "offered"]);
 
@@ -79,9 +79,11 @@ export default function Account() {
   const [waiting, setWaiting] = useState<Row[]>([]);
   const [held, setHeld] = useState<Held>({ packs: [], cards: [] });
   const [problem, setProblem] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
-    const [b, w, h] = await Promise.all([door.myBookings(), door.myWaitlist().catch(() => [] as Row[]), door.held()]);
+    setFailed(false);
+    const [b, w, h] = await Promise.all([door.myBookings(), door.myWaitlist(), door.held()]);
     setBookings(b);
     setWaiting(w.filter((row) => row["state"] === "waiting" || row["state"] === "offered"));
     setHeld(h);
@@ -92,7 +94,7 @@ export default function Account() {
       go("/sign-in", { replace: true });
       return;
     }
-    load().catch(() => setBookings([]));
+    load().catch(() => setFailed(true));
   }, [door, go, load]);
 
   const stamp = now();
@@ -109,6 +111,15 @@ export default function Account() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings]);
 
+  if (failed) {
+    return (
+      <Blank icon="cloud-off" title={t("somethingWrong")}>
+        <button type="button" className="lm-btn primary" onClick={() => void load().catch(() => setFailed(true))}>
+          {t("tryAgain")}
+        </button>
+      </Blank>
+    );
+  }
   if (me === null || bookings === null) {
     return (
       <main id="lm-main" className="lm-narrow-page" style={{ maxWidth: 880 }} aria-busy="true" aria-label={t("loading")}>

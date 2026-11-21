@@ -54,7 +54,7 @@ const REFUSAL_WORD: Partial<Record<Refusal, Word>> = {
   unknown: "somethingWrong",
 };
 
-function useStrip(serviceId: string | null, who: string | null, exclude: string | undefined, from: string) {
+function useStrip(serviceId: string | null, who: string | null, exclude: string | undefined, from: string, viaLink: boolean) {
   const { door } = useApp();
   const [days, setDays] = useState<StripDay[] | null>(null);
   useEffect(() => {
@@ -62,13 +62,13 @@ function useStrip(serviceId: string | null, who: string | null, exclude: string 
     const ctl = new AbortController();
     setDays(null);
     door
-      .days(serviceId, who, from, STRIP, exclude, ctl.signal)
+      .days(serviceId, who, from, STRIP, exclude, ctl.signal, viaLink)
       .then((d) => setDays(d as StripDay[]))
       .catch(() => {
         if (!ctl.signal.aborted) setDays([]);
       });
     return () => ctl.abort();
-  }, [door, serviceId, who, from, exclude]);
+  }, [door, serviceId, who, from, exclude, viaLink]);
   return [days, setDays] as const;
 }
 
@@ -108,7 +108,8 @@ export default function Book({ move }: { move?: MoveTarget }) {
 
   const teamId = who === ANYONE ? null : who;
   const exclude = move?.id;
-  const [strip, setStrip] = useStrip(step >= 3 && service !== null ? service.id : null, teamId, exclude, from);
+  const viaLink = moving && !move.signedIn;
+  const [strip, setStrip] = useStrip(step >= 3 && service !== null ? service.id : null, teamId, exclude, from, viaLink);
 
   useEffect(() => {
     setForm((f) => ({ ...f, name: f.name || String(me?.["name"] ?? ""), email: f.email || String(me?.["email"] ?? ""), phone: f.phone || String(me?.["phone"] ?? "") }));
@@ -130,13 +131,13 @@ export default function Book({ move }: { move?: MoveTarget }) {
       if (service === null || day === null) return;
       setTimes(null);
       door
-        .times(service.id, teamId, day, exclude, signal)
+        .times(service.id, teamId, day, exclude, signal, viaLink)
         .then((list) => setTimes(list.filter((s) => s.state === "free").map((s) => ({ minutes: hhmm(s.time) }))))
         .catch(() => {
           if (signal?.aborted !== true) setTimes([]);
         });
     },
-    [door, service, day, teamId, exclude],
+    [door, service, day, teamId, exclude, viaLink],
   );
 
   useEffect(() => {
@@ -204,7 +205,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
     setTime(null);
     setLost({ minutes, word });
     if (service !== null) {
-      door.days(service.id, teamId, from, STRIP, exclude).then((d) => setStrip(d as StripDay[])).catch(() => undefined);
+      door.days(service.id, teamId, from, STRIP, exclude, undefined, viaLink).then((d) => setStrip(d as StripDay[])).catch(() => undefined);
       loadTimes();
     }
   };

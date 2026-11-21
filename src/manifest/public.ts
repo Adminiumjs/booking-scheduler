@@ -36,6 +36,7 @@ export const BOOKING_SELECT = [
   "code",
   "service_id",
   "team_id",
+  "picked_by_anyone",
   "name",
   "email",
   "phone",
@@ -266,6 +267,8 @@ export const PUBLIC_ACCESS = [
 
   // ── one booking, by its own link ─────────────────────────────────────────────
   { table: "bookings", methods: ["GET"], ...OWN_LINK_CLAIM, select: BOOKING_SELECT, ...NOT_YET_WHO },
+  // Free or full, for moving this booking: its own time is not counted against it (L1a-F5).
+  { table: "bookings", key: LINK_KEY, kind: "availability", methods: ["GET"] },
   { table: "bookings", ...OWN_LINK, ...OWN_CANCEL },
   { table: "bookings", ...OWN_LINK, ...OWN_MOVE },
   { table: "bookings", ...OWN_LINK, ...OWN_PAY },

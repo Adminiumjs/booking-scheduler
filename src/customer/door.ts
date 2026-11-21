@@ -85,6 +85,7 @@ export interface CustomerRefs {
 
 export interface LinkRefs {
   read: string;
+  availability: string | null;
   cancel: string;
   move: string;
   pay: string;
@@ -145,6 +146,7 @@ export function linkRefs(config: PublicConfig, tables: Readonly<Record<string, s
   const codesTable = tables["booking_codes"] ?? `${PREFIX}booking_codes`;
   return {
     read,
+    availability: entries.find(([, e]) => e.kind === "availability")?.[0] ?? null,
     cancel: stateOnly[0] ?? "",
     move: updating("starts_at"),
     pay: updating("pay_started"),
@@ -402,14 +404,23 @@ export class LumenDoor {
     };
   }
 
-  async days(kind: string, who: string | null, from: string, days: number, exclude?: string, signal?: AbortSignal) {
-    const refs = await this.refs();
-    return this.client.bookingDays(refs.availability, { kind, resource: who ?? "any", from, days, ...(exclude === undefined ? {} : { exclude }) }, signal);
+  /** The client and ref to read free times through: a move by its link reads them on the link, so its own time is left out. */
+  private async freeTimes(viaLink: boolean): Promise<{ client: PublicClient; ref: string }> {
+    if (viaLink && this.linkClient !== null) {
+      const ref = (await this.linkRefs()).availability;
+      if (ref !== null) return { client: this.linkClient, ref };
+    }
+    return { client: this.client, ref: (await this.refs()).availability };
   }
 
-  async times(kind: string, who: string | null, date: string, exclude?: string, signal?: AbortSignal) {
-    const refs = await this.refs();
-    return this.client.bookingTimes(refs.availability, { kind, resource: who ?? "any", date, ...(exclude === undefined ? {} : { exclude }) }, signal);
+  async days(kind: string, who: string | null, from: string, days: number, exclude?: string, signal?: AbortSignal, viaLink = false) {
+    const { client, ref } = await this.freeTimes(viaLink);
+    return client.bookingDays(ref, { kind, resource: who ?? "any", from, days, ...(exclude === undefined ? {} : { exclude }) }, signal);
+  }
+
+  async times(kind: string, who: string | null, date: string, exclude?: string, signal?: AbortSignal, viaLink = false) {
+    const { client, ref } = await this.freeTimes(viaLink);
+    return client.bookingTimes(ref, { kind, resource: who ?? "any", date, ...(exclude === undefined ? {} : { exclude }) }, signal);
   }
 
   // ── signing in ────────────────────────────────────────────────────────────
@@ -445,11 +456,19 @@ export class LumenDoor {
     if (refs.customer !== null) await this.client.update(refs.customer, String(id), { review_requests: on });
   }
 
+  /** Every booking of the signed-in person, from both halves of the read. A failed read throws: it never reads as "no visits". */
   async myBookings(): Promise<Row[]> {
     const refs = await this.refs();
-    const lists = await Promise.all(refs.myBookings.map((ref) => this.client.list<Row>(ref, { limit: 100, order: "starts_at.desc" }).then((p) => p.data).catch(() => [] as Row[])));
     const byId = new Map<string, Row>();
-    for (const row of lists.flat()) byId.set(String(row["id"]), row);
+    for (const ref of refs.myBookings) {
+      for (let cursor: string | undefined, pages = 0; pages < 20; pages += 1) {
+        const page = await this.client.list<Row>(ref, { limit: 100, ...(cursor === undefined ? {} : { cursor }) });
+        for (const row of page.data) byId.set(String(row["id"]), row);
+        const next = page.cursor?.next ?? null;
+        if (next === null || page.data.length === 0) break;
+        cursor = next;
+      }
+    }
     return [...byId.values()];
   }
 
