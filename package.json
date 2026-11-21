@@ -15,6 +15,7 @@
     "demo:import": "node db/demo.mjs import",
     "demo:wipe": "node db/demo.mjs wipe",
     "demo:reset": "node db/demo.mjs reset",
+    "build:surface:staff": "VITE_ADMINIUM_SURFACE_SIDE=staff tsc -b && VITE_ADMINIUM_SURFACE_SIDE=staff vite build --base=/apps/bookings/staff/ --outDir dist-surface/bookings/staff",
     "typecheck": "tsc -b",
     "contract": "CONTRACT=1 vitest run src/contract/",
     "manifest": "vite-node scripts/write-manifest.ts",

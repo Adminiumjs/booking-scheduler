@@ -17,6 +17,7 @@ import "./styles/components.css";
 import { I18nProvider } from "./i18n/index.tsx";
 import { setDataSource } from "./data/source.ts";
 import { clientFromEnv, loadSnapshot, snapshotSource } from "./data/adminiumSource.ts";
+import { SURFACE_SIDE } from "./surface.ts";
 
 const container = document.getElementById("root");
 if (!container) throw new Error('Missing #root — check index.html');
@@ -39,6 +40,12 @@ if (!container) throw new Error('Missing #root — check index.html');
  * looks exactly like a working app.
  */
 async function boot(): Promise<void> {
+  // The staff build is the desk, on the signed-in person's session. Behind a flag that folds, so no other bundle carries it.
+  if (SURFACE_SIDE === "staff") {
+    const { bootDesk } = await import("./desk/boot.tsx");
+    await bootDesk(container as HTMLElement);
+    return;
+  }
   const client = clientFromEnv();
   if (client !== null) {
     const snap = await loadSnapshot(client);
