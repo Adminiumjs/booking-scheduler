@@ -157,7 +157,7 @@ export default function Reviews() {
   }, [door]);
 
   const more = useCallback(async () => {
-    if (page?.next == null) return;
+    if (page === null || page.next === null) return;
     const next = await door.reviews(PAGE, page.next);
     if (next === null) return;
     setPage(next);

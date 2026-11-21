@@ -251,7 +251,8 @@ export interface ReviewPage {
   /** Five stars first. */
   bars: number[];
   list: Row[];
-  next: string | null;
+  /** Where the next page starts; null at the end. */
+  next: number | null;
 }
 
 export interface ReviewLink {
@@ -560,16 +561,20 @@ export class LumenDoor {
   // ── reviews ───────────────────────────────────────────────────────────────
 
   /** The published reviews and their totals. Null while reviews are off. */
-  async reviews(limit: number, cursor?: string): Promise<ReviewPage | null> {
+  async reviews(limit: number, offset = 0): Promise<ReviewPage | null> {
     try {
       const [totals, list] = await Promise.all([
-        this.client.list<Row>("forms_review_totals", { limit: 20 }),
-        this.client.list<Row>("forms_reviews", { order: "submitted_at.desc", limit, ...(cursor === undefined ? {} : { cursor }) }),
+        this.client.list<Row>("forms_review_totals", { limit: 100 }),
+        // Sent as it is: the client reads a list that also says its `count` as one row (0.3.71).
+        this.raw<{ data: Row[] }>(this.client, this.served.publishableKey, `/api/v1/public/records/forms_reviews?order=submitted_at.desc&limit=${String(limit)}&offset=${String(offset)}`),
       ]);
-      const sums = [5, 4, 3, 2, 1].map((n) => totals.data.reduce((a, r) => a + Number(r[`c${String(n)}`] ?? 0), 0));
-      const count = totals.data.reduce((a, r) => a + Number(r["count"] ?? 0), 0);
-      const sum = totals.data.reduce((a, r) => a + Number(r["sum"] ?? 0), 0);
-      return { count, average: count === 0 ? 0 : sum / count, bars: sums, list: list.data, next: list.cursor?.next ?? null };
+      // One row per service, and one for the whole app (no subject): only that one is the studio's total.
+      const whole = totals.data.find((r) => (r["about_key"] ?? "") === "" && (r["about_table"] ?? "") === "");
+      const sums = [5, 4, 3, 2, 1].map((n) => Number(whole?.[`c${String(n)}`] ?? 0));
+      const count = Number(whole?.["count"] ?? 0);
+      const sum = Number(whole?.["sum"] ?? 0);
+      const seen = offset + list.data.length;
+      return { count, average: count === 0 ? 0 : sum / count, bars: sums, list: list.data, next: seen < count && list.data.length > 0 ? seen : null };
     } catch (error) {
       if (error instanceof PublicApiError && (error.status === 404 || error.code === "PUBLIC_SWITCHED_OFF" || error.code === "PUBLIC_REF_NOT_FOUND")) return null;
       throw error;

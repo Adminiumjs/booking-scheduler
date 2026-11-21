@@ -259,6 +259,80 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
         await expect(door.takeOffer(read["id"], false)).rejects.toThrow();
       }, 60_000);
 
+      describe("reviews", () => {
+        const visit = async (code: string) => (await stand.rows("bookings")).find((b) => b["code"] === code)!;
+
+        it("a guest's own link never reviews a visit it cannot prove (cQ23, ACC-6)", async () => {
+          const row = await visit("LMN-1738");
+          const token = await linkCodeOf(engine as Engine, stand.server.base, row["id"]);
+          const door = tab();
+          expect(await door.openLink(token)).toBe("opened");
+          const state = await door.reviewState(row["id"], false);
+          expect(state?.open).toBe(false);
+          expect(state?.shownName).toBe("");
+          await expect(door.sendReview(row["id"], false, 5, "Lovely")).rejects.toThrow();
+        }, 60_000);
+
+        it("a customer signed in reviews their visit once, and it waits to be read before it is public", async () => {
+          await nextHour();
+          const ava = tab();
+          await signIn(ava, "ava.reyes@example.com");
+          const row = await visit("LMN-1738");
+          const state = (await ava.reviewState(row["id"], true))!;
+          expect([state.open, state.reviewedAt]).toEqual([true, null]);
+          expect(state.shownName).toBe("Ava R.");
+          await ava.sendReview(row["id"], true, 2, "The colour was not what I asked for.");
+          await expect(ava.sendReview(row["id"], true, 5, "Again")).rejects.toThrow();
+          expect((await ava.reviewState(row["id"], true))!.reviewedAt).not.toBeNull();
+          expect((await tab().reviews(10))?.count ?? 0).toBe(0);
+
+          const kept = (await stand.rows("forms_reviews")).find((r) => num(r["stars"]) === 2)!;
+          await stand.patch("forms_reviews", kept["id"], { state: "published" });
+          const page = (await tab().reviews(10))!;
+          expect([page.count, page.average, page.bars]).toEqual([1, 2, [0, 0, 0, 1, 0]]);
+          // First name and initial, and the specialist by first name in what is public (cQ22).
+          const shown = page.list[0]!;
+          expect(shown["shown_name"]).toBe("Ava R.");
+          expect(String(shown["about_detail"]).split(/\s+/)[0]).toBe("Ivy");
+          expect(JSON.stringify(shown)).not.toContain("ava.reyes");
+        }, 180_000);
+      });
+
+      describe("on the studio's own website (cT13, cQ7)", () => {
+        const site = "https://lumenstudio.example";
+        const policyOf = async (path: string) => {
+          const res = await fetch(`${stand.server.base}/apps/bookings/customer${path}`);
+          return { status: res.status, csp: res.headers.get("content-security-policy") ?? "", xfo: res.headers.get("x-frame-options"), store: res.headers.get("cache-control") ?? "" };
+        };
+
+        beforeAll(async () => {
+          ok(await stand.staff.post("/api/v1/privacy/websites", { lines: [site] }));
+        }, 60_000);
+
+        it("lets a listed website frame only the declared screens", async () => {
+          for (const path of ["/?frame=1", "/book?frame=1&service=1", "/reviews?frame=1"]) {
+            const page = await policyOf(path);
+            expect(page.status, path).toBe(200);
+            expect(page.csp, path).toContain(site);
+            expect(page.xfo, path).toBeNull();
+            expect(page.store, path).toContain("no-store");
+          }
+        }, 60_000);
+
+        it("never lets a website frame a private page", async () => {
+          for (const path of ["/b?frame=1", "/account?frame=1", "/sign-in?frame=1", "/find?frame=1", "/packs?frame=1", "/gift-cards?frame=1", "/paid?frame=1", "/review?frame=1"]) {
+            const page = await policyOf(path);
+            expect(page.csp, path).not.toContain(site);
+            expect(page.csp, path).toContain("frame-ancestors 'self'");
+          }
+        }, 60_000);
+
+        it("hands the frame the listed websites", async () => {
+          const doc = ok(await new Caller(stand.server.base).get<{ frameOrigins?: string[] }>("/apps/bookings/customer/surface-config.json?frame=1"));
+          expect(doc.frameOrigins).toContain(site);
+        }, 60_000);
+      });
+
       describe("with payments on, as somebody rehearsing the checkout", () => {
         let money: () => LumenDoor;
         let nell: LumenDoor;
