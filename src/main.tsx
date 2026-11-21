@@ -17,6 +17,7 @@ import "./styles/components.css";
 import { I18nProvider } from "./i18n/index.tsx";
 import { setDataSource } from "./data/source.ts";
 import { clientFromEnv, loadSnapshot, snapshotSource } from "./data/adminiumSource.ts";
+import { SURFACE_SIDE } from "./surface.ts";
 
 const container = document.getElementById("root");
 if (!container) throw new Error('Missing #root — check index.html');
@@ -39,6 +40,12 @@ if (!container) throw new Error('Missing #root — check index.html');
  * looks exactly like a working app.
  */
 async function boot(): Promise<void> {
+  // The customer side is its own app (plan 78): it reads the studio through the public API and shares no state with the demo's store.
+  if (SURFACE_SIDE === "customer" || import.meta.env.VITE_LUMEN_CUSTOMER === "1") {
+    const { bootCustomer } = await import("./customer/CustomerApp.tsx");
+    await bootCustomer(container as HTMLElement);
+    return;
+  }
   const client = clientFromEnv();
   if (client !== null) {
     const snap = await loadSnapshot(client);
