@@ -2953,10 +2953,6 @@
               "name"
             ],
             "code": "code",
-            "person": [
-              "team_id",
-              "name"
-            ],
             "studio": {
               "name": {
                 "table": "settings",
@@ -2973,13 +2969,25 @@
             },
             "notice": {
               "en-US": "Declining in your calendar does not cancel. Use your booking link.",
-              "de-DE": "Eine Absage im Kalender storniert nicht. Nutzen Sie Ihren Buchungslink.",
-              "fr-FR": "Refuser dans votre agenda n'annule pas. Utilisez votre lien de réservation.",
-              "da-DK": "Et afslag i din kalender aflyser ikke. Brug dit bookinglink.",
-              "cs-CZ": "Odmítnutí v kalendáři rezervaci neruší. Použijte odkaz na rezervaci.",
-              "ar-EG": "الرفض في تقويمك لا يلغي الحجز. استخدم رابط حجزك.",
+              "de-DE": "Eine Absage im Kalender storniert den Termin nicht. Nutzen Sie Ihren Buchungslink.",
+              "fr-FR": "Refuser dans votre agenda n'annule pas le rendez-vous. Utilisez votre lien de réservation.",
+              "da-DK": "Et afslag i din kalender aflyser ikke besøget. Brug dit bookinglink.",
+              "cs-CZ": "Odmítnutí v kalendáři návštěvu nezruší. Použijte odkaz na svou rezervaci.",
+              "ar-EG": "الرفض في التقويم لا يلغي الموعد. استخدم رابط حجزك.",
               "zh-CN": "在日历中拒绝不会取消预约。请使用您的预约链接。",
               "zh-TW": "在行事曆中拒絕不會取消預約。請使用您的預約連結。"
+            },
+            "feed": {
+              "own": "email",
+              "active": "active",
+              "detail": {
+                "table": "settings",
+                "column": "event_detail"
+              },
+              "customer": [
+                "customer_id",
+                "name"
+              ]
             }
           },
           "grid": {

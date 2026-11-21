@@ -566,15 +566,6 @@ export const TABLES: Table[] = [
       windowDays: setting("window_days"),
       windowFor: "guests",
       noticeMinutes: setting("notice_min"),
-      // What "Add to calendar" and the invitation say: no guest-typed text, no price, no link (cT12).
-      calendar: {
-        revision: "revision",
-        title: ["service_id", "name"],
-        code: "code",
-        person: ["team_id", "name"],
-        studio: { name: setting("studio_name"), address: setting("address_line1"), website: setting("website") },
-        notice: l("Declining in your calendar does not cancel. Use your booking link."),
-      },
     },
     // Offers & gift cards: what a code, a pack use or a card takes off, inside the save (CR-OFF-1).
     adjust: {
