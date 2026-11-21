@@ -5,7 +5,7 @@
  * from the fragment and cleared at once (cT8).
  */
 import { rememberPayReturn } from "@adminiumjs/public-client/frame";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useApp, yes } from "../app.tsx";
 import type { Row } from "../door.ts";
@@ -61,14 +61,18 @@ export default function Booking() {
     return row === null ? null : { row, signedIn: false };
   }, [door, asked]);
 
+  // The link's code is read once and spent once, however often this effect runs.
+  const [token] = useState(() => tokenOf(window.location.hash, 64));
+  const opening = useRef<Promise<"opened" | "unknown" | "closed"> | null>(null);
+
   useEffect(() => {
     let on = true;
     (async () => {
-      const token = tokenOf(window.location.hash, 64);
       if (token !== null) {
+        // Out of the address at once: it reaches no history entry, referrer or log (cT8).
         window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-        const opened = await door.openLink(token);
-        if (opened !== "opened") {
+        opening.current ??= door.openLink(token);
+        if ((await opening.current) !== "opened") {
           if (on) setLoad({ kind: "expired" });
           return;
         }
@@ -82,7 +86,7 @@ export default function Booking() {
     return () => {
       on = false;
     };
-  }, [door, read]);
+  }, [door, read, token]);
 
   const reload = useCallback(async () => {
     const found = await read();

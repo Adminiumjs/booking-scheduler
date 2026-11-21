@@ -69,19 +69,12 @@ html[data-adminium-frame] .lm-root {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.lm-root h1,
-.lm-root h2,
-.lm-root h3,
-.lm-root p,
-.lm-root dl,
-.lm-root dd,
-.lm-root ul,
-.lm-root ol {
+/* No specificity of its own, so every class below can set its own margins and padding. */
+:where(.lm-root) :where(h1, h2, h3, p, dl, dd, ul, ol) {
   margin: 0;
   padding: 0;
 }
-.lm-root ul,
-.lm-root ol {
+:where(.lm-root) :where(ul, ol) {
   list-style: none;
 }
 .lm-mono {
