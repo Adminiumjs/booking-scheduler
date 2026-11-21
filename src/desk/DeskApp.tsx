@@ -44,10 +44,9 @@ const ICON: Record<string, ReactNode> = {
 export function sectionsFor(who: Person, data: DeskData): string[] {
   return DESK_NAV.filter((entry) => {
     switch (entry.id) {
+      // A specialist works from Today, their week and their own card (L2a-F9). A client of theirs opens from the booking.
       case "clients":
-        return who.can("customers", "read");
       case "services":
-        // A specialist reads service names for their own diary, and has no price list to open.
         return who.can("bookings", "create");
       case "waiting":
         return who.can("waitlist", "read");
@@ -186,7 +185,10 @@ function Shell() {
       )}
       <div className="lm-column">
         <header className="lm-top">
-          <div className="lm-top-title">{t(DESK_NAV.find((n) => n.view === shown)!.labelKey)}</div>
+          <div className="lm-top-title">
+            <strong>{t(DESK_NAV.find((n) => n.view === shown)!.labelKey)}</strong>
+            <small>{line === null ? studio : `${studio} · ${line}`}</small>
+          </div>
           <SearchBox />
           {who.can("bookings", "create") && (
             <button type="button" className="lm-btn lm-btn--primary" aria-label={t("nav.newBooking")} onClick={() => newBooking()}>

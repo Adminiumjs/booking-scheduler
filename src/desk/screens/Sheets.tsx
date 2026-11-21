@@ -269,7 +269,7 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
           </div>
 
           <div className="lm-field">
-            <span className="lm-label">{t("book.time")}</span>
+            <span className="lm-sr-only">{t("book.time")}</span>
             {slots === null && <span className="lm-muted-sm">{t("common.loading")}</span>}
             {slots !== null && slots.length === 0 && <span className="lm-muted-sm">{t("book.noTimes")}</span>}
             {slots !== null &&

@@ -248,10 +248,11 @@ export function TodayScreen() {
   const { zone } = door.facts();
   const now = door.now();
   const today = dayIn(now, zone);
-  const position = (id: unknown) => data.team.findIndex((p) => same(p.id, id));
+  // Two visits at one time: by the person's name, as the comp orders them.
+  const nameOf = (id: unknown) => text(data.team.find((p) => same(p.id, id))?.["name"]) ?? "";
   const rows = data.bookings
     .filter((b) => ON_THE_DAY.includes(String(b["state"])) && dayIn(startOf(b), zone) === today)
-    .sort((a, b) => startOf(a) - startOf(b) || position(a["team_id"]) - position(b["team_id"]));
+    .sort((a, b) => startOf(a) - startOf(b) || nameOf(a["team_id"]).localeCompare(nameOf(b["team_id"])));
   const needs = needsOf(data, door.who(), now, zone, fits);
   return (
     <div className="lm-page">

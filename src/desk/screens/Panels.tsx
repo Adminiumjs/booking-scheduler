@@ -146,8 +146,15 @@ export function BookingPanel({ id }: { id: Id }) {
         return t("pay.atStudio");
       case "paying":
         return t("pay.paying", { amt: fmt.money(line.amount) });
-      case "paid":
-        return t("pay.paid", { amt: fmt.money(line.amount) });
+      case "paid": {
+        // How it was paid, from the booking's own payment row: "Online · Stripe", "Cash".
+        const taken = data.payments.find((p) => same(p["booking_id"], booking.id) && p["kind"] === "taken");
+        const method = String(taken?.["method"] ?? "online");
+        const word = t(method === "cash" ? "pay.cash" : method === "card" ? "pay.card" : method === "gift_card" ? "pay.giftCard" : "pay.online");
+        const provider = method === "online" ? text(taken?.["provider"]) : null;
+        const how = provider === null ? word : `${word} · ${provider}`;
+        return t(booking["pay_mode"] === "deposit" ? "pay.paidDeposit" : "pay.paidFull", { amt: fmt.money(line.amount), how });
+      }
       case "kept":
         return t("pay.kept", { amt: fmt.money(line.amount) });
       case "refunded":
@@ -437,17 +444,27 @@ export function ClientPanel({ id }: { id: Id }) {
             );
           })}
         </section>
-        <NoteField
-          id="lm-client-note"
-          value={text(customer["staff_note"]) ?? ""}
-          label={t("client.notes")}
-          hint={t("client.notesHint")}
-          onSave={(next) =>
-            void run(async (d) => {
-              await d.saveCustomer(customer, { staff_note: next === "" ? null : next });
-            })
-          }
-        />
+        {writes ? (
+          <NoteField
+            id="lm-client-note"
+            value={text(customer["staff_note"]) ?? ""}
+            label={t("client.notes")}
+            hint={t("client.notesHint")}
+            onSave={(next) =>
+              void run(async (d) => {
+                await d.saveCustomer(customer, { staff_note: next === "" ? null : next });
+              })
+            }
+          />
+        ) : (
+          // A specialist reads the note on their own client, and does not write it (§7).
+          text(customer["staff_note"]) !== null && (
+            <section className="lm-mails">
+              <h3>{t("client.notes")}</h3>
+              <p className="lm-note">{text(customer["staff_note"])}</p>
+            </section>
+          )
+        )}
         {data.reviews !== null && (
           <section className="lm-mails">
             <h3>{t("client.reviews")}</h3>

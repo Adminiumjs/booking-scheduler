@@ -663,9 +663,21 @@ span.lm-chip {
   background: var(--surface);
 }
 .lm-top-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.lm-top-title strong {
   font-size: 15px;
   font-weight: 800;
-  white-space: nowrap;
+}
+.lm-top-title small {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
 }
 .lm-search {
   position: relative;
@@ -837,7 +849,7 @@ span.lm-chip {
   padding: 14px 16px;
   border-block-end: 1px solid var(--border);
 }
-.lm-empty {
+.lm-app .lm-empty {
   padding: 24px 16px;
   font-size: 13px;
   color: var(--fg-muted);
@@ -909,6 +921,7 @@ span.lm-chip {
 .lm-today-time {
   flex-shrink: 0;
   width: 66px;
+  white-space: nowrap;
   padding-block-start: 2px;
   font-size: 13px;
 }
@@ -1067,8 +1080,9 @@ span.lm-chip {
 .lm-cal-notice.is-danger {
   background: var(--danger-soft);
 }
+/* No scroll box of its own: the page scrolls, so the column heads stay under the toolbar. */
 .lm-grid-wrap {
-  overflow-x: auto;
+  min-width: fit-content;
 }
 .lm-grid {
   display: flex;
@@ -1792,7 +1806,14 @@ span.lm-chip {
 }
 .lm-table--services {
   min-width: 860px;
+  table-layout: fixed;
 }
+.lm-table--services th:nth-child(1) { width: 23%; }
+.lm-table--services th:nth-child(2),
+.lm-table--services th:nth-child(3) { width: 11%; }
+.lm-table--services th:nth-child(4) { width: 8%; }
+.lm-table--services th:nth-child(5) { width: 18%; }
+.lm-table--services th:nth-child(6) { width: 12%; }
 .lm-table th {
   padding: 10px 14px;
   border-block-end: 1px solid var(--border);
@@ -1883,6 +1904,15 @@ span.lm-chip {
 .lm-week-row > span:first-child {
   font-weight: 700;
   color: var(--fg-muted);
+}
+/* A person's week reads as two columns, the hours beside the day (comp L2 278). */
+.lm-person .lm-week {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+}
+.lm-person .lm-week-row {
+  display: contents;
 }
 .lm-offs {
   display: flex;
@@ -2353,9 +2383,6 @@ span.lm-chip {
     max-height: 92%;
     border-radius: 22px 22px 0 0;
     animation: lm-up 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .lm-today-time {
-    width: 58px;
   }
   .lm-toasts {
     inset-block-end: 72px;
