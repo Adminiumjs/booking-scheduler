@@ -30,6 +30,7 @@ const booking = (over: Partial<BookingFacts> = {}): BookingFacts => ({
   deposit: 0,
   price: 58,
   paid: 0,
+  cardPaid: 0,
   refunded: 0,
   discount: 0,
   payDue: 0,
@@ -158,8 +159,10 @@ describe("what was paid, kept or given back", () => {
   });
 
   it("says nothing was taken only when that is true (MON-8)", () => {
-    expect(letGoLine({ paid: 0 })).toEqual({ word: "nothingTaken" });
-    expect(letGoLine({ paid: 50 })).toEqual({ word: "lateMoney", amount: 50 });
+    expect(letGoLine({ paid: 0, cardPaid: 0 })).toEqual({ word: "nothingTaken" });
+    expect(letGoLine({ paid: 50, cardPaid: 0 })).toEqual({ word: "lateMoney", amount: 50 });
+    // A card's part went back to the card: no money of theirs is held.
+    expect(letGoLine({ paid: 30, cardPaid: 30 })).toEqual({ word: "nothingTaken" });
   });
 });
 

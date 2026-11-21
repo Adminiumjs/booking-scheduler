@@ -29,6 +29,7 @@ export default function Paid() {
   const [row, setRow] = useState<Row | null>(null);
   const [view, setView] = useState<PayView>("checking");
   const [none, setNone] = useState(false);
+  const [stopped, setStopped] = useState(false);
   const started = useRef(Date.now());
 
   useEffect(() => {
@@ -44,26 +45,30 @@ export default function Paid() {
     let timer: ReturnType<typeof setTimeout> | null = null;
     const ask = async () => {
       try {
-        const read = await door.linkBooking();
+        // The way it was paid: by the booking's own link, or signed in.
+        const read = kept.signedIn === true ? ((await door.myBookings()).find((b) => String(b["id"]) === kept.id) ?? null) : await door.linkBooking();
         if (!on) return;
         if (read === null) {
           setNone(true);
           return;
         }
         setRow(read);
-        const pay = await door.payState(read["id"], false).catch(() => null);
+        const pay = await door.payState(read["id"], kept.signedIn === true).catch(() => null);
         if (!on) return;
         const next = payViewOf(pay?.state ?? null, String(read["state"]) as BookingState);
         setView(next);
         if (next === "paid") {
-          go("/b?new=1", { replace: true });
+          go(`/b?new=1&id=${String(read["id"])}`, { replace: true });
           return;
         }
         if (next === "letGo" || next === "failed") return;
       } catch {
         // Asked again below.
       }
-      if (on && Date.now() - started.current < ASK_FOR_MS) timer = setTimeout(() => void ask(), ASK_EVERY_MS);
+      if (!on) return;
+      if (Date.now() - started.current < ASK_FOR_MS) timer = setTimeout(() => void ask(), ASK_EVERY_MS);
+      // Nothing more will be learned by waiting here: say so, rather than spin.
+      else setStopped(true);
     };
     void ask();
     return () => {
@@ -81,10 +86,10 @@ export default function Paid() {
       </Blank>
     );
   }
-  return <PayCard row={row} view={view} />;
+  return <PayCard row={row} view={view} stopped={stopped} signedIn={kept?.signedIn === true} />;
 }
 
-function PayCard({ row, view }: { row: Row | null; view: PayView }) {
+function PayCard({ row, view, stopped, signedIn }: { row: Row | null; view: PayView; stopped: boolean; signedIn: boolean }) {
   const { t, clock, studio, door, go } = useApp();
   const [busy, setBusy] = useState(false);
   const [refused, setRefused] = useState(false);
@@ -98,7 +103,7 @@ function PayCard({ row, view }: { row: Row | null; view: PayView }) {
     setBusy(true);
     setRefused(false);
     try {
-      window.location.assign(await door.startPaying(row["id"], false));
+      window.location.assign(await door.startPaying(row["id"], signedIn));
     } catch {
       setRefused(true);
       setBusy(false);
@@ -107,14 +112,14 @@ function PayCard({ row, view }: { row: Row | null; view: PayView }) {
 
   const letGo = b === null ? null : letGoLine(b);
   const titles: Record<PayView, string> = {
-    checking: t("checking"),
+    checking: stopped ? t("lostWatch") : t("checking"),
     paid: t("checking"),
     confirming: t("confirming"),
     failed: t("failed"),
     letGo: letGo?.word === "lateMoney" ? t("letGoMoney", { amt: fmtMoney(clock, letGo.amount) }) : t("letGoTitle", { n: studio.holdMin }),
   };
   const badge = view === "failed" ? "danger" : view === "letGo" ? "mute" : view === "confirming" ? "warn" : "";
-  const icon = view === "failed" ? "circle-x" : view === "letGo" ? "timer-off" : view === "confirming" ? "hourglass" : "loader-circle";
+  const icon = view === "failed" ? "circle-x" : view === "letGo" ? "timer-off" : view === "confirming" || stopped ? "hourglass" : "loader-circle";
 
   return (
     <main id="lm-main" className="lm-narrow-page" style={{ maxWidth: 600, paddingBlock: "clamp(24px,5cqi,56px)" }}>
@@ -160,7 +165,7 @@ function PayCard({ row, view }: { row: Row | null; view: PayView }) {
               {t("bookAgain")}
             </button>
           ) : null}
-          {view === "confirming" ? (
+          {view === "confirming" || (view === "checking" && stopped) ? (
             <button type="button" className="lm-btn" onClick={() => go("/")}>
               {t("backHome", { studio: studio.name })}
             </button>

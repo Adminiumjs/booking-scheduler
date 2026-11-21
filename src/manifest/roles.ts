@@ -46,6 +46,7 @@ const allBut = (ref: string, ...leaveOut: string[]): string[] =>
 
 /** What on a booking is the guest's, the guard's or an add-on's: no member of staff types it. */
 export const NOT_TYPED_ON_A_BOOKING = [
+  "card_paid",
   "no_review_request",
   "picked_by_anyone",
   "door",
@@ -63,6 +64,7 @@ export const NOT_TYPED_ON_A_BOOKING = [
 
 /** What a specialist may never read of a booking: money, and how to reach the customer (§7). */
 export const NOT_THE_SPECIALISTS = [
+  "card_paid",
   "no_review_request",
   "price",
   "pay_mode",
@@ -115,7 +117,7 @@ const DESK_BOOKING_MAKES = typed("bookings", ...NOT_TYPED_ON_A_BOOKING);
 const DESK_BOOKING_WRITES = DESK_BOOKING_MAKES.filter((c) => !["service_id", "customer_id", "ask_online", "deposit_link", "waitlist_id", "channel"].includes(c));
 
 /** Records of money and of what was sent: nobody deletes them. */
-const NO_DELETE = ["messages", "payments", "bookings", "purchases", "purchase_lines", "calendar_busy"];
+const NO_DELETE = ["messages", "payments", "bookings", "purchases", "purchase_lines", "purchase_refunds", "calendar_busy"];
 /** A table no role opens: the desk reads busy blocks through the sync's own route (T08). */
 const CLOSED = ["calendar_busy"];
 
@@ -126,7 +128,8 @@ export const ROLES = [
     permissions: [
       "app:@:staff",
       ...TABLE_REFS.filter((table) => !CLOSED.includes(table)).flatMap((table) =>
-        NO_DELETE.includes(table) ? grant(table, "read", "create", "update") : grant(table, "read", "create", "update", "delete"),
+        // Adminium alone writes a sale's refund, from the owner's cancel: a row by hand would refund with no recall of the pack.
+        table === "purchase_refunds" ? grant(table, "read") : NO_DELETE.includes(table) ? grant(table, "read", "create", "update") : grant(table, "read", "create", "update", "delete"),
       ),
       ...["bookings", "customers", "waitlist", "purchases", "purchase_lines", "messages", "team"].flatMap((table) => [pii(table), ...grant(table, "export")]),
       ...PAGE_REFS.flatMap((page) => [view(page), `page:@${page}:edit`]),

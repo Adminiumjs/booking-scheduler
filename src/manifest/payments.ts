@@ -59,7 +59,18 @@ export const PAYMENTS = {
       returnTo: "/paid",
       receipt: "engine",
       instantOnly: true,
-      refunds: { model: "column" },
+      // Kept as rows so a sale is refunded only by the owner's cancel: that cancel also takes back the pack or the card.
+      refunds: {
+        model: "rows",
+        table: "purchase_refunds",
+        payment: "payment_id",
+        amount: "amount",
+        when: [{ column: "method", eq: "online" }],
+        providerRef: "provider_ref",
+        state: "refund_state",
+        auto: { values: { automatic: true } },
+      },
+      refundOn: { moves: [{ from: ["paid"], to: "cancelled", by: ["staff"] }] },
     },
   ],
 };

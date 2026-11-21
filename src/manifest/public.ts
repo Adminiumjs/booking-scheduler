@@ -55,6 +55,7 @@ export const BOOKING_SELECT = [
   "discount",
   "asked",
   "paid",
+  "card_paid",
   "pay_due",
   "refunded",
   "deposit_link",
@@ -292,6 +293,10 @@ const OWN_GOOGLE = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["goo
 /** Turning an offer down, so its waiting-list row can close (cQ29). */
 const LET_OFFER_GO = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state", "lapsed_by"], writableValues: { state: ["lapsed"], lapsed_by: ["guest"] }, writableWhen: { state: ["offered"] } };
 
+/** Taking an offer while it is open: as it is, or through paying when the service asks for money (MOD-8). */
+const TAKE_OFFER = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["booked"] }, writableWhen: { state: ["offered"], offer_until: "from-now" } };
+const TAKE_OFFER_PAYING = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["paying"] }, defaults: { pay_started: true }, writableWhen: { state: ["offered"], offer_until: "from-now" } };
+
 const SIGNED_IN = { level: "verified", claimedBy: { table: "customers", column: "customer_id" } };
 /** The one entry that opens the link's row. */
 const OWN_LINK_CLAIM = {
@@ -310,8 +315,9 @@ export const PUBLIC_ACCESS = [
     writable: ["name", "phone", "language", "review_requests"],
     claim: { verify: "email-link", email: "email" },
     humanCheck: true,
-    // "Delete my details" also stops every link of their bookings. T13's rule cancels the visits ahead (cQ29).
-    forget: { columns: ["email", "name", "phone", "review_requests"], stamp: "forgotten_at", links: true },
+    // "Delete my details" also stops every link of their bookings and blanks what those rows copied of them. The page cancels
+    // the visits ahead first, and says so (cQ29).
+    forget: { columns: ["email", "name", "phone", "review_requests"], stamp: "forgotten_at", links: true, copies: true },
   },
   { table: "bookings", methods: ["GET"], ...SIGNED_IN, select: BOOKING_SELECT, filters: [{ column: "who_hidden", op: "eq", value: 0 }] },
   { table: "bookings", methods: ["GET"], ...SIGNED_IN, select: CHANGED_SELECT, filters: [{ column: "who_hidden", op: "eq", value: 1 }] },
@@ -323,6 +329,8 @@ export const PUBLIC_ACCESS = [
   // "Take me off the list" (G8). An open offer is let go first, which puts its row back to waiting.
   { table: "waitlist", methods: ["PATCH"], ...SIGNED_IN, select: ["id", "state"], writable: ["state"], writableValues: { state: ["closed"] }, writableWhen: { state: ["waiting"] } },
   { table: "bookings", ...SIGNED_IN, ...LET_OFFER_GO },
+  { table: "bookings", ...SIGNED_IN, ...TAKE_OFFER },
+  { table: "bookings", ...SIGNED_IN, ...TAKE_OFFER_PAYING },
 
   // ── the studio's public face ─────────────────────────────────────────────────
   ...PUBLIC_FACE,
@@ -347,6 +355,6 @@ export const PUBLIC_ACCESS = [
   { table: "purchases", methods: ["GET"], key: SALE_KEY, claim: { by: "token", column: "link_token", expires: "link_expires", stopped: "link_stopped", own: true, address: "buyer_email" }, select: SALE_SELECT },
   // An offer from the waiting list, while it is open: taken as it is, or through paying when the service asks for money,
   // which starts the usual minutes (MOD-8, ACC-4). The table's moves say which fits.
-  { table: "bookings", ...OWN_LINK, methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["booked"] }, writableWhen: { state: ["offered"], offer_until: "from-now" } },
-  { table: "bookings", ...OWN_LINK, methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["paying"] }, defaults: { pay_started: true }, writableWhen: { state: ["offered"], offer_until: "from-now" } },
+  { table: "bookings", ...OWN_LINK, ...TAKE_OFFER },
+  { table: "bookings", ...OWN_LINK, ...TAKE_OFFER_PAYING },
 ];

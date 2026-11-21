@@ -178,8 +178,6 @@ export const HOLDS_TIME = ["paying", "booked", "arrived", "done"];
 export const OPEN_STATES = ["booked", "paying"];
 
 export const PAY_MODES: Record<string, string> = { none: "At the studio", deposit: "Deposit online", full: "In full online" };
-/** What a pack can cover, as Offers names it. */
-const PACK_COVERS = ["item", "category", "type", "tag"];
 export const CHANNELS: Record<string, string> = { page: "Booking page", embed: "Your website", desk: "Front desk" };
 
 /** Who may undo a step taken by mistake: never a specialist (`roles.ts`). */
@@ -690,6 +688,8 @@ export const TABLES: Table[] = [
       // What the payments hold, online or at the studio, up to what the visit comes to.
       money("paid", "Paid", { rollup: { from: "payments", via: "booking_id", sum: "kept", balance: { column: "balance", of: "net_price" }, cap: true } }),
       amount("balance", "Still owing"),
+      // Of what is paid, the part a gift card paid. A card's part goes back to the card, never to a bank (cQ31, MON-8).
+      money("card_paid", "Paid by gift card", { rollup: { from: "payments", via: "booking_id", sum: "card_part" } }),
       // What is still to pay online: it falls to nothing as money lands (MON-1).
       money("pay_due", "Still to pay online", { formula: { max: [0, { sub: ["asked", c0("paid")] }] } }),
       money("refunded", "Refunded", { rollup: { from: "payments", via: "booking_id", sum: "returned" } }),
@@ -869,7 +869,7 @@ export const TABLES: Table[] = [
       money("amount", "Amount", { formula: { coalesce: ["load_amount", { coalesce: ["sale_amount", 0] }] } }),
       text("pack_name", 80, "Pack", { ...opt, rules: frozen("pack_id", "name") }),
       { ref: "pack_uses", type: "int", nullable: true, label: l("Visits"), rules: frozen("pack_id", "uses") },
-      { ref: "pack_what", type: "enum", enum: PACK_COVERS, nullable: true, label: l("Covers"), rules: frozen("pack_id", "what") },
+      { ref: "pack_what", type: "enum", enum: ["item", "category"], nullable: true, label: l("Covers"), rules: frozen("pack_id", "what") },
       fk("pack_service", "services", "Service", { ...opt, rules: frozen("pack_id", "service_id") }),
       fk("pack_category", "categories", "Category", { ...opt, rules: frozen("pack_id", "category_id") }),
       { ref: "tax_later", type: "bool", nullable: true, default: false, label: l("Tax when used") },
@@ -898,10 +898,10 @@ export const TABLES: Table[] = [
       text("name", 80, "Name", { semantic: "name" }),
       price("price", "Price", { rules: { validation: { min: 1 } } }),
       int("uses", "Visits", { default: 5, rules: { validation: { min: 1, max: 100 } } }),
-      fk("service_id", "services", "Covers this service", opt),
-      fk("category_id", "categories", "Or this category", opt),
-      // What Offers is told it covers: the service above, or the category.
-      { ref: "what", type: "enum", enum: PACK_COVERS, default: "item", label: l("Covers"), rules: { enumLabels: { labels: { item: l("This service"), category: l("This category"), type: l("A type"), tag: l("A tag") } } } },
+      fk("service_id", "services", "Covers this service", { ...opt, rules: { requiredWhen: { column: "what", in: ["item"] } } }),
+      fk("category_id", "categories", "Or this category", { ...opt, rules: { requiredWhen: { column: "what", in: ["category"] } } }),
+      // What Offers is told it covers: this service, or this category. The link it names must be filled.
+      choice("what", "Covers", { item: "This service", category: "This category" }, { default: "item" }),
       int("valid_days", "Lasts (days)", { default: 365, rules: { validation: { min: 1, max: 1830 } } }),
       int("position", "Position", { default: 0 }),
       bool("active", "On sale", true),
@@ -944,10 +944,32 @@ export const TABLES: Table[] = [
       amount("card_balance_after", "Left on the card"),
       // What went back of it, a running total Adminium writes.
       price("refunded", "Refunded", { default: 0 }),
+      // What went back of a sale's payment, through the owner's cancel (`purchase_refunds`).
+      money("refund_rows", "Refunded with its sale", { rollup: { from: "purchase_refunds", via: "payment_id", sum: "counted" } }),
+      money("card_part", "Paid by gift card", { formula: { if: [{ eq: ["method", "gift_card"] }, c0("amount"), 0] } }),
       // What the row holds: a row of money given back counts against the booking, whatever way it went.
-      money("kept", "Kept", { formula: { if: [{ eq: ["kind", "given_back"] }, { sub: [0, c0("amount")] }, { sub: [c0("amount"), c0("refunded")] }] } }),
-      money("returned", "Given back", { formula: { if: [{ eq: ["kind", "given_back"] }, c0("amount"), c0("refunded")] } }),
+      money("kept", "Kept", { formula: { if: [{ eq: ["kind", "given_back"] }, { sub: [0, c0("amount")] }, { sub: [c0("amount"), { add: [c0("refunded"), c0("refund_rows")] }] }] } }),
+      money("returned", "Given back", { formula: { if: [{ eq: ["kind", "given_back"] }, c0("amount"), { add: [c0("refunded"), c0("refund_rows")] }] } }),
       text("client_key", 64, "Retry key", { ...opt, unique: true }),
+    ],
+  },
+  {
+    // Money given back of a sale. Adminium writes these when the owner cancels a sale, and only then: a pack's refund must go
+    // through its cancel, or the pack would stay usable.
+    ref: "purchase_refunds",
+    keep: KEPT_FOR_TAX,
+    label: l("Refund of a sale"),
+    labelPlural: l("Refunds of sales"),
+    columns: [
+      id,
+      fk("payment_id", "payments", "Payment", { index: true }),
+      choice("method", "Method", { online: "Online", gift_card: "Gift card", cash: "Cash", card: "Card" }, { rules: frozen("payment_id", "method") }),
+      { ref: "amount", type: "decimal", scale: "currency", label: l("Amount"), rules: { validation: { min: 0.01 } } },
+      bool("automatic", "Refunded automatically", false),
+      choice("refund_state", "Refund", { asked: "Asked", pending: "On its way", done: "Refunded", "not-sent": "Not sent" }, opt),
+      text("provider_ref", 255, "Refund reference", opt),
+      money("counted", "Counted", { formula: { if: [{ eq: ["refund_state", "not-sent"] }, 0, "amount"] } }),
+      at("made_at", "Made", { ...opt, rules: stamp("now", "create") }),
     ],
   },
   {

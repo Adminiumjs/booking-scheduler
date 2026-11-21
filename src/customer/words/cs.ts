@@ -181,6 +181,9 @@ export const WORDS: Words = {
   lostWatch: "Zatím nevíme, zda platba proběhla. Napíše to potvrzovací e-mail.",
   paidThanks: "Děkujeme. Potvrzení už k vám míří e-mailem.",
   payRefused: "To teď nelze zaplatit. Napište nám prosím e-mail.",
+  replayEmail: "Tuto rezervaci už máme. Odkaz najdete ve svém e-mailu.",
+  saleReplay: "Tuto objednávku už máme. Zkontrolujte svůj e-mail.",
+  heldFailed: "Vaše balíčky a dárkové karty se nepodařilo načíst.",
 
   // booked / your booking
   booked: "Máte rezervováno, {name}.",

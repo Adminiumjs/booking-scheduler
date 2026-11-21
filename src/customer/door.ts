@@ -81,6 +81,8 @@ export interface CustomerRefs {
   pay: string | null;
   google: string | null;
   letOfferGo: string | null;
+  takeBooked: string | null;
+  takePaying: string | null;
 }
 
 export interface LinkRefs {
@@ -105,6 +107,8 @@ export function customerRefs(config: PublicConfig, tables: Readonly<Record<strin
   const reads = bookings.filter(([, e]) => has(e, "read") && e.kind !== "availability").map(([r]) => r);
   const updates = bookings.filter(([, e]) => has(e, "update"));
   const updating = (column: string) => updates.find(([, e]) => e.writable.includes(column))?.[0] ?? null;
+  // In the manifest's order: the cancel, then taking an offer as it is, then through paying.
+  const stateOnly = updates.filter(([, e]) => e.writable.length === 1 && e.writable[0] === "state").map(([r]) => r);
   const purchases = of("purchases");
   const purchaseCreates = purchases.filter(([, e]) => has(e, "create")).map(([r]) => r);
   const waitlist = of("waitlist");
@@ -128,7 +132,9 @@ export function customerRefs(config: PublicConfig, tables: Readonly<Record<strin
     myWaitlist: waitlist.find(([, e]) => has(e, "read"))?.[0] ?? null,
     leaveList: waitlist.find(([, e]) => has(e, "update"))?.[0] ?? null,
     myPurchases: purchases.find(([, e]) => has(e, "read"))?.[0] ?? null,
-    cancel: updates.find(([, e]) => e.writable.length === 1 && e.writable[0] === "state")?.[0] ?? null,
+    cancel: stateOnly[0] ?? null,
+    takeBooked: stateOnly[1] ?? null,
+    takePaying: stateOnly[2] ?? null,
     move: updating("starts_at"),
     pay: updating("pay_started"),
     google: updating("google_pressed"),
@@ -189,6 +195,8 @@ function tabStore(): Store {
 }
 
 const slot = (purpose: string) => `lumen.session.${purpose}`;
+const PROVED_SLOT = "lumen.proved-at";
+const FORGET_WITHIN_MS = 9 * 60_000;
 
 function readSession(store: Store, purpose: string): HeldSession | undefined {
   try {
@@ -273,6 +281,7 @@ export class LumenDoor {
   private readonly fetchImpl: typeof fetch;
   private refsCache: Promise<CustomerRefs> | null = null;
   private linkRefsCache: Promise<LinkRefs> | null = null;
+  private provedAt: number | null = null;
 
   constructor(served: Served, options: DoorOptions = {}) {
     this.served = served;
@@ -373,6 +382,11 @@ export class LumenDoor {
     return this.linkClient?.session() != null;
   }
 
+  /** Whether this tab holds a sale's own link. */
+  holdsSale(): boolean {
+    return this.saleClient?.session() != null;
+  }
+
   newKey(): string {
     return newClientKey();
   }
@@ -443,20 +457,42 @@ export class LumenDoor {
     return this.client.requestLink({ email, lang });
   }
 
-  verifySignIn(email: string, code: string) {
-    return this.client.verifyLinkCode({ email, code });
+  async verifySignIn(email: string, code: string) {
+    const result = await this.client.verifyLinkCode({ email, code });
+    if (result.ok) this.markProved();
+    return result;
   }
 
-  openSignInLink(token: string) {
-    return this.client.openLink(token);
+  async openSignInLink(token: string) {
+    const opened = await this.client.openLink(token);
+    if (opened) this.markProved();
+    return opened;
+  }
+
+  /**
+   * Whether the delete would still be taken: the server wants a mailbox proved in the last ten minutes. Asked before
+   * anything is cancelled, so a refused delete has changed nothing. A minute short, for the time the cancels take.
+   */
+  mayForget(): boolean {
+    const at = this.provedAt ?? Number(this.store.get(PROVED_SLOT) ?? 0);
+    return at > 0 && Date.now() - at < FORGET_WITHIN_MS;
+  }
+
+  /** Held in memory too: a browser may refuse the tab's storage, and that must not bar someone from deleting their details. */
+  private markProved(): void {
+    this.provedAt = Date.now();
+    this.store.set(PROVED_SLOT, String(this.provedAt));
   }
 
   signedIn(): boolean {
     return this.client.session()?.level === "verified";
   }
 
-  signOut() {
-    return this.client.signOut();
+  /** Ends every session this tab holds: the person's, and any booking's or sale's own link, so the next person at this screen has none. */
+  async signOut(): Promise<void> {
+    this.provedAt = null;
+    this.store.remove(PROVED_SLOT);
+    await Promise.allSettled([this.client.signOut(), this.linkClient?.signOut(), this.saleClient?.signOut()]);
   }
 
   async me(): Promise<Row | null> {
@@ -497,27 +533,45 @@ export class LumenDoor {
     if (refs.leaveList !== null) await this.client.update(refs.leaveList, String(id), { state: "closed" });
   }
 
-  /** What Offers holds for the address this session proved. Without Offers: nothing. */
+  /** What Offers holds for the address this session proved. Without Offers: nothing. A failed read throws: it is not "no packs". */
   async held(): Promise<Held> {
     const read = async (ref: string) => {
       try {
         return (await this.client.list<Row>(ref, { limit: 50 })).data;
-      } catch {
-        return [];
+      } catch (error) {
+        if (error instanceof PublicApiError && (error.status === 404 || error.code === "PUBLIC_REF_NOT_FOUND" || error.code === "PUBLIC_SWITCHED_OFF")) return [];
+        throw error;
       }
     };
     const [packs, cards] = await Promise.all([read("offers_vouchers_verified"), read("offers_gift_cards_verified")]);
     return { packs, cards };
   }
 
-  /** Cancels the visits ahead and leaves the list first (cQ29), then deletes the person's details. */
-  async forgetMe(ahead: readonly Row[], waiting: readonly Row[]): Promise<void> {
+  /** Whether Offers would take this pack on this booking: asked of Offers itself, with nothing saved. */
+  async packCovers(door: DoorName, values: BookingValues, packId: unknown): Promise<boolean> {
+    const refs = await this.refs();
+    const { no_review: _box, ...sent } = values;
+    try {
+      const quote = await this.client.quote<Row>(refs.doors[door], { values: sent, children: { booking_codes: [{ values: { typed: `held:${String(packId)}` } }] } });
+      return quote.applied.some((one) => one.kind === "pack" || one.kind === "voucher") || Number(quote.data["discount"] ?? 0) > 0;
+    } catch (error) {
+      if (error instanceof PublicApiError && error.status >= 400 && error.status < 500 && error.code !== "PUBLIC_RATE_LIMITED") return false;
+      throw error;
+    }
+  }
+
+  /**
+   * Cancels the visits ahead and leaves the list first (cQ29), then deletes the person's details. A visit still being paid
+   * cannot be cancelled: its hold runs out by itself. Letting an offer go puts its row back to waiting, so the list is read
+   * again before it is left.
+   */
+  async forgetMe(ahead: readonly Row[]): Promise<void> {
     const refs = await this.refs();
     for (const row of ahead) {
       if (row["state"] === "booked" && refs.cancel !== null) await this.client.update(refs.cancel, String(row["id"]), { state: "cancelled" });
       if (row["state"] === "offered" && refs.letOfferGo !== null) await this.client.update(refs.letOfferGo, String(row["id"]), { state: "lapsed", lapsed_by: "guest" });
     }
-    for (const row of waiting) if (row["state"] === "waiting") await this.leaveList(row["id"]);
+    for (const row of await this.myWaitlist()) if (row["state"] === "waiting") await this.leaveList(row["id"]);
     await this.client.forgetMe();
   }
 
@@ -581,7 +635,11 @@ export class LumenDoor {
     await v.client.update(v.google!, String(id), { google_pressed: true }).catch(() => undefined);
   }
 
-  async takeOffer(id: unknown, paying: boolean): Promise<Row> {
+  async takeOffer(id: unknown, paying: boolean, signedIn: boolean): Promise<Row> {
+    if (signedIn) {
+      const r = await this.refs();
+      return this.client.update<Row>((paying ? r.takePaying : r.takeBooked)!, String(id), { state: paying ? "paying" : "booked" });
+    }
     const r = await this.linkRefs();
     return this.linkClient!.update<Row>(paying ? r.takePaying : r.takeBooked, String(id), { state: paying ? "paying" : "booked" });
   }

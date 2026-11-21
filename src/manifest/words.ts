@@ -2,6 +2,16 @@
 import type { Translation } from "./labels.ts";
 
 export const WORDS: Record<string, Translation> = {
+  "Refund": {"de-DE": "Erstattung", "fr-FR": "Remboursement", "da-DK": "Refusion", "cs-CZ": "Vrácení", "ar-EG": "استرداد", "zh-CN": "退款", "zh-TW": "退款"},
+  "Paid by gift card": {"de-DE": "Mit Geschenkkarte bezahlt", "fr-FR": "Payé par carte cadeau", "da-DK": "Betalt med gavekort", "cs-CZ": "Zaplaceno dárkovou kartou", "ar-EG": "مدفوع ببطاقة هدية", "zh-CN": "礼品卡支付", "zh-TW": "禮物卡支付"},
+  "Refunded with its sale": {"de-DE": "Mit dem Verkauf erstattet", "fr-FR": "Remboursé avec la vente", "da-DK": "Refunderet med salget", "cs-CZ": "Vráceno s prodejem", "ar-EG": "مسترد مع البيع", "zh-CN": "随销售退款", "zh-TW": "隨銷售退款"},
+  "Refund of a sale": {"de-DE": "Erstattung eines Verkaufs", "fr-FR": "Remboursement d'une vente", "da-DK": "Refusion af et salg", "cs-CZ": "Vrácení prodeje", "ar-EG": "استرداد عملية بيع", "zh-CN": "销售退款", "zh-TW": "銷售退款"},
+  "Refunds of sales": {"de-DE": "Erstattungen von Verkäufen", "fr-FR": "Remboursements de ventes", "da-DK": "Refusioner af salg", "cs-CZ": "Vrácení prodejů", "ar-EG": "استردادات المبيعات", "zh-CN": "销售退款", "zh-TW": "銷售退款"},
+  "Refunded automatically": {"de-DE": "Automatisch erstattet", "fr-FR": "Remboursé automatiquement", "da-DK": "Refunderet automatisk", "cs-CZ": "Vráceno automaticky", "ar-EG": "مسترد تلقائيًا", "zh-CN": "自动退款", "zh-TW": "自動退款"},
+  "Refund reference": {"de-DE": "Erstattungsreferenz", "fr-FR": "Référence du remboursement", "da-DK": "Refusionsreference", "cs-CZ": "Reference vrácení", "ar-EG": "مرجع الاسترداد", "zh-CN": "退款参考号", "zh-TW": "退款參考編號"},
+  "Counted": {"de-DE": "Gezählt", "fr-FR": "Compté", "da-DK": "Medregnet", "cs-CZ": "Započteno", "ar-EG": "محسوب", "zh-CN": "已计入", "zh-TW": "已計入"},
+  "Asked": {"de-DE": "Angefragt", "fr-FR": "Demandé", "da-DK": "Anmodet", "cs-CZ": "Vyžádáno", "ar-EG": "مطلوب", "zh-CN": "已申请", "zh-TW": "已申請"},
+  "On its way": {"de-DE": "Unterwegs", "fr-FR": "En cours", "da-DK": "På vej", "cs-CZ": "Na cestě", "ar-EG": "في الطريق", "zh-CN": "处理中", "zh-TW": "處理中"},
   "Holder": {"de-DE": "Inhaber", "fr-FR": "Titulaire", "da-DK": "Indehaver", "cs-CZ": "Držitel", "ar-EG": "صاحب الباقة", "zh-CN": "持有人", "zh-TW": "持有人"},
   "Holder's e-mail": {"de-DE": "E-Mail des Inhabers", "fr-FR": "E-mail du titulaire", "da-DK": "Indehaverens e-mail", "cs-CZ": "E-mail držitele", "ar-EG": "بريد صاحب الباقة", "zh-CN": "持有人邮箱", "zh-TW": "持有人電子郵件"},
   "Covers": {"de-DE": "Gilt für", "fr-FR": "Couvre", "da-DK": "Dækker", "cs-CZ": "Pokrývá", "ar-EG": "يشمل", "zh-CN": "适用于", "zh-TW": "適用於"},

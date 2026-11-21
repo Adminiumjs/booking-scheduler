@@ -129,7 +129,8 @@ export function GiftCards() {
   const [errs, setErrs] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const clientKey = useRef(door.newKey());
+  // Kept while the order is the same, so a lost reply is not a second card; new as soon as anything in it changes.
+  const clientKey = useRef<{ sig: string; key: string } | null>(null);
   const today = dayOf(clock, new Date(now()).toISOString());
   const lastDay = addDays(today, 365);
   const amount = amounts.find((a) => String(a["id"]) === amountId);
@@ -138,6 +139,12 @@ export function GiftCards() {
     setErrs({ ...errs, [k]: false });
   };
   const canPay = studio.ownerSwitch === "on" && studio.rows.paymentsOnline;
+
+  const keyFor = (amount_: string, sendOn: string | null) => {
+    const sig = JSON.stringify([amount_, f.to.trim(), f.toEmail.trim(), f.from.trim(), f.buyer.trim(), f.msg.trim(), sendOn]);
+    if (clientKey.current?.sig !== sig) clientKey.current = { sig, key: door.newKey() };
+    return clientKey.current.key;
+  };
 
   const pay = async (e: FormEvent) => {
     e.preventDefault();
@@ -158,8 +165,14 @@ export function GiftCards() {
     setProblem(null);
     try {
       const sendOn = f.when === "date" ? f.date : null;
-      const made = await door.buyCard({ gift_amount_id: amountId, to_name: f.to.trim(), to_email: f.toEmail.trim(), ...(f.msg.trim() === "" ? {} : { message: f.msg.trim() }), ...(sendOn === null ? {} : { send_on: sendOn }) }, { buyer_name: f.from.trim(), buyer_email: f.buyer.trim(), language: locale }, clientKey.current);
+      const made = await door.buyCard({ gift_amount_id: amountId, to_name: f.to.trim(), to_email: f.toEmail.trim(), ...(f.msg.trim() === "" ? {} : { message: f.msg.trim() }), ...(sendOn === null ? {} : { send_on: sendOn }) }, { buyer_name: f.from.trim(), buyer_email: f.buyer.trim(), language: locale }, keyFor(amountId, sendOn));
       keep({ kind: "card", id: String(made.row["id"]), to: f.to.trim(), toEmail: f.toEmail.trim(), sendOn });
+      if (made.payUrl === null && !door.holdsSale()) {
+        // A retry of an order whose reply was lost: its way to pay went by e-mail, not in this reply.
+        setProblem(t("saleReplay"));
+        setBusy(false);
+        return;
+      }
       rememberPayReturn("/gift-cards?paid=1");
       window.location.assign(made.payUrl ?? (await door.payPurchase(made.row["id"])));
     } catch (error) {
@@ -274,6 +287,11 @@ export function Packs() {
     try {
       const made = await door.buyPack(id, { buyer_name: String(me["name"] ?? ""), buyer_email: String(me["email"] ?? ""), language: locale }, keys.current.get(id)!);
       keep({ kind: "pack", id: String(made.row["id"]), pack: String(pack["name"] ?? "") });
+      if (made.payUrl === null && !door.holdsSale()) {
+        setProblem(t("saleReplay"));
+        setBusy(null);
+        return;
+      }
       rememberPayReturn("/packs?paid=1");
       window.location.assign(made.payUrl ?? (await door.payPurchase(made.row["id"])));
     } catch (error) {

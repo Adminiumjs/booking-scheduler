@@ -184,6 +184,9 @@ export const EN = {
   lostWatch: "We can't tell yet whether that went through. Your confirmation e-mail will say.",
   paidThanks: "Thank you. Your confirmation is on its way by e-mail.",
   payRefused: "That can't be paid right now. Please e-mail us.",
+  replayEmail: "We already have this booking. Its link is in your e-mail.",
+  saleReplay: "We already have this order. Check your e-mail.",
+  heldFailed: "We couldn't load your packs and gift cards.",
 
   // booked / your booking
   booked: "You're booked, {name}.",

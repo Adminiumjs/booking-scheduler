@@ -11,6 +11,8 @@ export interface KeptBooking {
   email: string;
   /** Just made: the page says "You're booked". */
   fresh: boolean;
+  /** Read through the person's own session rather than the booking's link. */
+  signedIn?: boolean;
 }
 
 export function keepBooking(kept: KeptBooking): void {

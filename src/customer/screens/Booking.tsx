@@ -4,6 +4,7 @@
  * are states of this page (the comp's lines 437–508, 623–647). The code is taken
  * from the fragment and cleared at once (cT8).
  */
+import { PublicApiError } from "@adminiumjs/public-client";
 import { rememberPayReturn } from "@adminiumjs/public-client/frame";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -13,7 +14,7 @@ import { dayOf, firstName, fmtDay, fmtMoment, fmtMoney, fmtTime, fmtWhen, minute
 import { Blank, Icon, Tile } from "../parts.tsx";
 import { tokenOf } from "../route.ts";
 import { actionsOf, cancelledLine, isFree, keptOnLate, letGoLine, paidRow, refusalOf, statusOf, type BookingFacts, type BookingState, type PayMode } from "../rules.ts";
-import { forgetBooking, keptBooking } from "../session.ts";
+import { forgetBooking, keepBooking, keptBooking } from "../session.ts";
 import Book, { type MoveTarget } from "./Book.tsx";
 import ReviewForm from "./ReviewForm.tsx";
 
@@ -28,6 +29,7 @@ export function factsOf(r: Row): BookingFacts {
     deposit: n(r["deposit"]),
     price: n(r["price"]),
     paid: n(r["paid"]),
+    cardPaid: n(r["card_paid"]),
     refunded: n(r["refunded"]),
     discount: n(r["discount"]),
     payDue: n(r["pay_due"]),
@@ -58,7 +60,9 @@ export default function Booking() {
       if (row !== undefined) return { row, signedIn: true };
     }
     const row = await door.linkBooking();
-    return row === null ? null : { row, signedIn: false };
+    // The tab may hold another booking's link: an address that names a row shows that row or nothing.
+    if (row === null || (asked !== null && String(row["id"]) !== asked)) return null;
+    return { row, signedIn: false };
   }, [door, asked]);
 
   // The link's code is read once and spent once, however often this effect runs.
@@ -131,7 +135,7 @@ export default function Booking() {
   if (reviewing) {
     return <ReviewForm bookingId={row["id"]} signedIn={signedIn} serviceId={String(row["service_id"])} teamId={orNull(row["team_id"])} day={dayOf(app.clock, String(row["starts_at"]))} onBack={() => { setReviewing(false); void reload(); }} />;
   }
-  if (row["state"] === "offered") return <Offer row={row} onChange={reload} />;
+  if (row["state"] === "offered") return <Offer row={row} signedIn={signedIn} onChange={reload} />;
   return <Card row={row} signedIn={signedIn} isNew={route.query.get("new") === "1"} onChange={reload} onMove={() => setMoving(true)} onReview={() => setReviewing(true)} />;
 }
 
@@ -218,6 +222,7 @@ function Card({ row, signedIn, isNew, onChange, onMove, onReview }: { row: Row; 
         return;
       }
       const url = await door.startPaying(row["id"], signedIn);
+      keepBooking({ id: String(row["id"]), token: null, name, email, fresh: true, signedIn });
       rememberPayReturn("/b");
       window.location.assign(url);
     } catch {
@@ -273,7 +278,7 @@ function Card({ row, signedIn, isNew, onChange, onMove, onReview }: { row: Row; 
   const line = (): string | null => {
     if (fresh && kept?.fresh === true && b.paid > 0) return b.payMode === "full" ? t("paidNoteFull", { amt: money(b.paid) }) : t("paidNote", { amt: money(b.paid) });
     if (fresh && b.discount > 0 && b.payMode === "deposit" && b.paid === 0) return t("paidCovered");
-    if (b.state === "paying") return row["pay_until"] === null || row["pay_until"] === undefined ? t("linkHoldLine", { when: row["link_until"] ? fmtMoment(clock, String(row["link_until"])) : "", n: studio.holdMin }) : t("payingLine", { n: studio.holdMin });
+    if (b.state === "paying") return row["pay_until"] === null || row["pay_until"] === undefined ? t("linkHoldLine", { when: row["link_until"] ? fmtMoment(clock, String(row["link_until"])) : "", n: studio.holdMin }) : b.payMode === "full" ? t("hold", { n: studio.holdMin }) : t("payingLine", { n: studio.holdMin });
     if (b.state === "cancelled") {
       const c = cancelledLine(b);
       switch (c.word) {
@@ -413,7 +418,7 @@ function Card({ row, signedIn, isNew, onChange, onMove, onReview }: { row: Row; 
               </>
             )}
           </div>
-          <button type="button" className="lm-btn mid wide" onClick={() => go("/b", { replace: true })}>
+          <button type="button" className="lm-btn mid wide" onClick={() => go(`/b?id=${String(row["id"])}`, { replace: true })}>
             {t("manage")}
             <Icon name="arrow-right" size={15} />
           </button>
@@ -461,10 +466,12 @@ function Card({ row, signedIn, isNew, onChange, onMove, onReview }: { row: Row; 
   );
 }
 
-function Offer({ row, onChange }: { row: Row; onChange: () => Promise<void> }) {
+function Offer({ row, signedIn, onChange }: { row: Row; signedIn: boolean; onChange: () => Promise<void> }) {
   const { t, clock, studio, door, go, now } = useApp();
   const [busy, setBusy] = useState(false);
   const [gone, setGone] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const full = row["pay_mode"] === "full";
   const service = studio.services.find((s) => s.id === String(row["service_id"]));
   const person = studio.team.find((p) => p.id === String(row["team_id"] ?? ""));
   const start = String(row["starts_at"]);
@@ -477,19 +484,25 @@ function Offer({ row, onChange }: { row: Row; onChange: () => Promise<void> }) {
 
   const take = async () => {
     setBusy(true);
+    setProblem(null);
     try {
       const paying = due > 0;
-      await door.takeOffer(row["id"], paying);
+      await door.takeOffer(row["id"], paying, signedIn);
       if (paying) {
-        const url = await door.startPaying(row["id"], false);
+        const url = await door.startPaying(row["id"], signedIn);
+        keepBooking({ id: String(row["id"]), token: null, name: String(row["name"] ?? ""), email: String(row["email"] ?? ""), fresh: true, signedIn });
         rememberPayReturn("/b");
         window.location.assign(url);
         return;
       }
-      go("/b?new=1", { replace: true });
+      go(`/b?new=1&id=${String(row["id"])}`, { replace: true });
       await onChange();
-    } catch {
-      setGone(true);
+    } catch (error) {
+      // Only a real refusal means the time has gone: a failed request can be pressed again.
+      const why = refusalOf(error, signedIn);
+      if (why === "taken" || why === "no-longer-fits" || why === "too-late" || why === "not-offered") setGone(true);
+      else if (error instanceof PublicApiError && error.status === 409) setGone(true);
+      else setProblem(why === "network" ? t("offline") : t("somethingWrong"));
     } finally {
       setBusy(false);
     }
@@ -528,7 +541,7 @@ function Offer({ row, onChange }: { row: Row; onChange: () => Promise<void> }) {
           {person === undefined ? t("offerTitleAnyone", { svc: service?.name ?? "", day, time }) : t("offerTitle", { svc: service?.name ?? "", day, time, who: person.name })}
         </h1>
         <p className="lm-muted" style={{ fontSize: 14, lineHeight: 1.55 }}>
-          {`${t("offerLine")} ${due > 0 ? t("offerDeposit", { n: studio.holdMin }) : t("offerStudio")} ${t("offerUntil", { when: fmtMoment(clock, String(row["offer_until"])) })}`}
+          {`${t("offerLine")} ${due > 0 ? (full ? t("hold", { n: studio.holdMin }) : t("offerDeposit", { n: studio.holdMin })) : t("offerStudio")} ${t("offerUntil", { when: fmtMoment(clock, String(row["offer_until"])) })}`}
         </p>
         <dl className="lm-dl">
           <div>
@@ -541,11 +554,17 @@ function Offer({ row, onChange }: { row: Row; onChange: () => Promise<void> }) {
           </div>
           <div>
             <dt>{t("rPay")}</dt>
-            <dd>{due > 0 ? t("payDeposit", { amt: fmtMoney(clock, due) }) : t("payStudio")}</dd>
+            <dd>{due > 0 ? (full ? t("payFull", { amt: fmtMoney(clock, due) }) : t("payDeposit", { amt: fmtMoney(clock, due) })) : t("payStudio")}</dd>
           </div>
         </dl>
+        {problem === null ? null : (
+          <div role="alert" className="lm-note danger">
+            <Icon name="circle-alert" size={16} />
+            {problem}
+          </div>
+        )}
         <button type="button" className="lm-btn primary large" disabled={busy} onClick={() => void take()}>
-          {due > 0 ? t("payToBook", { amt: fmtMoney(clock, due) }) : t("bookIt")}
+          {due > 0 ? (full ? t("payFullAmt", { amt: fmtMoney(clock, due) }) : t("payToBook", { amt: fmtMoney(clock, due) })) : t("bookIt")}
         </button>
       </div>
     </main>

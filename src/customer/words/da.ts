@@ -181,6 +181,9 @@ export const WORDS: Words = {
   lostWatch: "Vi kan endnu ikke se, om betalingen gik igennem. Din bekræftelse på e-mail vil fortælle det.",
   paidThanks: "Tak. Din bekræftelse er på vej på e-mail.",
   payRefused: "Det kan ikke betales lige nu. Skriv til os på e-mail.",
+  replayEmail: "Vi har allerede denne booking. Linket står i din e-mail.",
+  saleReplay: "Vi har allerede denne ordre. Tjek din e-mail.",
+  heldFailed: "Vi kunne ikke hente dine klippekort og gavekort.",
 
   // booked / your booking
   booked: "Du er booket, {name}.",

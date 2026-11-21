@@ -181,6 +181,9 @@ export const WORDS: Words = {
   lostWatch: "Wir wissen noch nicht, ob die Zahlung durchgegangen ist. Ihre Bestätigungs-E-Mail gibt Auskunft.",
   paidThanks: "Vielen Dank. Ihre Bestätigung ist per E-Mail unterwegs.",
   payRefused: "Das kann gerade nicht bezahlt werden. Bitte schreiben Sie uns eine E-Mail.",
+  replayEmail: "Diese Buchung liegt uns bereits vor. Den Link finden Sie in Ihrer E-Mail.",
+  saleReplay: "Diese Bestellung liegt uns bereits vor. Bitte prüfen Sie Ihre E-Mails.",
+  heldFailed: "Ihre Pakete und Geschenkkarten konnten nicht geladen werden.",
 
   // booked / your booking
   booked: "Ihre Buchung steht, {name}.",

@@ -252,12 +252,63 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
         expect(await door.openLink(token)).toBe("opened");
         const read = (await door.linkBooking())!;
         expect([read["state"], num(read["pay_due"])]).toEqual(["offered", 0]);
-        await door.takeOffer(read["id"], false);
+        await door.takeOffer(read["id"], false, false);
         expect((await stand.row("bookings", offer["id"]))["state"]).toBe("booked");
         expect((await stand.row("waitlist", entry["id"]))["state"]).toBe("booked");
         // Taken once: the same link cannot take it again.
-        await expect(door.takeOffer(read["id"], false)).rejects.toThrow();
+        await expect(door.takeOffer(read["id"], false, false)).rejects.toThrow();
       }, 60_000);
+
+      describe("delete my details (cQ29, ACC-10)", () => {
+        it("takes a signed-in customer's offer through their own session", async () => {
+          await nextHour();
+          const email = `tia.${engine}@lumen-guests.dev`;
+          const guest = tab();
+          await guest.joinList({ service_id: services["Gel Manicure"]!["id"], team_id: null, day: "2026-10-15", name: "Tia Offer", email, language: "en-US" }, retryKey("o1"));
+          const entry = (await stand.rows("waitlist")).find((w) => w["name"] === "Tia Offer")!;
+          const offer = await stand.create("bookings", { waitlist_id: entry["id"], service_id: entry["service_id"], team_id: team["Ivy"]!["id"], customer_id: entry["customer_id"], name: entry["name"], email: entry["email"], starts_at: pdt("2026-10-15", "11:00"), state: "offered" });
+          const tia = tab();
+          await signIn(tia, email);
+          await tia.takeOffer(offer["id"], false, true);
+          expect((await stand.row("bookings", offer["id"]))["state"]).toBe("booked");
+        }, 120_000);
+
+        it("cancels the visits ahead, leaves the list, and blanks only what is linked to them", async () => {
+          await nextHour();
+          const email = `rae.${engine}@lumen-guests.dev`;
+          const first = await tab().book("studio", values("Cut & Style", pdt("2026-10-09", "10:00"), "Rae Forget", { email, note: "Allergic to latex" }), retryKey("f1"));
+          const guest = tab();
+          await guest.joinList({ service_id: services["Balayage"]!["id"], team_id: team["Elin"]!["id"], day: "2026-10-16", name: "Rae Forget", email, language: "en-US" }, retryKey("f2"));
+          // The same address, typed at the desk with no link to the customer.
+          const unlinked = await stand.create("bookings", { service_id: services["Cut & Style"]!["id"], team_id: team["Elin"]!["id"], name: "Someone Else", email, starts_at: pdt("2026-10-09", "12:00") });
+          expect(unlinked["customer_id"] ?? null).toBeNull();
+
+          const rae = tab();
+          await signIn(rae, email);
+          expect(rae.mayForget()).toBe(true);
+          const ahead = (await rae.myBookings()).filter((b) => b["state"] === "booked");
+          expect(ahead.length).toBe(1);
+          await rae.forgetMe(ahead);
+
+          const row = await stand.row("bookings", first.row["id"]);
+          expect(row["state"]).toBe("cancelled");
+          expect(String(row["email"] ?? "")).not.toContain("rae.");
+          expect(String(row["name"] ?? "")).not.toContain("Rae");
+          expect(row["note"] ?? null).toBeNull();
+          const waiting = (await stand.rows("waitlist")).find((w) => w["customer_id"] === row["customer_id"])!;
+          expect(waiting["state"]).toBe("closed");
+          expect(String(waiting["email"] ?? "")).not.toContain("rae.");
+          const person = await stand.row("customers", row["customer_id"]);
+          expect([person["email"], person["name"]]).toEqual([null, null]);
+          const other = await stand.row("bookings", unlinked["id"]);
+          expect([other["name"], other["email"]]).toEqual(["Someone Else", email]);
+        }, 180_000);
+
+        it("asks for a fresh code before anything is cancelled", async () => {
+          const door = tab();
+          expect(door.mayForget()).toBe(false);
+        }, 10_000);
+      });
 
       describe("reviews", () => {
         const visit = async (code: string) => (await stand.rows("bookings")).find((b) => b["code"] === code)!;
@@ -471,6 +522,10 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
           await until(glow, "the second pack");
           await stand.patch("purchases", made.row["id"], { state: "cancelled" });
           await until(async () => ((await glow()) === undefined ? true : undefined), "the pack recalled");
+          // The money goes with it: the sale's refund is the cancel's own.
+          const payment = (await stand.rows("payments")).find((p) => p["purchase_id"] === made.row["id"])!;
+          const refund = await until(async () => (await stand.rows("purchase_refunds")).find((r) => r["payment_id"] === payment["id"]), "the sale's refund");
+          expect([num(refund["amount"]), yes(refund["automatic"])]).toEqual([num(pack["price"]), true]);
         }, 180_000);
 
         // Last: it moves the clock past the visit, which outlives the customer's session.

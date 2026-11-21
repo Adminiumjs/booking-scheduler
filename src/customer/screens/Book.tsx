@@ -12,8 +12,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import { A, useApp, type Service } from "../app.tsx";
 import type { Booked, Held, Row } from "../door.ts";
 import { addDays, dayNumber, dayOf, firstName, fmtDay, fmtMoney, fmtRange, fmtTime, hhmm, initials, momentOf, monthShort, weekdayShort } from "../format.ts";
-import { Err, Icon, Rows } from "../parts.tsx";
-import { doorFor, dueNow, looksLikeEmail, nearestTimes, nextFreeDay, partOf, refusalOf, usesLeft, type DayPart, type Refusal, type StripDay } from "../rules.ts";
+import { Blank, Err, Icon, Rows } from "../parts.tsx";
+import { doorFor, dueNow, letGoLine, looksLikeEmail, nearestTimes, nextFreeDay, partOf, refusalOf, usesLeft, type DayPart, type Refusal, type StripDay } from "../rules.ts";
 import { keepBooking } from "../session.ts";
 import type { Word } from "../words/index.ts";
 
@@ -57,19 +57,22 @@ const REFUSAL_WORD: Partial<Record<Refusal, Word>> = {
 function useStrip(serviceId: string | null, who: string | null, exclude: string | undefined, from: string, viaLink: boolean) {
   const { door } = useApp();
   const [days, setDays] = useState<StripDay[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (serviceId === null) return;
     const ctl = new AbortController();
     setDays(null);
+    setFailed(false);
     door
       .days(serviceId, who, from, STRIP, exclude, ctl.signal, viaLink)
       .then((d) => setDays(d as StripDay[]))
       .catch(() => {
-        if (!ctl.signal.aborted) setDays([]);
+        if (!ctl.signal.aborted) setFailed(true);
       });
     return () => ctl.abort();
-  }, [door, serviceId, who, from, exclude, viaLink]);
-  return [days, setDays] as const;
+  }, [door, serviceId, who, from, exclude, viaLink, attempt]);
+  return { days, setDays, failed, retry: () => setAttempt((n) => n + 1) };
 }
 
 export default function Book({ move }: { move?: MoveTarget }) {
@@ -91,12 +94,16 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const [day, setDay] = useState<string | null>(moving ? startDay : null);
   const [time, setTime] = useState<number | null>(null);
   const [times, setTimes] = useState<Slot[] | null>(null);
+  const [timesFailed, setTimesFailed] = useState(false);
   const [lost, setLost] = useState<{ minutes: number; word: "taken" | "noLongerFits" } | null>(null);
   const [form, setForm] = useState({ name: String(me?.["name"] ?? ""), email: String(me?.["email"] ?? ""), phone: String(me?.["phone"] ?? ""), note: "", noReview: false });
   const [errs, setErrs] = useState<{ name?: boolean; email?: boolean }>({});
   const [refused, setRefused] = useState<Refusal | null>(null);
   const [saving, setSaving] = useState(false);
   const [held, setHeld] = useState<Held | null>(null);
+  const [heldFailed, setHeldFailed] = useState(false);
+  const [packs, setPacks] = useState<Row[]>([]);
+  const [replayed, setReplayed] = useState(false);
   const [usePack, setUsePack] = useState(route.query.get("pack"));
   const [useCard, setUseCard] = useState<string | null>(null);
   const [wl, setWl] = useState<"idle" | "form" | "added">("idle");
@@ -109,12 +116,18 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const teamId = who === ANYONE ? null : who;
   const exclude = move?.id;
   const viaLink = moving && !move.signedIn;
-  const [strip, setStrip] = useStrip(step >= 3 && service !== null ? service.id : null, teamId, exclude, from, viaLink);
+  const { days: strip, setDays: setStrip, failed: stripFailed, retry: retryStrip } = useStrip(step >= 3 && service !== null ? service.id : null, teamId, exclude, from, viaLink);
 
   useEffect(() => {
     setForm((f) => ({ ...f, name: f.name || String(me?.["name"] ?? ""), email: f.email || String(me?.["email"] ?? ""), phone: f.phone || String(me?.["phone"] ?? "") }));
     if (me !== null) {
-      door.held().then(setHeld).catch(() => undefined);
+      door
+        .held()
+        .then((h) => {
+          setHeld(h);
+          setHeldFailed(false);
+        })
+        .catch(() => setHeldFailed(true));
     }
   }, [me, door]);
 
@@ -130,11 +143,13 @@ export default function Book({ move }: { move?: MoveTarget }) {
     (signal?: AbortSignal) => {
       if (service === null || day === null) return;
       setTimes(null);
+      setTimesFailed(false);
       door
         .times(service.id, teamId, day, exclude, signal, viaLink)
         .then((list) => setTimes(list.filter((s) => s.state === "free").map((s) => ({ minutes: hhmm(s.time) }))))
         .catch(() => {
-          if (signal?.aborted !== true) setTimes([]);
+          // A read that failed is not a day with no times: it must not offer the waiting list.
+          if (signal?.aborted !== true) setTimesFailed(true);
         });
     },
     [door, service, day, teamId, exclude, viaLink],
@@ -150,12 +165,33 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const doer = (id: string | null) => studio.team.find((p) => p.id === id) ?? null;
   const person = doer(teamId);
   const whoName = person?.name ?? t("anyone");
-  const packs = useMemo(() => (held?.packs ?? []).filter((p) => service !== null && packCovers(p, service, studio.rows.packs)), [held, service, studio.rows.packs]);
   const pack = packs.find((p) => String(p["id"]) === usePack) ?? null;
-  const cards = held?.cards ?? [];
+  const cards = useMemo(() => (held?.cards ?? []).filter((c) => Number(c["balance"] ?? 0) > 0), [held]);
   const card = cards.find((c) => String(c["id"]) === useCard) ?? null;
 
   const door0 = service === null ? null : doorFor(service, studio.ownerSwitch, studio.rows.paymentsOnline);
+
+  // Which of the packs held this visit can use is Offers' to say, asked with the visit itself and with nothing saved.
+  useEffect(() => {
+    setPacks([]);
+    if (step !== 4 || service === null || day === null || time === null || door0 === null || me === null) return;
+    const candidates = (held?.packs ?? []).filter((p) => p["worth"] === "pack" && usesLeft(p) > 0);
+    if (candidates.length === 0) return;
+    let on = true;
+    const asked = { service_id: service.id, ...(teamId === null ? {} : { team_id: teamId }), starts_at: momentOf(clock, day, time), name: String(me["name"] ?? form.name), email: String(me["email"] ?? form.email), language: locale, channel: frame === null ? ("page" as const) : ("embed" as const) };
+    Promise.all(candidates.map(async (p) => ((await door.packCovers(door0, asked, p["id"])) ? p : null)))
+      .then((list) => {
+        if (on) setPacks(list.filter((p): p is Row => p !== null));
+      })
+      .catch(() => {
+        if (on) setHeldFailed(true);
+      });
+    return () => {
+      on = false;
+    };
+    // The form's own fields are not part of the question.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, service, day, time, teamId, door0, me, held, door, clock, locale, frame]);
   const due = service === null ? 0 : dueNow(service, door0);
   const coveredByPack = pack !== null;
   const payNow = coveredByPack ? 0 : due;
@@ -217,7 +253,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
     try {
       await door.moveBooking(move.id, momentOf(clock, day, time), teamId, move.signedIn);
       toast(t("moved", { when: `${fmtDay(clock, day)}, ${fmtTime(clock, time)}` }));
-      go("/b", { replace: true });
+      go(`/b?id=${move.id}`, { replace: true });
     } catch (error) {
       const why = refusalOf(error, door.signedIn());
       if (why === "taken" || why === "no-longer-fits") await backToDay(time, why === "taken" ? "taken" : "noLongerFits");
@@ -253,7 +289,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
     const sig = JSON.stringify([values, usePack, useCard]);
     if (clientKey.current?.sig !== sig) clientKey.current = { sig, key: door.newKey() };
     const packCode = pack === null ? [] : [`held:${String(pack["id"])}`];
-    const cardCode = card === null ? null : `held:${String(card["id"])}`;
+    const cardCode = card === null || pack !== null ? null : `held:${String(card["id"])}`;
     try {
       const made: Booked = await door.book(door0, values, clientKey.current.key, { codes: packCode, card: cardCode });
       await after(made);
@@ -268,7 +304,13 @@ export default function Book({ move }: { move?: MoveTarget }) {
 
   const after = async (made: Booked) => {
     const id = String(made.row["id"]);
-    keepBooking({ id, token: made.token, name: form.name.trim(), email: form.email.trim(), fresh: true });
+    // A retry of a save whose reply was lost: the booking stands, and its own link went out by e-mail, not in this reply.
+    if (made.replayed && made.token === null) {
+      if (door.signedIn()) go(`/b?id=${id}`, { replace: true });
+      else setReplayed(true);
+      return;
+    }
+    keepBooking({ id, token: made.token, name: form.name.trim(), email: form.email.trim(), fresh: true, signedIn: !door.holdsLink() });
     // A card or a pack that left nothing due: booked at once, with no trip to the pay page (MON-3).
     if (made.row["state"] === "paying" && Number(made.row["pay_due"] ?? 0) <= 0) {
       await door.nothingDue(id, !door.holdsLink());
@@ -295,11 +337,12 @@ export default function Book({ move }: { move?: MoveTarget }) {
       setFramedDone(made.row);
       return;
     }
-    go("/b?new=1", { replace: true });
+    go(`/b?new=1&id=${String(made.row["id"])}`, { replace: true });
   };
 
   const [framedDone, setFramedDone] = useState<Row | null>(null);
   const [frameState, setFrameState] = useState<FramePayState | "lost">("paying");
+  const [lateMoney, setLateMoney] = useState(0);
   useEffect(() => {
     if (frameWait === null) return;
     const id = String(frameWait.row["id"]);
@@ -310,7 +353,11 @@ export default function Book({ move }: { move?: MoveTarget }) {
         const row = await door.linkBooking();
         if (row === null) return "let-go";
         const state = String(row["state"]);
-        if (state === "lapsed" || state === "cancelled") return "let-go";
+        if (state === "lapsed" || state === "cancelled") {
+          const late = letGoLine({ paid: Number(row["paid"] ?? 0), cardPaid: Number(row["card_paid"] ?? 0) });
+          setLateMoney(late.word === "lateMoney" ? late.amount : 0);
+          return "let-go";
+        }
         if (state === "booked") return "paid";
         const pay = await door.payState(id, false).catch(() => null);
         return pay?.state === "confirming" ? "confirming" : "paying";
@@ -349,6 +396,16 @@ export default function Book({ move }: { move?: MoveTarget }) {
 
   // ── what is drawn ──────────────────────────────────────────────────────
 
+  if (replayed) {
+    return (
+      <Blank icon="calendar-check" title={t("replayEmail")}>
+        <button type="button" className="lm-btn primary mid" onClick={() => go("/find")}>
+          {t("fFind")}
+        </button>
+      </Blank>
+    );
+  }
+
   if (framedDone !== null) {
     return (
       <main id="lm-main" className="lm-narrow-page" style={{ maxWidth: 560 }}>
@@ -385,7 +442,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
         className="lm-link quiet"
         style={{ marginBottom: 6 }}
         onClick={() => {
-          if (moving) go("/b");
+          if (moving) go(`/b?id=${move.id}`);
           else if (step === 1) go("/");
           else setStep((step - 1) as 1 | 2 | 3);
         }}
@@ -523,7 +580,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                     {t("earlier")}
                   </button>
                 ) : null}
-                {strip === null
+                {strip === null && !stripFailed
                   ? Array.from({ length: 7 }, (_, i) => <div key={i} className="lm-skel" style={{ flex: "0 0 68px", height: 84 }} />)
                   : stripDays.map((d) => {
                       const off = d.state !== "open" || d.open === 0;
@@ -544,6 +601,23 @@ export default function Book({ move }: { move?: MoveTarget }) {
                   </button>
                 ) : null}
               </div>
+
+              {stripFailed || timesFailed ? (
+                <div role="alert" className="lm-note danger" style={{ marginBottom: 18, alignItems: "center" }}>
+                  <Icon name="cloud-off" size={16} />
+                  <span style={{ flex: 1 }}>{t("somethingWrong")}</span>
+                  <button
+                    type="button"
+                    className="lm-btn"
+                    onClick={() => {
+                      if (stripFailed) retryStrip();
+                      if (timesFailed) loadTimes();
+                    }}
+                  >
+                    {t("tryAgain")}
+                  </button>
+                </div>
+              ) : null}
 
               {lost !== null ? (
                 <div role="alert" className="lm-note warn lm-col" style={{ marginBottom: 18, padding: "14px 16px", borderRadius: 14, alignItems: "stretch" }}>
@@ -572,7 +646,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                 </div>
               ) : null}
 
-              {times === null ? (
+              {times === null && !timesFailed ? (
                 <div aria-busy="true" aria-label={t("loadingTimes")} className="lm-col" style={{ gap: 18 }}>
                   {[6, 8].map((n) => (
                     <div key={n}>
@@ -737,7 +811,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
               {frameWait !== null ? (
                 <div role="status" className="lm-col" style={{ alignItems: "center", textAlign: "center", gap: 10, padding: "26px 20px", borderRadius: 18, background: "var(--info-soft)" }}>
                   <Icon name="external-link" size={24} />
-                  <div style={{ fontSize: 16, fontWeight: 800 }}>{frameState === "confirming" ? t("confirming") : frameState === "let-go" ? t("letGoTitle", { n: studio.holdMin }) : frameState === "lost" ? t("lostWatch") : t("newTab")}</div>
+                  <div style={{ fontSize: 16, fontWeight: 800 }}>{frameState === "confirming" ? t("confirming") : frameState === "let-go" ? (lateMoney > 0 ? t("letGoMoney", { amt: fmtMoney(clock, lateMoney) }) : t("letGoTitle", { n: studio.holdMin })) : frameState === "lost" ? t("lostWatch") : t("newTab")}</div>
                   {frameState === "paying" || frameState === "confirming" ? (
                     <a className="lm-link" {...payLinkProps(frameWait.payUrl)}>
                       {t("openPay")}
@@ -817,17 +891,35 @@ export default function Book({ move }: { move?: MoveTarget }) {
                 <dd>{payRow()}</dd>
               </div>
             </dl>
-            {!moving && packs.length > 0 ? (
-              <label className="lm-use">
-                <input type="checkbox" checked={pack !== null} onChange={(e) => setUsePack(e.target.checked ? String(packs[0]!["id"]) : null)} />
-                {t("usePack", { pack: String(packs[0]!["public_name"] ?? ""), n: usesLeft(packs[0]!) })}
-              </label>
-            ) : null}
-            {!moving && due > 0 && !coveredByPack && cards.length > 0 ? (
-              <label className="lm-use">
-                <input type="checkbox" checked={card !== null} onChange={(e) => setUseCard(e.target.checked ? String(cards[0]!["id"]) : null)} />
-                {t("useCardPick", { card: String(cards[0]!["label"] ?? t("navGifts")), amt: fmtMoney(clock, cards[0]!["balance"]) })}
-              </label>
+            {!moving && packs.length > 0
+              ? packs.map((p) => (
+                  <label key={String(p["id"])} className="lm-use">
+                    <input
+                      type="checkbox"
+                      checked={usePack === String(p["id"])}
+                      onChange={(e) => {
+                        setUsePack(e.target.checked ? String(p["id"]) : null);
+                        // A pack covers the visit: nothing is left for a card to pay.
+                        if (e.target.checked) setUseCard(null);
+                      }}
+                    />
+                    {t("usePack", { pack: String(p["public_name"] ?? ""), n: usesLeft(p) })}
+                  </label>
+                ))
+              : null}
+            {!moving && due > 0 && !coveredByPack
+              ? cards.map((c) => (
+                  <label key={String(c["id"])} className="lm-use">
+                    <input type="checkbox" checked={useCard === String(c["id"])} onChange={(e) => setUseCard(e.target.checked ? String(c["id"]) : null)} />
+                    {t("useCardPick", { card: String(c["label"] ?? t("navGifts")), amt: fmtMoney(clock, c["balance"]) })}
+                  </label>
+                ))
+              : null}
+            {!moving && heldFailed ? (
+              <div className="lm-note warn" style={{ margin: "0 20px 14px" }}>
+                <Icon name="info" size={16} />
+                {t("heldFailed")}
+              </div>
             ) : null}
             {step === 4 && frameWait === null ? (
               <div className="lm-col" style={{ padding: "0 20px 20px", gap: 10 }}>
@@ -859,7 +951,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
             </div>
           </div>
           <span className="lm-mono6" style={{ fontSize: 15 }}>
-            {due > 0 ? t("payDeposit", { amt: fmtMoney(clock, due) }) : fmtMoney(clock, service.price)}
+            {due > 0 ? (service.online === "full" ? t("payFull", { amt: fmtMoney(clock, due) }) : t("payDeposit", { amt: fmtMoney(clock, due) })) : fmtMoney(clock, service.price)}
           </span>
         </div>
       ) : null}
@@ -871,16 +963,3 @@ export default function Book({ move }: { move?: MoveTarget }) {
     </main>
   );
 }
-
-/**
- * Whether a pack this customer holds covers this service. Offers' read names the pack and not what it covers, so that comes
- * from the studio's own row of the same name; the save is judged by Offers whatever this says.
- */
-function packCovers(pack: Row, service: Service, products: readonly Row[]): boolean {
-  if (pack["worth"] !== "pack" || usesLeft(pack) <= 0) return false;
-  const product = products.find((p) => p["name"] === pack["public_name"]);
-  if (product === undefined) return false;
-  if (product["service_id"] !== null && product["service_id"] !== undefined) return String(product["service_id"]) === service.id;
-  return String(product["category_id"] ?? "") === service.categoryId;
-}
-

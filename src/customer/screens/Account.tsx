@@ -14,17 +14,18 @@ import type { Held, Row } from "../door.ts";
 import { dayOf, fmtDay, fmtDayYear, fmtMoney, fmtWhen } from "../format.ts";
 import { Blank, Icon, Tile } from "../parts.tsx";
 import { usesLeft } from "../rules.ts";
+import { forgetBooking } from "../session.ts";
 
 const UPCOMING = new Set(["booked", "paying", "offered"]);
 
-function VisitRow({ row, signedIn }: { row: Row; signedIn: boolean }) {
-  const { t, clock, studio, go } = useApp();
+function VisitRow({ row }: { row: Row }) {
+  const { t, clock, studio } = useApp();
   const service = studio.services.find((s) => s.id === String(row["service_id"]));
   const person = studio.team.find((p) => p.id === String(row["team_id"] ?? ""));
   const icon = studio.categories.find((c) => c.id === service?.categoryId)?.icon ?? "sparkles";
   const when = fmtWhen(clock, String(row["starts_at"]), Number(row["minutes"] ?? service?.minutes ?? 60));
   return (
-    <A to={`/b?id=${String(row["id"])}`} className="lm-visit" onClick={signedIn ? undefined : () => go("/b")}>
+    <A to={`/b?id=${String(row["id"])}`} className="lm-visit">
       <Tile icon={icon} size={48} iconSize={22} />
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "block", fontSize: 15, fontWeight: 800 }}>{service?.name ?? ""}</span>
@@ -81,6 +82,7 @@ export default function Account() {
   const [held, setHeld] = useState<Held>({ packs: [], cards: [] });
   const [problem, setProblem] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [stepUp, setStepUp] = useState(false);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -143,7 +145,13 @@ export default function Account() {
   };
 
   const askDelete = () => {
-    const ahead = [...upcoming, ...typed];
+    // A visit still being paid has no cancel: its hold runs out by itself. It is not one of the visits this cancels.
+    const ahead = [...upcoming, ...typed].filter((r) => r["state"] === "booked" || r["state"] === "offered");
+    // Asked first: the server takes the delete only just after a code, and nothing may be cancelled for one it would refuse.
+    if (!door.mayForget()) {
+      setStepUp(true);
+      return;
+    }
     openSheet({
       icon: "trash-2",
       title: t("delTitle"),
@@ -153,12 +161,13 @@ export default function Account() {
       onGo: async () => {
         setProblem(null);
         try {
-          await door.forgetMe(ahead, waiting);
+          await door.forgetMe(ahead);
+          forgetBooking();
           setMe(null);
           toast(t("deleted"));
           go("/", { replace: true });
         } catch (error) {
-          if (error instanceof PublicApiError && error.code === "PUBLIC_CODE_STEP_UP") setProblem(t("delStepUp"));
+          if (error instanceof PublicApiError && error.code === "PUBLIC_CODE_STEP_UP") setStepUp(true);
           else setProblem(t("somethingWrong"));
           await load().catch(() => undefined);
         }
@@ -189,6 +198,15 @@ export default function Account() {
           {problem}
         </div>
       )}
+      {stepUp ? (
+        <div role="alert" className="lm-note warn" style={{ marginBottom: 16, alignItems: "center" }}>
+          <Icon name="lock" size={16} />
+          <span style={{ flex: 1 }}>{t("delStepUp")}</span>
+          <A to="/sign-in" className="lm-btn">
+            {t("signIn")}
+          </A>
+        </div>
+      ) : null}
       <div className="lm-visits">
         <div className="lm-col" style={{ gap: 18 }}>
           <section aria-labelledby="lm-h-up">
@@ -200,7 +218,7 @@ export default function Account() {
                 </p>
               ) : null}
               {upcoming.map((r) => (
-                <VisitRow key={String(r["id"])} row={r} signedIn />
+                <VisitRow key={String(r["id"])} row={r} />
               ))}
             </div>
           </section>
@@ -212,7 +230,7 @@ export default function Account() {
               </p>
               <div className="lm-col" style={{ gap: 10 }}>
                 {typed.map((r) => (
-                  <VisitRow key={String(r["id"])} row={r} signedIn />
+                  <VisitRow key={String(r["id"])} row={r} />
                 ))}
               </div>
             </section>
@@ -348,6 +366,7 @@ export default function Account() {
             style={{ alignSelf: "flex-start", fontWeight: 700 }}
             onClick={() => {
               void door.signOut().finally(() => {
+                forgetBooking();
                 setMe(null);
                 go("/", { replace: true });
               });

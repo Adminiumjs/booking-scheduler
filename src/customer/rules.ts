@@ -97,6 +97,8 @@ export interface BookingFacts {
   deposit: number;
   price: number;
   paid: number;
+  /** Of `paid`, what a gift card paid: it goes back to the card, never to a bank. */
+  cardPaid: number;
   refunded: number;
   discount: number;
   payDue: number;
@@ -209,8 +211,10 @@ export function cancelledLine(b: BookingFacts): CancelledLine {
  * A time let go. "Nothing was taken" only when that is true: money can land
  * after the hold ended, and then the page says so and how it is put right (MON-8).
  */
-export const letGoLine = (b: Pick<BookingFacts, "paid">): { word: "lateMoney"; amount: number } | { word: "nothingTaken" } =>
-  b.paid > 0 ? { word: "lateMoney", amount: b.paid } : { word: "nothingTaken" };
+export function letGoLine(b: Pick<BookingFacts, "paid" | "cardPaid">): { word: "lateMoney"; amount: number } | { word: "nothingTaken" } {
+  const online = b.paid - b.cardPaid;
+  return online > 0 ? { word: "lateMoney", amount: online } : { word: "nothingTaken" };
+}
 
 // ── the way back from paying ────────────────────────────────────────────────
 

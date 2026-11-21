@@ -181,6 +181,9 @@ export const WORDS: Words = {
   lostWatch: "我们暂时无法确认付款是否成功，请以确认邮件为准。",
   paidThanks: "谢谢。确认邮件正在发送给您。",
   payRefused: "目前无法支付，请给我们发送电子邮件。",
+  replayEmail: "我们已收到此预约，链接在您的邮件中。",
+  saleReplay: "我们已收到此订单，请查看您的邮箱。",
+  heldFailed: "无法加载您的套餐和礼品卡。",
 
   // booked / your booking
   booked: "{name}，您已预约成功。",

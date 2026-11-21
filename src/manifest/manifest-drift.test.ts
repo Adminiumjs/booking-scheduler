@@ -73,8 +73,15 @@ describe("the tables, as ruled", () => {
   });
 
   it("keeps only the money by law: a booking's personal copies can be erased (ACC-10)", () => {
-    expect(TABLES.filter((t) => t.keep !== undefined).map((t) => t.ref).sort()).toEqual(["payments", "purchase_lines", "purchases"]);
+    expect(TABLES.filter((t) => t.keep !== undefined).map((t) => t.ref).sort()).toEqual(["payments", "purchase_lines", "purchase_refunds", "purchases"]);
     for (const name of ["name", "email", "phone", "note", "staff_note"]) expect(column("bookings", name)?.nullable, name).toBe(true);
+  });
+
+  it("lets nobody write a sale's refund by hand: it comes only from the owner's cancel, which takes the pack back", () => {
+    const owner = ROLES.find((r) => r.key === "owner")!;
+    const onRefunds = owner.permissions.filter((p) => typeof p === "string" && p.includes("purchase_refunds"));
+    expect(onRefunds.length).toBeGreaterThan(0);
+    expect(onRefunds.filter((p) => /:(create|update|delete)$/.test(p))).toEqual([]);
   });
 
   it("gives a retry key to bookings and the waiting list (MOD-10)", () => {
