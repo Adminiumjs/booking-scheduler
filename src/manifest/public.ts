@@ -220,6 +220,9 @@ const OWN_PAY = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["pay_st
 /** Pressed "Review us on Google". */
 const OWN_GOOGLE = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["google_pressed"], writableValues: { google_pressed: [true] }, writableWhen: { state: ["arrived", "done"] } };
 
+/** Turning an offer down, so its waiting-list row can close (cQ29). */
+const LET_OFFER_GO = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state", "lapsed_by"], writableValues: { state: ["lapsed"], lapsed_by: ["guest"] }, writableWhen: { state: ["offered"] } };
+
 const SIGNED_IN = { level: "verified", claimedBy: { table: "customers", column: "customer_id" } };
 /** The one entry that opens the link's row. */
 const OWN_LINK_CLAIM = {
@@ -248,6 +251,9 @@ export const PUBLIC_ACCESS = [
   { table: "bookings", ...SIGNED_IN, ...OWN_PAY },
   { table: "bookings", ...SIGNED_IN, ...OWN_GOOGLE },
   { table: "waitlist", methods: ["GET"], ...SIGNED_IN, select: ["id", "service_id", "team_id", "day", "state"] },
+  // "Take me off the list" (G8). An open offer is let go first, which puts its row back to waiting.
+  { table: "waitlist", methods: ["PATCH"], ...SIGNED_IN, select: ["id", "state"], writable: ["state"], writableValues: { state: ["closed"] }, writableWhen: { state: ["waiting"] } },
+  { table: "bookings", ...SIGNED_IN, ...LET_OFFER_GO },
 
   // ── the studio's public face ─────────────────────────────────────────────────
   ...PUBLIC_FACE,

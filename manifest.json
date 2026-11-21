@@ -91,9 +91,33 @@
         "help": "/help",
         "policy": "/policy",
         "privacy": "/privacy",
-        "terms": "/terms"
+        "terms": "/terms",
+        "review": "/review"
       },
-      "instances": true
+      "instances": true,
+      "embed": {
+        "paths": [
+          "/",
+          {
+            "path": "/book",
+            "label": "Book a service",
+            "choose": {
+              "query": "service",
+              "table": "services",
+              "value": "id",
+              "label": "name",
+              "title": "A particular service",
+              "any": "Any service"
+            }
+          },
+          "/reviews"
+        ],
+        "modes": [
+          "inline",
+          "button",
+          "floating"
+        ]
+      }
     }
   ],
   "addOns": {
@@ -9347,6 +9371,96 @@
         "day",
         "state"
       ]
+    },
+    {
+      "table": "waitlist",
+      "methods": [
+        "PATCH"
+      ],
+      "level": "verified",
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "select": [
+        "id",
+        "state"
+      ],
+      "writable": [
+        "state"
+      ],
+      "writableValues": {
+        "state": [
+          "closed"
+        ]
+      },
+      "writableWhen": {
+        "state": [
+          "waiting"
+        ]
+      }
+    },
+    {
+      "table": "bookings",
+      "level": "verified",
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "methods": [
+        "PATCH"
+      ],
+      "select": [
+        "id",
+        "code",
+        "service_id",
+        "name",
+        "email",
+        "phone",
+        "language",
+        "note",
+        "channel",
+        "starts_at",
+        "minutes",
+        "free_until",
+        "state",
+        "price",
+        "pay_mode",
+        "deposit",
+        "discount",
+        "asked",
+        "paid",
+        "pay_due",
+        "refunded",
+        "deposit_link",
+        "link_until",
+        "pay_until",
+        "offer_until",
+        "late_cancel",
+        "cancelled_by",
+        "cancel_reason",
+        "lapsed_by",
+        "link_expires",
+        "reviewed_at",
+        "customer_proved"
+      ],
+      "writable": [
+        "state",
+        "lapsed_by"
+      ],
+      "writableValues": {
+        "state": [
+          "lapsed"
+        ],
+        "lapsed_by": [
+          "guest"
+        ]
+      },
+      "writableWhen": {
+        "state": [
+          "offered"
+        ]
+      }
     },
     {
       "table": "settings",

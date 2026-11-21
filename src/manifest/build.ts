@@ -43,6 +43,20 @@ export const CUSTOMER_ROUTES = {
   policy: "/policy",
   privacy: "/privacy",
   terms: "/terms",
+  review: "/review",
+};
+
+/**
+ * The screens a listed website may frame (cT13, cQ7): looking, booking as a guest, and the reviews. A booking's own page,
+ * sign-in and Your visits are never declared, so the server refuses to frame them.
+ */
+const EMBED = {
+  paths: [
+    "/",
+    { path: "/book", label: "Book a service", choose: { query: "service", table: "services", value: "id", label: "name", title: "A particular service", any: "Any service" } },
+    "/reviews",
+  ],
+  modes: ["inline", "button", "floating"],
 };
 
 /** The one row a new studio starts with. No opening hours: those are the studio's to set (MOD-5). */
@@ -71,7 +85,7 @@ export function buildManifest(): Record<string, unknown> {
     capabilities: ["file-storage", "email-delivery", "realtime"],
     frontends: [
       { side: "staff", kind: "spa", entry: "index.html", env: ENV, placement: "external", routes: STAFF_ROUTES, instances: true },
-      { side: "customer", kind: "spa", entry: "index.html", env: ENV, routes: CUSTOMER_ROUTES, instances: true },
+      { side: "customer", kind: "spa", entry: "index.html", env: ENV, routes: CUSTOMER_ROUTES, instances: true, embed: EMBED },
     ],
     addOns: ADD_ONS,
     navGroups: NAV_GROUPS,
