@@ -307,8 +307,9 @@ export default function Account() {
                     <div className="lm-muted" style={{ fontSize: 12.5 }}>
                       {[covers, p["expires_on"] ? t("packValid", { day: fmtDayYear(clock, String(p["expires_on"]).slice(0, 10)) }) : null].filter((x) => x !== null && x !== "").join(" · ")}
                     </div>
-                    {product?.["service_id"] && left > 0 ? (
-                      <button type="button" className="lm-btn primary" style={{ alignSelf: "flex-start" }} onClick={() => go(`/book?service=${String(product["service_id"])}&pack=${String(p["id"])}`)}>
+                    {left > 0 ? (
+                      // A pack whose product was retired still books: the visit's own step asks Offers whether it covers it.
+                      <button type="button" className="lm-btn primary" style={{ alignSelf: "flex-start" }} onClick={() => go(product?.["service_id"] ? `/book?service=${String(product["service_id"])}&pack=${String(p["id"])}` : `/book?pack=${String(p["id"])}`)}>
                         {t("bookSession")}
                       </button>
                     ) : null}
