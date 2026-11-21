@@ -108,7 +108,7 @@ describe.skipIf(why !== null)(`Lumen's doors${why === null ? "" : ` — skipped:
         waitRef = Object.keys(stand.refs).find((r) => r.startsWith("bookings_waitlist") && JSON.stringify(stand.refs[r]?.["actions"] ?? []).includes("create"))!;
         const linkConfig = ok(await new Caller(stand.server.base, { origin: stand.server.base, authorization: `Bearer ${stand.linkKey}` }).get<{ data?: { refs?: Record<string, Row> } }>("/api/v1/public/config"));
         const linkRefs = linkConfig.data?.refs ?? {};
-        linkEntry = Object.keys(linkRefs).find((r) => r.startsWith("bookings_bookings") && JSON.stringify(linkRefs[r]!["actions"]).includes("read"))!;
+        linkEntry = Object.keys(linkRefs).find((r) => r.startsWith("bookings_bookings") && linkRefs[r]!["kind"] !== "availability" && JSON.stringify(linkRefs[r]!["actions"]).includes("read"))!;
         linkWrites = Object.entries(linkRefs).filter(([r, e]) => r.startsWith("bookings_bookings") && JSON.stringify(e["actions"]).includes("update")).map(([r, e]) => ({ ref: r, writable: (e["writable"] ?? []) as string[] }))
           .sort((a, b) => Number(/_(\d+)$/.exec(a.ref)?.[1] ?? 0) - Number(/_(\d+)$/.exec(b.ref)?.[1] ?? 0));
         if (process.env["CONTRACT_DUMP"] === "1") console.info(JSON.stringify(linkRefs).slice(0, 2500));
