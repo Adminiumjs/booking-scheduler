@@ -3,8 +3,6 @@
  * tokens (BN-08): the teal is the tokens' own, and every direction is logical,
  * so the pages mirror in Arabic.
  */
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
-
 :root {
   --accent-light: #007167;
   --accent-dark: #49bbae;
@@ -32,7 +30,8 @@
   flex-direction: column;
   background: var(--bg);
   color: var(--fg);
-  font-family: "Manrope", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  /* Manrope and JetBrains Mono are the app's own files (`base.css`): the page's policy loads no font from elsewhere. */
+  font-family: "Manrope", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   font-size: 15px;
   line-height: normal;
