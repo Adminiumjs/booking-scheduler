@@ -168,6 +168,8 @@ export type PaidRow =
 export function paidRow(b: BookingFacts): PaidRow {
   const full = b.payMode === "full";
   if (b.refunded > 0) return { word: "refunded", amount: b.refunded, full };
+  // Cancelled in time, or by the studio: it is on its way back, whether or not the refund has landed yet (MON-16).
+  if (b.state === "cancelled" && !b.lateCancel && b.paid > 0) return { word: "refunded", amount: b.paid, full };
   if (b.state === "paying") return b.payDue > 0 ? { word: "notYet", amount: b.payDue, full } : { word: "nothing" };
   if (b.paid > 0) {
     const kept = b.state === "no_show" || (b.state === "cancelled" && b.lateCancel);
@@ -194,9 +196,10 @@ export type CancelledLine =
   | { word: "plain" };
 
 export function cancelledLine(b: BookingFacts): CancelledLine {
-  if (b.cancelledBy === "studio") return { word: "studio", reason: b.cancelReason, refunded: b.refunded };
+  if (b.cancelledBy === "studio") return { word: "studio", reason: b.cancelReason, refunded: b.refunded > 0 ? b.refunded : b.paid };
   const full = b.payMode === "full";
   if (b.refunded > 0) return { word: "refunded", amount: b.refunded, full };
+  if (!b.lateCancel && b.paid > 0) return { word: "refunded", amount: b.paid, full };
   if (b.lateCancel && b.paid > 0) return { word: "kept", amount: b.paid, full };
   if (b.lateCancel && b.discount > 0) return { word: "keptUse" };
   return { word: "plain" };

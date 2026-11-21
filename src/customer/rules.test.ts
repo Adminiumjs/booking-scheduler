@@ -137,6 +137,13 @@ describe("what was paid, kept or given back", () => {
     expect(paidRow(booking({ state: "cancelled", payMode: "deposit", paid: 0, refunded: 50 }))).toEqual({ word: "refunded", amount: 50, full: false });
   });
 
+  it("says money is on its way back before the refund has landed (MON-16)", () => {
+    const b = booking({ state: "cancelled", cancelledBy: "customer", payMode: "deposit", paid: 50 });
+    expect(paidRow(b)).toEqual({ word: "refunded", amount: 50, full: false });
+    expect(cancelledLine(b)).toEqual({ word: "refunded", amount: 50, full: false });
+    expect(cancelledLine(booking({ state: "cancelled", cancelledBy: "studio", cancelReason: "Ivy is ill", payMode: "deposit", paid: 50 }))).toEqual({ word: "studio", reason: "Ivy is ill", refunded: 50 });
+  });
+
   it("names what a late cancel keeps, for every way of paying (cQ26, cQ31)", () => {
     expect(keptOnLate({ payMode: "deposit", asked: 50, paid: 50, discount: 0 })).toBe("deposit");
     expect(keptOnLate({ payMode: "full", asked: 40, paid: 40, discount: 0 })).toBe("payment");
