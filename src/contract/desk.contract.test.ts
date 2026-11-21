@@ -10,6 +10,8 @@
  * makes the write, and the write fails.
  */
 import { randomBytes } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -20,13 +22,16 @@ import { dayIn } from "../desk/time.ts";
 import { createSessionTransport } from "../desk/transport/sessionSource.ts";
 import { loadStaffConfig } from "../desk/transport/staffConnection.ts";
 import type { Row } from "../desk/wire.ts";
-import { Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, type Engine } from "./harness.ts";
+import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, type Engine } from "./harness.ts";
 import { ADD_ONS, CLOCK, standUp, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the desk contract must run here, and cannot: ${why}`);
 const PORT_BASE = Number(process.env["CONTRACT_PORT_BASE"] ?? 5310) + 60;
 const ZONE = "America/Los_Angeles";
+/** Whether the built engine has ACC-5's read. Until the patch lands this test says so by skipping, and the row stays open. */
+const DATA_ROUTES = join(ADMINIUM_REPO, "apps", "server", "dist", "routes", "data", "index.js");
+const hasCapRead = existsSync(DATA_ROUTES) && readFileSync(DATA_ROUTES, "utf8").includes("public-cap-reached");
 const pdt = (day: string, time: string) => new Date(`${day}T${time}:00-07:00`).toISOString();
 const key = () => randomBytes(16).toString("hex");
 const refused = async (work: () => Promise<unknown>) => {
@@ -123,6 +128,14 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         expect(needs.some((n) => n.kind === "lateMoney")).toBe(false);
         // A specialist has no money line and no paying row.
         expect(needsOf(data.noor, doors.noor.who(), CLOCK, ZONE, {}).some((n) => n.kind === "paying")).toBe(false);
+      });
+
+      it.skipIf(!hasCapRead)(`the hourly-limit row reads the engine's count, and tells a specialist nothing (ACC-5)${hasCapRead ? "" : " — skipped: this engine has no public-cap-reached read yet"}`, () => {
+        expect(data.owner.capReached).toBe(0);
+        expect(data.desk.capReached).toBe(0);
+        expect(data.noor.capReached).toBe(0);
+        expect(needsOf({ ...data.desk, capReached: 2 }, doors.desk.who(), CLOCK, ZONE, {}).some((n) => n.kind === "limit")).toBe(true);
+        expect(needsOf({ ...data.noor, capReached: 2 }, doors.noor.who(), CLOCK, ZONE, {}).some((n) => n.kind === "limit")).toBe(false);
       });
 
       // ── who reads what ──

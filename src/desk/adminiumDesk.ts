@@ -315,7 +315,8 @@ export class AdminiumDesk implements DeskDoor {
     try {
       return (await this.t.get<{ data: { lastHour: number } }>(await this.path(this.real("bookings"), "/public-cap-reached"))).data.lastHour;
     } catch (error) {
-      if (absent(error)) return null;
+      // An engine without this read takes the word for a row's key and answers 400: one missing "Needs you" row must not stop the desk.
+      if (absent(error) || (error instanceof SessionPortError && error.status === 400)) return null;
       throw error;
     }
   }
