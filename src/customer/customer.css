@@ -36,8 +36,12 @@
   font-size: 15px;
   line-height: normal;
 }
-html[data-adminium-frame] .lm-root {
+/* An inline frame is as tall as its content: a viewport height here would read the frame's own height back, and never shrink. */
+html[data-adminium-frame="inline"] #root,
+html[data-adminium-frame="inline"] .lm-root,
+html[data-adminium-frame="inline"] .lm-shell {
   min-height: 0;
+  height: auto;
 }
 .lm-root *,
 .lm-root *::before,
