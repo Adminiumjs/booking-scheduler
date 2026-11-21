@@ -14,7 +14,12 @@
     "demo:status": "node db/demo.mjs status",
     "demo:import": "node db/demo.mjs import",
     "demo:wipe": "node db/demo.mjs wipe",
-    "demo:reset": "node db/demo.mjs reset"
+    "demo:reset": "node db/demo.mjs reset",
+    "typecheck": "tsc -b",
+    "contract": "CONTRACT=1 vitest run src/contract/",
+    "manifest": "vite-node scripts/write-manifest.ts",
+    "manifest:check": "vite-node scripts/check-manifest.ts",
+    "sample": "vite-node scripts/write-sample.ts"
   },
   "dependencies": {
     "@adminiumjs/public-client": "^0.2.2",
