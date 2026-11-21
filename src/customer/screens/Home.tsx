@@ -137,7 +137,7 @@ export default function Home() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 18px" }}>
               <span className="lm-meta">
                 <Icon name="map-pin" size={15} />
-                {`${address}, ${String(s["city"] ?? "")}`}
+                <bdi>{`${address}, ${String(s["city"] ?? "")}`}</bdi>
               </span>
               <span className="lm-meta">
                 <Icon name="clock" size={15} />
@@ -238,9 +238,9 @@ export default function Home() {
             <div className="lm-col" style={{ padding: "18px 20px", gap: 8 }}>
               <div style={{ fontSize: 15, fontWeight: 800 }}>{studio.name}</div>
               <div className="lm-muted" style={{ fontSize: 13.5, lineHeight: 1.5 }}>
-                {address}
+                <bdi>{address}</bdi>
                 <br />
-                {line2}
+                <bdi>{line2}</bdi>
               </div>
               <a href={`mailto:${studio.email}`} dir="ltr" style={{ fontSize: 13.5, fontWeight: 600 }}>
                 {studio.email}

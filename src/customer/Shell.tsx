@@ -193,9 +193,9 @@ function Footer() {
             {studio.name}
           </div>
           <div className="lm-muted" style={{ fontSize: 13, lineHeight: 1.55 }}>
-            {String(s["address_line1"] ?? "")}
+            <bdi>{String(s["address_line1"] ?? "")}</bdi>
             <br />
-            {addressLine2(s)}
+            <bdi>{addressLine2(s)}</bdi>
           </div>
         </div>
         <div className="lm-foot-col">

@@ -360,7 +360,9 @@ function Card({ row, signedIn, isNew, onChange, onMove, onReview }: { row: Row; 
           </div>
           <div>
             <dt>{t("rWhere")}</dt>
-            <dd>{where}</dd>
+            <dd>
+              <bdi>{where}</bdi>
+            </dd>
           </div>
           <div>
             <dt>{t("rPaid")}</dt>
