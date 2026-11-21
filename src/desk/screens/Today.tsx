@@ -42,7 +42,10 @@ function TodayRow({ booking }: { booking: Row }) {
 
   let sub: ReactNode = null;
   if (kind === "arrived") sub = t("today.finishes", { time: fmt.time(endOf(booking)) });
-  if (kind === "soon") sub = t("today.dueIn", {}, Math.max(0, Math.round((startOf(booking) - now) / 60_000)));
+  if (kind === "soon") {
+    const away = Math.round((startOf(booking) - now) / 60_000);
+    sub = away > 0 ? t("today.dueIn", {}, away) : away === 0 ? t("today.dueNow") : t("today.lateBy", {}, -away);
+  }
   if (kind === "late") sub = t("today.lateBy", {}, Math.round((now - startOf(booking)) / 60_000));
   if (kind === "paying") {
     const at = letGoAt(booking);

@@ -44,7 +44,8 @@ export function kindOf(booking: Row, now: number, zone: string): Kind {
   if (state !== "booked" || dayIn(startOf(booking), zone) !== dayIn(now, zone)) return state;
   const start = startOf(booking);
   if (now >= start + 15 * MINUTE) return "late";
-  if (start >= now && start - now <= 30 * MINUTE) return "soon";
+  // From half an hour before until "Not arrived": someone a few minutes late still gets the one-press Arrived.
+  if (now >= start - 30 * MINUTE) return "soon";
   return "booked";
 }
 

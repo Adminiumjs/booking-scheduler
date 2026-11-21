@@ -4,7 +4,7 @@
  * offer, a person's calendar, a connect link, time off, the service editor,
  * hiding a review, a closure, and the phone's More.
  */
-import { CalendarCheck, Info, Link2, Undo2, X } from "lucide-react";
+import { IdCard, Info, Link2, Settings, Sparkles, Star, Undo2, X } from "lucide-react";
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 
 import { useData, useEnv, useRun } from "../env.tsx";
@@ -1175,6 +1175,13 @@ function ClosureSheet() {
   );
 }
 
+const MORE_ICON: Record<string, ReactNode> = {
+  services: <Sparkles size={16} aria-hidden="true" />,
+  team: <IdCard size={16} aria-hidden="true" />,
+  reviews: <Star size={16} aria-hidden="true" />,
+  settings: <Settings size={16} aria-hidden="true" />,
+};
+
 /** The phone's More: the sections the tab bar has no room for, and who is signed in. */
 function MoreSheet({ sections }: { sections: readonly string[] }) {
   const { door } = useEnv();
@@ -1185,7 +1192,7 @@ function MoreSheet({ sections }: { sections: readonly string[] }) {
     <Frame title={t("nav.more")} foot={<span className="lm-muted-sm">{who.name}</span>}>
       {items.map((n) => (
         <button key={n.id} type="button" className="lm-more-item" onClick={() => go(n.view as View)}>
-          <CalendarCheck size={16} aria-hidden="true" />
+          {MORE_ICON[n.id]}
           {t(n.labelKey)}
         </button>
       ))}

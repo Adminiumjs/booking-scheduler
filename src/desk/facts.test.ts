@@ -45,7 +45,8 @@ describe("kindOf", () => {
     expect(kindOf(booking({ starts_at: iso("2026-09-15", "10:45") }), NOW, ZONE)).toBe("soon");
     expect(kindOf(booking({ starts_at: iso("2026-09-15", "12:00") }), NOW, ZONE)).toBe("booked");
     expect(kindOf(booking({ starts_at: iso("2026-09-15", "10:25") }), NOW, ZONE)).toBe("late");
-    expect(kindOf(booking({ starts_at: iso("2026-09-15", "10:30") }), NOW, ZONE)).toBe("booked");
+    expect(kindOf(booking({ starts_at: iso("2026-09-15", "10:30") }), NOW, ZONE)).toBe("soon");
+    expect(kindOf(booking({ starts_at: iso("2026-09-15", "11:11") }), NOW, ZONE)).toBe("booked");
   });
   it("leaves another day's row and any other state alone", () => {
     expect(kindOf(booking({ starts_at: iso("2026-09-16", "10:45") }), NOW, ZONE)).toBe("booked");

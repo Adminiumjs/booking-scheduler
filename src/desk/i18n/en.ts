@@ -80,6 +80,7 @@ export const en = {
   "today.count": "{count} booking today|{count} bookings today",
   "today.finishes": "Finishes at {time}",
   "today.dueIn": "Due in {count} minute|Due in {count} minutes",
+  "today.dueNow": "Due now",
   "today.lateBy": "Started {count} minute ago|Started {count} minutes ago",
   "today.letGoAt": "Let go at {time} if it isn't paid",
   "today.nothing": "Nothing booked today.",
