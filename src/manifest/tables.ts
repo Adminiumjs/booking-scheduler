@@ -632,6 +632,8 @@ export const TABLES: Table[] = [
       // The yes/no the review word and Offers read. Only Offers' step writes it, so without Offers it stays empty and a booking's
       // own link reviews nothing: signing in, or the review mail's own link (T06), still does. `proved_by` above is the desk's mark.
       { ref: "customer_proved", type: "bool", nullable: true, label: l("Made signed in or at the desk") },
+      // 1 when it was made signed in or at the desk. What Your visits sorts by, with or without Offers, and without showing whose id `proved_by` holds.
+      { ref: "made_proved", type: "int", nullable: true, label: l("Made signed in or at the desk"), rules: { formula: { if: [{ isNull: "proved_by" }, 0, 1] } } },
       // Empty once the person is erased; every door and the desk's form require it.
       text("name", 120, "Name", { ...opt, semantic: "name" }),
       text("email", 254, "E-mail", { ...opt, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),

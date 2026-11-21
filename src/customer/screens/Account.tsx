@@ -106,8 +106,9 @@ export default function Account() {
     const ahead = rows.filter((r) => UPCOMING.has(String(r["state"])) && new Date(String(r["starts_at"])).getTime() > stamp);
     const aheadIds = new Set(ahead.map((r) => r["id"]));
     return {
-      upcoming: ahead.filter((r) => yes(r["customer_proved"])),
-      typed: ahead.filter((r) => !yes(r["customer_proved"])),
+      // Made signed in or at the desk, against made by someone who typed this address (ACC-6). Offers' own mark exists only with Offers.
+      upcoming: ahead.filter((r) => Number(r["made_proved"] ?? 0) === 1),
+      typed: ahead.filter((r) => Number(r["made_proved"] ?? 0) !== 1),
       past: rows.filter((r) => !aheadIds.has(r["id"])).reverse(),
     };
     // The clock is read once per load: a list does not reshuffle while it is read.

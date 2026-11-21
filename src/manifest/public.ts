@@ -69,6 +69,7 @@ export const BOOKING_SELECT = [
   "link_expires",
   "reviewed_at",
   "customer_proved",
+  "made_proved",
 ];
 
 /** What making a booking answers: an endpoint anyone may call selects nothing personal. */

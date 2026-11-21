@@ -226,6 +226,8 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
         expect(mine.length).toBeGreaterThan(1);
         expect(mine.every((b) => String(b["email"]).toLowerCase() === "ava.reyes@example.com")).toBe(true);
         expect(mine.map((b) => b["code"])).toContain("LMN-1807");
+        // Made with her account: not listed as "someone typed your address" (ACC-6).
+        expect(Number(mine.find((b) => b["code"] === "LMN-1807")!["made_proved"])).toBe(1);
         // Another customer's row is the same as no row.
         const someone = (await stand.rows("bookings")).find((b) => b["code"] === "LMN-1889")!;
         const refs = await ava.refs();
@@ -288,6 +290,8 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
           expect(rae.mayForget()).toBe(true);
           const ahead = (await rae.myBookings()).filter((b) => b["state"] === "booked");
           expect(ahead.length).toBe(1);
+          // Booked as a guest, with only a typed address behind it.
+          expect(Number(ahead[0]!["made_proved"])).toBe(0);
           await rae.forgetMe(ahead);
 
           const row = await stand.row("bookings", first.row["id"]);

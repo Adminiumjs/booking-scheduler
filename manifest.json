@@ -3582,6 +3582,32 @@
             }
           },
           {
+            "ref": "made_proved",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Made signed in or at the desk",
+              "de-DE": "Angemeldet oder am Empfang erstellt",
+              "fr-FR": "Créée connecté ou à l'accueil",
+              "da-DK": "Oprettet som logget ind eller i receptionen",
+              "cs-CZ": "Vytvořeno po přihlášení nebo na recepci",
+              "ar-EG": "تم إنشاؤه بعد تسجيل الدخول أو في الاستقبال",
+              "zh-CN": "登录后或在前台创建",
+              "zh-TW": "登入後或在櫃檯建立"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "isNull": "proved_by"
+                  },
+                  0,
+                  1
+                ]
+              }
+            }
+          },
+          {
             "ref": "name",
             "type": "text",
             "maxLength": 120,
@@ -12316,7 +12342,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "filters": [
         {
@@ -12370,7 +12397,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "filters": [
         {
@@ -12424,7 +12452,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -12487,7 +12516,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "starts_at",
@@ -12544,7 +12574,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "pay_started",
@@ -12608,7 +12639,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "google_pressed"
@@ -12715,7 +12747,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state",
@@ -12779,7 +12812,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -12840,7 +12874,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -13103,7 +13138,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "service_id",
@@ -13247,7 +13283,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "service_id",
@@ -13417,7 +13454,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "service_id",
@@ -13815,7 +13853,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "withhold": {
         "columns": [
@@ -13884,7 +13923,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -13948,7 +13988,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "starts_at",
@@ -14006,7 +14047,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "pay_started",
@@ -14071,7 +14113,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "google_pressed"
@@ -14156,7 +14199,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -14218,7 +14262,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
