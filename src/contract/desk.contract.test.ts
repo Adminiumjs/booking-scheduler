@@ -33,6 +33,12 @@ const ZONE = "America/Los_Angeles";
 /** Whether the built engine has ACC-5's read. Until the patch lands this test says so by skipping, and the row stays open. */
 const DATA_ROUTES = join(ADMINIUM_REPO, "apps", "server", "dist", "routes", "data", "index.js");
 const hasCapRead = existsSync(DATA_ROUTES) && readFileSync(DATA_ROUTES, "utf8").includes("public-cap-reached");
+/** Whether it can attach the built-in demo calendar. Until it can, the clash tests say so by skipping, and SYN-6 stays open. */
+const CALENDAR_ROUTES = join(ADMINIUM_REPO, "apps", "server", "dist", "routes", "calendar-sync", "index.js");
+const hasDemoRoute = existsSync(CALENDAR_ROUTES) && readFileSync(CALENDAR_ROUTES, "utf8").includes("/calendar-sync/row/demo");
+/** Whether a screens-only person may reach the calendar routes. Until they can, the tests that need it say so by skipping. */
+const SCREENS_ONLY = join(ADMINIUM_REPO, "apps", "server", "dist", "apps", "screens-only.js");
+const staffReachCalendars = existsSync(SCREENS_ONLY) && readFileSync(SCREENS_ONLY, "utf8").includes("/calendar-sync/clashes");
 const pdt = (day: string, time: string) => new Date(`${day}T${time}:00-07:00`).toISOString();
 const key = () => randomBytes(16).toString("hex");
 const refused = async (work: () => Promise<unknown>) => {
@@ -50,6 +56,7 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
       let stand: Stand;
       const doors = {} as Record<"owner" | "desk" | "noor", AdminiumDesk>;
       const data = {} as Record<"owner" | "desk" | "noor", DeskData>;
+      const callers = {} as Record<"owner" | "desk" | "noor", Caller>;
       let noorTeam: Row;
       let seeded = 0;
 
@@ -97,7 +104,10 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         const desk = await member(/front/i, "jun");
         const noor = await member(/specialist/i, "noor");
         noorTeam = (await stand.rows("team")).find((t) => t["name"] === "Noor Haddad") as Row;
-        await stand.patch("team", noorTeam["id"], { user_id: noor.id });
+        await stand.patch("team", noorTeam["id"], { user_id: noor.id, email: `noor.desk.${engine}@lumen-staff.dev` });
+        callers.owner = owner.caller;
+        callers.desk = desk.caller;
+        callers.noor = noor.caller;
         // A sample cannot bring Forms' reviews (T12), and only a customer can leave one: signed in, on their own visits.
         const rows = await stand.rows("bookings");
         const done = rows.filter((b) => b["state"] === "done" && (b["reviewed_at"] === null || b["reviewed_at"] === undefined));
@@ -324,6 +334,69 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         await doors.noor.removeTimeOff(made);
         const other = (await reload("desk")).team.find((p) => String(p.id) !== String(noorTeam["id"]))!;
         await refused(() => doors.noor.addTimeOff({ team_id: other.id as string, starts_at: pdt("2026-10-06", "09:00"), ends_at: pdt("2026-10-06", "10:00"), why: null }));
+      });
+
+      it("what each role may do with a calendar is the server's answer for that row (cQ12)", async () => {
+        const id = String(noorTeam["id"]);
+        const asOwner = (await reload("owner")).calendars[id]!;
+        expect(asOwner.may).toMatchObject({ connect: true, sendLink: true, copyLink: true, disconnect: true });
+        const asDesk = (await reload("desk")).calendars[id]!;
+        expect(asDesk.may).toMatchObject({ connect: false, sendLink: true, copyLink: false, disconnect: false });
+        const asNoor = (await reload("noor")).calendars[id]!;
+        expect(asNoor.may).toMatchObject({ connect: true, sendLink: false, copyLink: false, disconnect: true });
+        expect(Object.keys(data.noor.calendars)).toEqual([id]);
+      });
+
+      it("the front desk sends a connect link and cannot copy one; a specialist reaches no colleague's row", async () => {
+        const fresh = await reload("desk");
+        await refused(() => doors.desk.copyConnectLink(noorTeam["id"] as string));
+        const other = fresh.team.find((p) => String(p.id) !== String(noorTeam["id"]))!;
+        await refused(() => doors.noor.sendConnectLink(other.id));
+        await refused(() => doors.noor.connectCalendar(other.id, "calendar-google"));
+        await refused(() => doors.noor.syncNow(other.id));
+      });
+
+      it.skipIf(!staffReachCalendars)(`the private feed link is shown only to its own person; the front desk reaches neither (A5)${staffReachCalendars ? "" : " — skipped: screens-only staff cannot reach the calendar routes on this engine"}`, async () => {
+        const own = await doors.noor.feedLink(noorTeam["id"] as string);
+        expect(own?.own).toBe(true);
+        const asOwner = await doors.owner.feedLink(noorTeam["id"] as string);
+        expect(asOwner).toMatchObject({ link: null, own: false });
+        expect(await doors.desk.feedLink(noorTeam["id"] as string)).toBeNull();
+      });
+
+      it.skipIf(!hasDemoRoute || !staffReachCalendars)(`one clash raises one row, "Keep it" holds until the overlap changes (SYN-6)${hasDemoRoute && staffReachCalendars ? "" : " — skipped: this engine cannot attach a demo calendar, or screens-only staff cannot reach its routes"}`, async () => {
+        const attach = (busy: [string, string][]) =>
+          callers.owner.post("/api/v1/calendar-sync/row/demo", {
+            connection: stand.connectionId,
+            table: "bookings_team",
+            row: String(noorTeam["id"]),
+            busy: busy.map(([start, end]) => ({ start: pdt("2026-09-17", start), end: pdt("2026-09-17", end) })),
+          });
+        ok(await attach([["09:00", "11:00"]]));
+        doors.desk = await doorFor(callers.desk);
+        doors.noor = await doorFor(callers.noor);
+        const before = await reload("desk");
+        const lucia = code(before, "LMN-1779");
+        const open = (before.clashes ?? []).filter((c) => String(c.row) === String(lucia.id) && !c.kept);
+        expect(open).toHaveLength(1);
+        expect(open[0]!.block).toEqual({ start: Date.parse(pdt("2026-09-17", "09:00")), end: Date.parse(pdt("2026-09-17", "11:00")) });
+        expect(needsOf(before, doors.desk.who(), CLOCK, ZONE, {}).filter((n) => n.kind === "clash" && String(n.booking.id) === String(lucia.id))).toHaveLength(1);
+        expect(((await reload("noor")).clashes ?? []).some((c) => String(c.row) === String(lucia.id))).toBe(true);
+        expect(before.calendars[String(noorTeam["id"])]?.accounts[0]?.state).toBe("connected");
+
+        await doors.desk.keepClash(open[0]!);
+        const kept = await reload("desk");
+        expect((kept.clashes ?? []).find((c) => String(c.row) === String(lucia.id))?.kept).toBe(true);
+        expect(needsOf(kept, doors.desk.who(), CLOCK, ZONE, {}).some((n) => n.kind === "clash" && String(n.booking.id) === String(lucia.id))).toBe(false);
+
+        // A longer busy time over the same part of the booking is the same clash: it stays kept.
+        ok(await attach([["09:00", "12:00"]]));
+        expect(((await reload("desk")).clashes ?? []).find((c) => String(c.row) === String(lucia.id))?.kept).toBe(true);
+        // A changed overlap is a new clash, and it is raised again.
+        ok(await attach([["10:30", "12:00"]]));
+        const raised = ((await reload("desk")).clashes ?? []).filter((c) => String(c.row) === String(lucia.id));
+        expect(raised).toHaveLength(1);
+        expect(raised[0]!.kept).toBe(false);
       });
 
       // ── K8 ──

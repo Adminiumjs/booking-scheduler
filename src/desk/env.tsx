@@ -7,7 +7,7 @@
  * screen's guess); when it is refused, the refusal is said in the reader's
  * words, and the rows are read again too, so the screen shows what is true now.
  */
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 import type { DeskData, DeskDoor } from "./door.ts";
 import { guestFits, type WaitFit } from "./facts.ts";
@@ -31,6 +31,20 @@ export function useEnv(): DeskEnv {
   const env = useContext(Ctx);
   if (env === null) throw new Error("useEnv() outside <DeskProvider>");
   return env;
+}
+
+/** Adminium's console actions this person holds; empty until read. A link they could not follow is not drawn (ACC-12). */
+export function useSystemActions(): readonly string[] {
+  const { door } = useEnv();
+  const [held, setHeld] = useState<readonly string[]>([]);
+  useEffect(() => {
+    let live = true;
+    void door.systemActions().then((got) => live && setHeld(got));
+    return () => {
+      live = false;
+    };
+  }, [door]);
+  return held;
 }
 
 /** The rows last read. The shell renders the screens only once there are some. */

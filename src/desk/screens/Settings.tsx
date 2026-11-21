@@ -8,7 +8,7 @@ import { CircleCheck, Copy, ExternalLink, Plus } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import type { EmbedFacts } from "../door.ts";
-import { useData, useEnv, useRun } from "../env.tsx";
+import { useData, useEnv, useRun, useSystemActions } from "../env.tsx";
 import { useFmt } from "../format.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { openSheet, toast, useDesk, type DeskState } from "../store.ts";
@@ -34,6 +34,8 @@ const DAYS: { key: string; word: DeskKey }[] = [
   { key: "sat", word: "day.saturday" },
   { key: "sun", word: "day.sunday" },
 ];
+/** Where a connection's time zone is set (MOD-4). */
+const ZONE_PAGE = "/studio";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URLISH = /^https?:\/\/[^\s]+$/;
 
@@ -80,6 +82,7 @@ function StudioTab({ settings }: { settings: Row }) {
   const columns = useMemo(() => ["studio_name", "address_line1", "city", "region", "zip", "email", "website"], []);
   const { form, set, dirty, reset } = useSettingsForm(settings, columns);
   const [errs, setErrs] = useState<Record<string, boolean>>({});
+  const held = useSystemActions();
   const { zone } = door.facts();
   const clock = (value: unknown) => instantOf("2026-01-15", String(value), zone);
   const save = () => {
@@ -112,7 +115,7 @@ function StudioTab({ settings }: { settings: Row }) {
           <span className="lm-label">{t("settings.zone")}</span>
           <span className="lm-with">
             <Fig>{zone}</Fig>
-            <a className="lm-link" href="/settings" target="_top">{t("settings.zoneWhere")}</a>
+            {held.includes("connections.manage") && <a className="lm-link" href={ZONE_PAGE} target="_top">{t("settings.zoneWhere")}</a>}
           </span>
         </div>
         <SaveBar dirty={dirty} busy={busy} onSave={save} onReset={reset} />
@@ -220,6 +223,7 @@ function PaymentsTab({ settings }: { settings: Row }) {
   const t = useDeskT();
   const fmt = useFmt();
   const { busy, run } = useRun();
+  const held = useSystemActions();
   const payments = door.payments();
   const on = settings["online_payments"] === "on";
   const state: DeskKey = payments === null || !payments.on ? "payments.notSetUp" : !payments.online ? "payments.paused" : payments.test ? "payments.test" : "payments.live";
@@ -249,7 +253,9 @@ function PaymentsTab({ settings }: { settings: Row }) {
           <span>{t(state)}</span>
         </span>
         <small>{t("payments.how")}</small>
-        <a className="lm-link" href="/settings/payments" target="_top">{t("payments.where")}</a>
+        {(held.includes("payments.manage") || held.includes("payments.view")) && (
+          <a className="lm-link" href="/studio/payments" target="_top">{t("payments.where")}</a>
+        )}
       </div>
       <h2>{t("payments.paidOnline")}</h2>
       {paid.length === 0 && <p className="lm-muted-sm">{t("payments.none")}</p>}
@@ -367,7 +373,7 @@ function WebsiteTab() {
       <section className="lm-card lm-pad lm-stack-col" aria-labelledby="lm-web-sites">
         <div className="lm-page-head">
           <h2 id="lm-web-sites">{t("website.yours")}</h2>
-          <a className="lm-btn" href="/settings/privacy" target="_top">
+          <a className="lm-btn" href="/studio/privacy" target="_top">
             <ExternalLink size={14} aria-hidden="true" />
             {t("website.manage")}
           </a>

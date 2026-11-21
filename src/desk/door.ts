@@ -220,6 +220,8 @@ export interface DeskDoor {
   facts(): DeskFacts;
   /** The server's clock, as epoch ms. */
   now(): number;
+  /** Adminium's console actions this person holds (`payments.manage`, `connections.manage`). Empty when it cannot be read. */
+  systemActions(): Promise<readonly string[]>;
   payments(): StaffPayments | null;
   /** Whether this person may publish, hide and reply to reviews. */
   moderates(): boolean;

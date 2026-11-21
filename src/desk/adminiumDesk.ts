@@ -94,6 +94,7 @@ export class AdminiumDesk implements DeskDoor {
   private readonly cfg: StaffConfig;
   private readonly skew: number;
   private readonly kept = new Map<string, { at: number; value: unknown }>();
+  private actions: Promise<readonly string[]> | null = null;
 
   constructor(transport: SessionTransport, config: StaffConfig, options: DeskDoorOptions = {}) {
     this.t = transport;
@@ -184,7 +185,15 @@ export class AdminiumDesk implements DeskDoor {
   }
   /** A person's row, as the calendar routes name it. */
   private async teamRef(team: Id): Promise<{ connection: string; table: string; row: string }> {
-    return { connection: await this.conn(), table: this.real("team"), row: String(team) };
+    return { connection: await this.conn(), table: await this.t.tableId(this.real("team")), row: String(team) };
+  }
+  /** The feed is the booking table's, for one person's row. */
+  private async feedRef(team: Id): Promise<{ connection: string; table: string; row: string }> {
+    return { connection: await this.conn(), table: await this.t.tableId(this.real("bookings")), row: String(team) };
+  }
+  private async feedQuery(team: Id): Promise<string> {
+    const ref = await this.feedRef(team);
+    return `connection=${encodeURIComponent(ref.connection)}&table=${encodeURIComponent(ref.table)}&row=${encodeURIComponent(ref.row)}`;
   }
   private async teamQuery(team: Id): Promise<string> {
     const ref = await this.teamRef(team);
@@ -222,6 +231,15 @@ export class AdminiumDesk implements DeskDoor {
     if (!Object.keys(this.cfg.addOns).includes("forms")) return false;
     const access = this.cfg.access;
     return access === null || (access.tables[this.realAddOn("forms", "reviews")]?.includes("update") ?? access.tables["forms:reviews"]?.includes("update") ?? false);
+  }
+
+  /** What this person may open in Adminium's console, so a link they could not follow is not drawn (ACC-12). */
+  systemActions(): Promise<readonly string[]> {
+    this.actions ??= this.t
+      .get<{ data?: { systemActions?: string[] } }>("/api/v1/bootstrap")
+      .then((reply) => reply.data?.systemActions ?? [])
+      .catch(() => []);
+    return this.actions;
   }
 
   payments(): StaffPayments | null {
@@ -313,7 +331,7 @@ export class AdminiumDesk implements DeskDoor {
 
   private async clashes(): Promise<Clash[] | null> {
     try {
-      const query = `connection=${encodeURIComponent(await this.conn())}&table=${encodeURIComponent(this.real("bookings"))}`;
+      const query = `connection=${encodeURIComponent(await this.conn())}&table=${encodeURIComponent(await this.t.tableId(this.real("bookings")))}`;
       const clashes = (await this.t.get<{ clashes: Clash[] }>(`/api/v1/calendar-sync/clashes?${query}`)).clashes;
       // The sentence names the whole busy time: read for each clash still open, on its own day.
       const zone = this.facts().zone;
@@ -401,7 +419,7 @@ export class AdminiumDesk implements DeskDoor {
       await this.t.port.config();
       const reply = await this.t.mutate<{ data: Record<string, unknown> | null }>("/api/v1/payments/panel", "POST", {
         connectionId: await this.conn(),
-        table: this.real("bookings"),
+        table: await this.t.tableId(this.real("bookings")),
         recordId: String(booking.id),
       });
       const p = reply.data;
@@ -508,7 +526,7 @@ export class AdminiumDesk implements DeskDoor {
     return this.run(async () => {
       await this.t.mutate("/api/v1/calendar-sync/clashes/keep", "POST", {
         connection: await this.conn(),
-        table: this.real("bookings"),
+        table: await this.t.tableId(this.real("bookings")),
         row: clash.row,
         overlapStart: clash.overlapStart,
         overlapEnd: clash.overlapEnd,
@@ -543,7 +561,7 @@ export class AdminiumDesk implements DeskDoor {
   feedLink(team: Id): Promise<{ link: string | null; own: boolean } | null> {
     return this.run(async () => {
       try {
-        return (await this.t.get<{ data: { link: string | null; own: boolean } }>(`/api/v1/calendar-feed?${await this.teamQuery(team)}`)).data;
+        return (await this.t.get<{ data: { link: string | null; own: boolean } }>(`/api/v1/calendar-feed?${await this.feedQuery(team)}`)).data;
       } catch (error) {
         if (absent(error)) return null;
         throw error;
@@ -551,7 +569,7 @@ export class AdminiumDesk implements DeskDoor {
     });
   }
   renewFeed(team: Id): Promise<{ link: string | null; own: boolean }> {
-    return this.run(async () => (await this.t.mutate<{ data: { link: string | null; own: boolean } }>("/api/v1/calendar-feed/renew", "POST", await this.teamRef(team))).data);
+    return this.run(async () => (await this.t.mutate<{ data: { link: string | null; own: boolean } }>("/api/v1/calendar-feed/renew", "POST", await this.feedRef(team))).data);
   }
   embeds(): Promise<EmbedFacts | null> {
     return this.run(async () => {

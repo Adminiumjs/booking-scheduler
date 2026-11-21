@@ -99,7 +99,8 @@ function CalendarPart({ person }: { person: Row }) {
   const account: CalendarAccount | undefined = calendar.accounts[0];
   const mine = text(person["user_id"]) !== null && text(person["user_id"]) === door.who().id;
   const { may, sync } = calendar;
-  const unavailable = account !== undefined && !calendar.providers.some((p) => p.key === account.provider);
+  // The built-in demo calendar has no add-on behind it, and is not "missing".
+  const unavailable = account !== undefined && sync?.demo !== true && !calendar.providers.some((p) => p.key === account.provider);
   const lastSynced = sync?.lastSyncedAt ?? null;
   const addOnKey = account === undefined ? null : (calendar.providers.find((p) => p.key === account.provider)?.key ?? account.provider);
 
@@ -350,7 +351,7 @@ function PersonCard({ person, index, total }: { person: Row; index: number; tota
           </button>
         )}
         {manages && (
-          <a className="lm-btn" href={`/p/bookings-team/${encodeURIComponent(String(person.id))}`} target="_top">
+          <a className="lm-btn" href={`/p/bookings-team/r/${encodeURIComponent(String(person.id))}`} target="_top">
             <ExternalLink size={14} aria-hidden="true" />
             {t("team.editInAdminium")}
           </a>
