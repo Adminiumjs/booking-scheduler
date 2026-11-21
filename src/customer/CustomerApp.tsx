@@ -4,7 +4,7 @@
  * declares (cT13, cQ7); anything else opens in a new tab.
  */
 import { readFrame, startFrame, type FrameLink } from "@adminiumjs/public-client/frame";
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { I18nProvider, useI18n } from "../i18n/index.tsx";
@@ -12,7 +12,7 @@ import { isLocaleTag } from "../i18n/locales.ts";
 import { AppProvider, useApp } from "./app.tsx";
 import "./customer.css";
 import { LumenDoor, type Served, type StudioRows } from "./door.ts";
-import { Blank } from "./parts.tsx";
+import { Blank, Icon } from "./parts.tsx";
 import { FRAMED_SCREENS, mountOf } from "./route.ts";
 import Account from "./screens/Account.tsx";
 import Book from "./screens/Book.tsx";
@@ -115,6 +115,90 @@ function Screen() {
   }
 }
 
+/** What the loader says to a button or floating frame: the site's own label, and the sheet opening or closing. */
+const frameEvents = {
+  label: null as string | null,
+  open: false,
+  listeners: new Set<() => void>(),
+  set(change: { label?: string | null; open?: boolean }) {
+    if (change.label !== undefined) this.label = change.label;
+    if (change.open !== undefined) this.open = change.open;
+    for (const listen of this.listeners) listen();
+  },
+};
+
+function useFrameSheet() {
+  return useSyncExternalStore(
+    (listen) => {
+      frameEvents.listeners.add(listen);
+      return () => frameEvents.listeners.delete(listen);
+    },
+    () => frameEvents.open,
+  );
+}
+
+/**
+ * A floating frame is its launcher until pressed; a button frame is nothing until the site's own button opens it. Both are
+ * drawn here, inside the frame, so the site's styles cannot reach them (cQ6). Open, the sheet is the page with a way to close.
+ */
+function FramedSheet({ frame, children }: { frame: FrameLink; children: ReactNode }) {
+  const { t } = useApp();
+  const open = useFrameSheet();
+  const launcher = useRef<HTMLButtonElement | null>(null);
+  const label = useSyncExternalStore(
+    (listen) => {
+      frameEvents.listeners.add(listen);
+      return () => frameEvents.listeners.delete(listen);
+    },
+    () => frameEvents.label,
+  );
+
+  useEffect(() => {
+    if (frame.mode !== "floating" || open || launcher.current === null) return;
+    const box = launcher.current.getBoundingClientRect();
+    frame.size(Math.ceil(box.width) + 8, Math.ceil(box.height) + 8);
+  }, [frame, open, label]);
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-lm-closed", !open);
+    return () => document.documentElement.removeAttribute("data-lm-closed");
+  }, [open]);
+
+  if (!open) {
+    if (frame.mode !== "floating") return null;
+    return (
+      <button
+        ref={launcher}
+        type="button"
+        className="lm-launcher"
+        onClick={() => {
+          frame.openSheet();
+          frameEvents.set({ open: true });
+        }}
+      >
+        <Icon name="calendar-plus" size={17} />
+        {label ?? t("bookNow")}
+      </button>
+    );
+  }
+  return (
+    <>
+      <button
+        type="button"
+        className="lm-icon-btn lm-sheet-close"
+        aria-label={t("close")}
+        onClick={() => {
+          frame.closeSheet();
+          frameEvents.set({ open: false });
+        }}
+      >
+        <Icon name="x" size={18} />
+      </button>
+      {children}
+    </>
+  );
+}
+
 function Root({ door, rows, base, frame }: { door: LumenDoor; rows: StudioRows; base: string; frame: FrameLink | null }) {
   const { setLocale } = useI18n();
   const [ready, setReady] = useState(false);
@@ -129,9 +213,17 @@ function Root({ door, rows, base, frame }: { door: LumenDoor; rows: StudioRows; 
   if (!ready) return null;
   return (
     <AppProvider door={door} rows={rows} base={base} frame={frame}>
-      <Shell>
-        <Screen />
-      </Shell>
+      {frame === null || frame.mode === "inline" ? (
+        <Shell>
+          <Screen />
+        </Shell>
+      ) : (
+        <FramedSheet frame={frame}>
+          <Shell>
+            <Screen />
+          </Shell>
+        </FramedSheet>
+      )}
     </AppProvider>
   );
 }
@@ -173,7 +265,15 @@ export async function bootCustomer(mount: HTMLElement): Promise<void> {
     return;
   }
   const base = mountOf(window.location.pathname);
-  const frame = framed === null ? null : startFrame({ origins: served.frameOrigins ?? [], screens: FRAMED_SCREENS, base, root: mount });
+  const frame = framed === null ? null : startFrame({
+          origins: served.frameOrigins ?? [],
+          screens: FRAMED_SCREENS,
+          base,
+          root: mount,
+          onLinked: ({ label }) => frameEvents.set({ label }),
+          onOpen: () => frameEvents.set({ open: true }),
+          onClose: () => frameEvents.set({ open: false }),
+        });
   createRoot(mount).render(
     <StrictMode>
       <I18nProvider>

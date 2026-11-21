@@ -144,6 +144,57 @@ html[data-adminium-frame="inline"] .lm-shell {
   animation: lm-fade 0.25s ease;
 }
 
+/* ── a floating or button frame ──────────────────────────────────────── */
+html[data-lm-closed],
+html[data-lm-closed] body {
+  background: transparent;
+  overflow: hidden;
+  min-height: 0;
+}
+html[data-lm-closed] #root {
+  min-height: 0;
+}
+.lm-launcher {
+  position: fixed;
+  inset-block-end: 4px;
+  inset-inline-end: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-family: "Manrope", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(10, 10, 20, 0.25);
+}
+.lm-launcher:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
+.lm-sheet-close {
+  position: fixed;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
 /* ── buttons ─────────────────────────────────────────────────────────── */
 .lm-btn {
   display: inline-flex;
