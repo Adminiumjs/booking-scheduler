@@ -626,13 +626,13 @@ export class LumenDoor {
 
   async buyCard(line: Row, buyer: Row, clientKey: string): Promise<{ row: Row; payUrl: string | null }> {
     const refs = await this.refs();
-    const made = await this.client.createTree<Row>(refs.buyCard!, { values: { ...buyer, client_key: clientKey }, children: { purchase_lines: [{ values: { kind: "card", ...line } }] } });
+    const made = await this.client.createTree<Row>(refs.buyCard!, { values: { ...buyer, client_key: clientKey }, children: { purchase_lines: [{ values: line }] } });
     return { row: made.data, payUrl: made.payUrl };
   }
 
   async buyPack(packId: string, buyer: Row, clientKey: string): Promise<{ row: Row; payUrl: string | null }> {
     const refs = await this.refs();
-    const made = await this.client.createTree<Row>(refs.buyPack!, { values: { ...buyer, client_key: clientKey }, children: { purchase_lines: [{ values: { kind: "pack", pack_id: packId } }] } });
+    const made = await this.client.createTree<Row>(refs.buyPack!, { values: { ...buyer, client_key: clientKey }, children: { purchase_lines: [{ values: { pack_id: packId } }] } });
     return { row: made.data, payUrl: made.payUrl };
   }
 

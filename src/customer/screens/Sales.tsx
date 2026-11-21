@@ -158,7 +158,7 @@ export function GiftCards() {
     setProblem(null);
     try {
       const sendOn = f.when === "date" ? f.date : null;
-      const made = await door.buyCard({ gift_amount_id: amountId, to_name: f.to.trim(), to_email: f.toEmail.trim(), sender: f.from.trim(), message: f.msg.trim(), send_on: sendOn, language: locale }, { buyer_name: f.from.trim(), buyer_email: f.buyer.trim(), language: locale }, clientKey.current);
+      const made = await door.buyCard({ gift_amount_id: amountId, to_name: f.to.trim(), to_email: f.toEmail.trim(), ...(f.msg.trim() === "" ? {} : { message: f.msg.trim() }), ...(sendOn === null ? {} : { send_on: sendOn }) }, { buyer_name: f.from.trim(), buyer_email: f.buyer.trim(), language: locale }, clientKey.current);
       keep({ kind: "card", id: String(made.row["id"]), to: f.to.trim(), toEmail: f.toEmail.trim(), sendOn });
       rememberPayReturn("/gift-cards?paid=1");
       window.location.assign(made.payUrl ?? (await door.payPurchase(made.row["id"])));

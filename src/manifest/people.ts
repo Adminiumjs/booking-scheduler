@@ -34,6 +34,8 @@ export const PEOPLE = [
       { table: "waitlist", column: "email", holds: "email", via: "customer_id" },
       { table: "purchases", column: "buyer_name", holds: "name", via: "customer_id" },
       { table: "purchases", column: "buyer_email", holds: "email", via: "customer_id" },
+      { table: "purchases", column: "holder_name", holds: "name", via: "customer_id" },
+      { table: "purchases", column: "holder_email", holds: "email", via: "customer_id" },
       { table: "messages", column: "to_address", holds: "email", via: "customer_id" },
     ],
   },

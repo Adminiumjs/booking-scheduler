@@ -2,6 +2,20 @@
 import type { Translation } from "./labels.ts";
 
 export const WORDS: Record<string, Translation> = {
+  "Holder": {"de-DE": "Inhaber", "fr-FR": "Titulaire", "da-DK": "Indehaver", "cs-CZ": "Držitel", "ar-EG": "صاحب الباقة", "zh-CN": "持有人", "zh-TW": "持有人"},
+  "Holder's e-mail": {"de-DE": "E-Mail des Inhabers", "fr-FR": "E-mail du titulaire", "da-DK": "Indehaverens e-mail", "cs-CZ": "E-mail držitele", "ar-EG": "بريد صاحب الباقة", "zh-CN": "持有人邮箱", "zh-TW": "持有人電子郵件"},
+  "Covers": {"de-DE": "Gilt für", "fr-FR": "Couvre", "da-DK": "Dækker", "cs-CZ": "Pokrývá", "ar-EG": "يشمل", "zh-CN": "适用于", "zh-TW": "適用於"},
+  "This service": {"de-DE": "Diese Leistung", "fr-FR": "Ce service", "da-DK": "Denne behandling", "cs-CZ": "Tato služba", "ar-EG": "هذه الخدمة", "zh-CN": "此服务", "zh-TW": "此服務"},
+  "This category": {"de-DE": "Diese Kategorie", "fr-FR": "Cette catégorie", "da-DK": "Denne kategori", "cs-CZ": "Tato kategorie", "ar-EG": "هذه الفئة", "zh-CN": "此类别", "zh-TW": "此類別"},
+  "A type": {"de-DE": "Ein Typ", "fr-FR": "Un type", "da-DK": "En type", "cs-CZ": "Typ", "ar-EG": "نوع", "zh-CN": "某一类型", "zh-TW": "某一類型"},
+  "A tag": {"de-DE": "Ein Schlagwort", "fr-FR": "Une étiquette", "da-DK": "Et mærke", "cs-CZ": "Štítek", "ar-EG": "وسم", "zh-CN": "某一标签", "zh-TW": "某一標籤"},
+  "Left on the card": {"de-DE": "Restguthaben", "fr-FR": "Reste sur la carte", "da-DK": "Tilbage på kortet", "cs-CZ": "Zůstatek na kartě", "ar-EG": "المتبقي على البطاقة", "zh-CN": "卡内余额", "zh-TW": "卡內餘額"},
+  "Loaded": {"de-DE": "Aufgeladen", "fr-FR": "Chargé", "da-DK": "Indsat", "cs-CZ": "Nabito", "ar-EG": "المبلغ المشحون", "zh-CN": "充值金额", "zh-TW": "儲值金額"},
+  "Card code": {"de-DE": "Kartencode", "fr-FR": "Code de la carte", "da-DK": "Kortkode", "cs-CZ": "Kód karty", "ar-EG": "رمز البطاقة", "zh-CN": "卡号", "zh-TW": "卡號"},
+  "Sale price": {"de-DE": "Verkaufspreis", "fr-FR": "Prix de vente", "da-DK": "Salgspris", "cs-CZ": "Prodejní cena", "ar-EG": "سعر البيع", "zh-CN": "售价", "zh-TW": "售價"},
+  "Tax when used": {"de-DE": "Steuer bei Einlösung", "fr-FR": "Taxe à l'utilisation", "da-DK": "Moms ved brug", "cs-CZ": "Daň při použití", "ar-EG": "الضريبة عند الاستخدام", "zh-CN": "使用时计税", "zh-TW": "使用時計稅"},
+  "No review request": {"de-DE": "Keine Bewertungsanfrage", "fr-FR": "Pas de demande d'avis", "da-DK": "Ingen anmodning om anmeldelse", "cs-CZ": "Bez žádosti o recenzi", "ar-EG": "بدون طلب تقييم", "zh-CN": "不发送评价请求", "zh-TW": "不傳送評價邀請"},
+  "Declining in your calendar does not cancel. Use your booking link.": {"de-DE": "Eine Absage im Kalender storniert nicht. Nutzen Sie Ihren Buchungslink.", "fr-FR": "Refuser dans votre agenda n'annule pas. Utilisez votre lien de réservation.", "da-DK": "Et afslag i din kalender aflyser ikke. Brug dit bookinglink.", "cs-CZ": "Odmítnutí v kalendáři rezervaci neruší. Použijte odkaz na rezervaci.", "ar-EG": "الرفض في تقويمك لا يلغي الحجز. استخدم رابط حجزك.", "zh-CN": "在日历中拒绝不会取消预约。请使用您的预约链接。", "zh-TW": "在行事曆中拒絕不會取消預約。請使用您的預約連結。"},
   "\"Anyone\" goes to": {"de-DE": "„Egal wer“ geht an", "fr-FR": "« Peu importe » revient à", "da-DK": "\"Hvem som helst\" går til", "cs-CZ": "„Kdokoli“ připadne", "ar-EG": "\"أي شخص\" يذهب إلى", "zh-CN": "“任意”分配给", "zh-TW": "「任一位」分配給"},
   "A deposit link holds the time for (hours)": {"de-DE": "Anzahlungslink hält den Termin (Stunden)", "fr-FR": "Un lien d'acompte réserve l'heure pendant (heures)", "da-DK": "Et depositumlink holder tiden i (timer)", "cs-CZ": "Odkaz na zálohu drží termín (hodiny)", "ar-EG": "يحجز رابط العربون الموعد لمدة (ساعات)", "zh-CN": "定金链接保留时间（小时）", "zh-TW": "訂金連結保留時間（小時）"},
   "A later e-mail took its place": {"de-DE": "Eine spätere E-Mail hat sie ersetzt", "fr-FR": "Un e-mail ultérieur l’a remplacé", "da-DK": "En senere e-mail erstattede den", "cs-CZ": "Nahradil ho pozdější e-mail", "ar-EG": "حلّت محلها رسالة لاحقة", "zh-CN": "已被之后的邮件取代", "zh-TW": "已被之後的郵件取代"},

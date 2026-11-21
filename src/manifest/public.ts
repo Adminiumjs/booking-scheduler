@@ -138,7 +138,32 @@ const PUBLIC_FACE = [
 ];
 
 /** What every door takes from the guest. `channel` is their word, a statistic only (MOD-16). */
-const TYPED = ["service_id", "team_id", "starts_at", "name", "email", "phone", "language", "note", "channel", "client_key"];
+const TYPED = ["service_id", "team_id", "starts_at", "name", "email", "phone", "language", "note", "channel", "client_key", "no_review_request"];
+
+/** The box on the booking form: ticked, the person's standing "no" to review requests, with the sentence they saw (cQ10). */
+const NO_REVIEWS = {
+  column: "no_review_request",
+  purpose: "surveys",
+  means: "no",
+  wording: {
+    version: 1,
+    text: {
+      "en-US": "Don't send me a review request after my visit",
+      "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+      "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+      "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+      "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+      "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+      "zh-CN": "到访后请勿向我发送评价请求",
+      "zh-TW": "到訪後請勿傳送評價邀請給我",
+    },
+  },
+};
+
+/** A pack or a code the guest holds, sent as `held:<id>`, spent inside the save (CR-OFF-1, MON-3). */
+const CODES = { via: "booking_id", writable: ["typed"], select: ["id"], max: 2 };
+/** A gift card paying what is due online (R2). Never a figure: the card and the booking say what it pays. */
+const CARD = { via: "booking_id", writable: ["card_code"], defaults: { method: "gift_card" }, select: ["id", "amount"], max: 1 };
 
 /** A guest met for the first time is made from this booking; one already known is found, and never changed. */
 const WHO = {
@@ -149,6 +174,7 @@ const WHO = {
   level: "verified",
   clientKey: "client_key",
   dryRun: true,
+  consent: NO_REVIEWS,
   // Signed in: at most three visits ahead (cQ4).
   maxOpen: { column: "state", values: ["booked", "paying"], n: 3, upcoming: "starts_at" },
 };
@@ -172,6 +198,7 @@ const door = (more: Record<string, unknown>) => ({
 const DOOR_AT_STUDIO = door({
   requireSetting: [setting("online_booking")],
   defaults: { door: "at_studio" },
+  children: { booking_codes: CODES },
   anonymous: { perValue: { columns: ["email", "phone"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
 });
 
@@ -181,6 +208,7 @@ const DOOR_WITH_MONEY = door({
   requirePayments: "on",
   pay: true,
   defaults: { door: "with_money", state: "paying", ask_online: true, pay_started: true },
+  children: { booking_codes: CODES, payments: CARD },
   anonymous: { perValue: { columns: ["email", "phone"], n: 3 }, perIpHour: 3, perKeyHour: 40, plainText: ["name"] },
 });
 
@@ -188,6 +216,7 @@ const DOOR_WITH_MONEY = door({
 const DOOR_DEPOSITS_OFF = door({
   requireSetting: [setting("online_booking"), { ...setting("online_payments"), in: ["off"] }],
   defaults: { door: "deposits_off" },
+  children: { booking_codes: CODES },
   anonymous: { perValue: { columns: ["email", "phone"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
 });
 
@@ -205,6 +234,41 @@ const JOIN_WAITLIST = {
   level: "verified",
   clientKey: "client_key",
   anonymous: { perValue: { columns: ["email"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
+};
+
+const SALE_SELECT = ["id", "code", "state", "total", "due", "pay_until"];
+const SALE_DOOR = {
+  table: "purchases",
+  methods: ["POST"],
+  select: SALE_SELECT,
+  requireSetting: [setting("online_booking"), { ...setting("online_payments"), in: ["on"] }],
+  requirePayments: "on",
+  pay: true,
+  humanCheck: true,
+  level: "verified",
+  clientKey: "client_key",
+};
+/** A gift card, by anyone (G12). The amount is the studio's own row; the page names which. */
+const BUY_CARD = {
+  ...SALE_DOOR,
+  writable: ["buyer_name", "buyer_email", "language", "client_key"],
+  requires: ["buyer_name", "buyer_email"],
+  claimedBy: { table: "customers", column: "customer_id", optional: true },
+  anonymous: { perValue: { columns: ["buyer_email"], n: 3 }, perIpHour: 3, perKeyHour: 30, plainText: ["buyer_name"] },
+  children: {
+    purchase_lines: { via: "purchase_id", writable: ["gift_amount_id", "to_name", "to_email", "message", "send_on"], defaults: { kind: "card" }, requires: ["gift_amount_id", "to_name", "to_email"], select: ["id", "amount"], min: 1, max: 1, plainText: ["to_name", "message"] },
+  },
+};
+/** A pack, by a signed-in customer only: it needs a holder who proved their address (G13). */
+const BUY_PACK = {
+  ...SALE_DOOR,
+  // Who the receipt goes to. Who holds the pack is the signed-in customer's own row (`holder_*`), whatever is typed here.
+  writable: ["buyer_name", "buyer_email", "language", "client_key"],
+  requires: ["buyer_name", "buyer_email"],
+  claimedBy: { table: "customers", column: "customer_id" },
+  defaults: { customer_proved: true },
+  maxOpen: { column: "state", values: ["paying"], n: 2 },
+  children: { purchase_lines: { via: "purchase_id", writable: ["pack_id"], defaults: { kind: "pack" }, requires: ["pack_id"], select: ["id", "amount"], min: 1, max: 1 } },
 };
 
 /** Cancelling a booked visit: the table's rule says whether it is late. */
@@ -264,6 +328,8 @@ export const PUBLIC_ACCESS = [
   DOOR_WITH_MONEY,
   DOOR_DEPOSITS_OFF,
   JOIN_WAITLIST,
+  BUY_CARD,
+  BUY_PACK,
 
   // ── one booking, by its own link ─────────────────────────────────────────────
   { table: "bookings", methods: ["GET"], ...OWN_LINK_CLAIM, select: BOOKING_SELECT, ...NOT_YET_WHO },

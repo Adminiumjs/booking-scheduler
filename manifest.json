@@ -2893,6 +2893,42 @@
           "noticeMinutes": {
             "table": "settings",
             "column": "notice_min"
+          },
+          "calendar": {
+            "revision": "revision",
+            "title": [
+              "service_id",
+              "name"
+            ],
+            "code": "code",
+            "person": [
+              "team_id",
+              "name"
+            ],
+            "studio": {
+              "name": {
+                "table": "settings",
+                "column": "studio_name"
+              },
+              "address": {
+                "table": "settings",
+                "column": "address_line1"
+              },
+              "website": {
+                "table": "settings",
+                "column": "website"
+              }
+            },
+            "notice": {
+              "en-US": "Declining in your calendar does not cancel. Use your booking link.",
+              "de-DE": "Eine Absage im Kalender storniert nicht. Nutzen Sie Ihren Buchungslink.",
+              "fr-FR": "Refuser dans votre agenda n'annule pas. Utilisez votre lien de réservation.",
+              "da-DK": "Et afslag i din kalender aflyser ikke. Brug dit bookinglink.",
+              "cs-CZ": "Odmítnutí v kalendáři rezervaci neruší. Použijte odkaz na rezervaci.",
+              "ar-EG": "الرفض في تقويمك لا يلغي الحجز. استخدم رابط حجزك.",
+              "zh-CN": "在日历中拒绝不会取消预约。请使用您的预约链接。",
+              "zh-TW": "在行事曆中拒絕不會取消預約。請使用您的預約連結。"
+            }
           }
         },
         "adjust": {
@@ -3623,6 +3659,21 @@
             "nullable": true,
             "rules": {
               "personal": true
+            }
+          },
+          {
+            "ref": "no_review_request",
+            "type": "bool",
+            "default": false,
+            "label": {
+              "en-US": "No review request",
+              "de-DE": "Keine Bewertungsanfrage",
+              "fr-FR": "Pas de demande d'avis",
+              "da-DK": "Ingen anmodning om anmeldelse",
+              "cs-CZ": "Bez žádosti o recenzi",
+              "ar-EG": "بدون طلب تقييم",
+              "zh-CN": "不发送评价请求",
+              "zh-TW": "不傳送評價邀請"
             }
           },
           {
@@ -5451,6 +5502,69 @@
             "nullable": true
           },
           {
+            "ref": "holder_name",
+            "type": "text",
+            "maxLength": 120,
+            "label": {
+              "en-US": "Holder",
+              "de-DE": "Inhaber",
+              "fr-FR": "Titulaire",
+              "da-DK": "Indehaver",
+              "cs-CZ": "Držitel",
+              "ar-EG": "صاحب الباقة",
+              "zh-CN": "持有人",
+              "zh-TW": "持有人"
+            },
+            "nullable": true,
+            "semantic": "name",
+            "rules": {
+              "copy": {
+                "via": "customer_id",
+                "from": "name",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "holder_email",
+            "type": "text",
+            "maxLength": 254,
+            "label": {
+              "en-US": "Holder's e-mail",
+              "de-DE": "E-Mail des Inhabers",
+              "fr-FR": "E-mail du titulaire",
+              "da-DK": "Indehaverens e-mail",
+              "cs-CZ": "E-mail držitele",
+              "ar-EG": "بريد صاحب الباقة",
+              "zh-CN": "持有人邮箱",
+              "zh-TW": "持有人電子郵件"
+            },
+            "nullable": true,
+            "semantic": "email",
+            "rules": {
+              "copy": {
+                "via": "customer_id",
+                "from": "email",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "customer_proved",
+            "type": "bool",
+            "default": false,
+            "label": {
+              "en-US": "Made signed in or at the desk",
+              "de-DE": "Angemeldet oder am Empfang erstellt",
+              "fr-FR": "Créée connecté ou à l'accueil",
+              "da-DK": "Oprettet som logget ind eller i receptionen",
+              "cs-CZ": "Vytvořeno po přihlášení nebo na recepci",
+              "ar-EG": "تم إنشاؤه بعد تسجيل الدخول أو في الاستقبال",
+              "zh-CN": "登录后或在前台创建",
+              "zh-TW": "登入後或在櫃檯建立"
+            }
+          },
+          {
             "ref": "language",
             "type": "text",
             "maxLength": 16,
@@ -5717,6 +5831,58 @@
             }
           },
           {
+            "ref": "paid_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Paid at",
+              "de-DE": "Bezahlt am",
+              "fr-FR": "Payé le",
+              "da-DK": "Betalt den",
+              "cs-CZ": "Zaplaceno dne",
+              "ar-EG": "وقت الدفع",
+              "zh-CN": "付款时间",
+              "zh-TW": "付款時間"
+            },
+            "nullable": true,
+            "rules": {
+              "stamp": {
+                "set": "now",
+                "on": {
+                  "column": "state",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "ref": "cancelled_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Cancelled at",
+              "de-DE": "Abgesagt am",
+              "fr-FR": "Annulé le",
+              "da-DK": "Aflyst den",
+              "cs-CZ": "Čas zrušení",
+              "ar-EG": "وقت الإلغاء",
+              "zh-CN": "取消时间",
+              "zh-TW": "取消時間"
+            },
+            "nullable": true,
+            "rules": {
+              "stamp": {
+                "set": "now",
+                "on": {
+                  "column": "state",
+                  "values": [
+                    "cancelled"
+                  ]
+                }
+              }
+            }
+          },
+          {
             "ref": "client_key",
             "type": "text",
             "maxLength": 64,
@@ -5841,6 +6007,174 @@
           "zh-CN": "购买明细",
           "zh-TW": "購買明細"
         },
+        "postings": [
+          {
+            "id": "card-make",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "issue"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "card"
+            },
+            "reserve": {
+              "on": {
+                "create": true
+              }
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "cancelled",
+                  "lapsed"
+                ],
+                "from": [
+                  "paying"
+                ]
+              }
+            },
+            "map": {
+              "amount": "load_amount",
+              "to_name": "to_name",
+              "to_email": "to_email",
+              "message": "message",
+              "sender": "sender",
+              "language": "language",
+              "send_on": "send_on"
+            }
+          },
+          {
+            "id": "card-recall",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "recall"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "card"
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "cancelled"
+                ],
+                "from": [
+                  "paid"
+                ]
+              }
+            },
+            "map": {
+              "sale": {
+                "row": true
+              }
+            }
+          },
+          {
+            "id": "pack-make",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "sell-pack"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "pack"
+            },
+            "reserve": {
+              "on": {
+                "create": true
+              }
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "cancelled",
+                  "lapsed"
+                ],
+                "from": [
+                  "paying"
+                ]
+              }
+            },
+            "map": {
+              "amount": "sale_amount",
+              "name": "pack_name",
+              "uses": "pack_uses",
+              "what": "pack_what",
+              "target": "target_id",
+              "holder_email": {
+                "parent": "holder_email"
+              },
+              "holder_name": {
+                "parent": "holder_name"
+              },
+              "language": "language",
+              "proved": {
+                "parent": "customer_proved"
+              },
+              "tax_later": "tax_later"
+            }
+          },
+          {
+            "id": "pack-recall",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "recall-pack"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "pack"
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "cancelled"
+                ],
+                "from": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "map": {
+              "sale": {
+                "row": true
+              }
+            }
+          }
+        ],
         "columns": [
           {
             "ref": "id",
@@ -5921,7 +6255,17 @@
               "zh-CN": "礼品金额",
               "zh-TW": "禮品金額"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "linkable": {
+                "where": [
+                  {
+                    "column": "active",
+                    "eq": true
+                  }
+                ]
+              }
+            }
           },
           {
             "ref": "pack_id",
@@ -5937,7 +6281,63 @@
               "zh-CN": "套餐",
               "zh-TW": "套票"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "linkable": {
+                "where": [
+                  {
+                    "column": "active",
+                    "eq": true
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "ref": "load_amount",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Loaded",
+              "de-DE": "Aufgeladen",
+              "fr-FR": "Chargé",
+              "da-DK": "Indsat",
+              "cs-CZ": "Nabito",
+              "ar-EG": "المبلغ المشحون",
+              "zh-CN": "充值金额",
+              "zh-TW": "儲值金額"
+            },
+            "rules": {
+              "copy": {
+                "via": "gift_amount_id",
+                "from": "amount",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "sale_amount",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Sale price",
+              "de-DE": "Verkaufspreis",
+              "fr-FR": "Prix de vente",
+              "da-DK": "Salgspris",
+              "cs-CZ": "Prodejní cena",
+              "ar-EG": "سعر البيع",
+              "zh-CN": "售价",
+              "zh-TW": "售價"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "price",
+                "mode": "always"
+              }
+            }
           },
           {
             "ref": "amount",
@@ -5953,6 +6353,175 @@
               "ar-EG": "المبلغ",
               "zh-CN": "金额",
               "zh-TW": "金額"
+            },
+            "rules": {
+              "formula": {
+                "coalesce": [
+                  "load_amount",
+                  {
+                    "coalesce": [
+                      "sale_amount",
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "ref": "pack_name",
+            "type": "text",
+            "maxLength": 80,
+            "label": {
+              "en-US": "Pack",
+              "de-DE": "Paket",
+              "fr-FR": "Forfait",
+              "da-DK": "Klippekort",
+              "cs-CZ": "Balíček",
+              "ar-EG": "باقة",
+              "zh-CN": "套餐",
+              "zh-TW": "套票"
+            },
+            "nullable": true,
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "name",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_uses",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Visits",
+              "de-DE": "Besuche",
+              "fr-FR": "Consultations",
+              "da-DK": "Besøg",
+              "cs-CZ": "Návštěvy",
+              "ar-EG": "الزيارات",
+              "zh-CN": "就诊",
+              "zh-TW": "看診"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "uses",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_what",
+            "type": "enum",
+            "enum": [
+              "item",
+              "category",
+              "type",
+              "tag"
+            ],
+            "nullable": true,
+            "label": {
+              "en-US": "Covers",
+              "de-DE": "Gilt für",
+              "fr-FR": "Couvre",
+              "da-DK": "Dækker",
+              "cs-CZ": "Pokrývá",
+              "ar-EG": "يشمل",
+              "zh-CN": "适用于",
+              "zh-TW": "適用於"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "what",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_service",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Service",
+              "de-DE": "Versandart",
+              "fr-FR": "Mode d’envoi",
+              "da-DK": "Forsendelsesmåde",
+              "cs-CZ": "Služba",
+              "ar-EG": "الخدمة",
+              "zh-CN": "寄送方式",
+              "zh-TW": "寄送方式"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "service_id",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_category",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Category",
+              "de-DE": "Kategorie",
+              "fr-FR": "Catégorie",
+              "da-DK": "Kategori",
+              "cs-CZ": "Kategorie",
+              "ar-EG": "الفئة",
+              "zh-CN": "分类",
+              "zh-TW": "分類"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "category_id",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "target_id",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Covers",
+              "de-DE": "Gilt für",
+              "fr-FR": "Couvre",
+              "da-DK": "Dækker",
+              "cs-CZ": "Pokrývá",
+              "ar-EG": "يشمل",
+              "zh-CN": "适用于",
+              "zh-TW": "適用於"
+            },
+            "rules": {
+              "formula": {
+                "coalesce": [
+                  "pack_service",
+                  "pack_category"
+                ]
+              }
+            }
+          },
+          {
+            "ref": "tax_later",
+            "type": "bool",
+            "nullable": true,
+            "default": false,
+            "label": {
+              "en-US": "Tax when used",
+              "de-DE": "Steuer bei Einlösung",
+              "fr-FR": "Taxe à l'utilisation",
+              "da-DK": "Moms ved brug",
+              "cs-CZ": "Daň při použití",
+              "ar-EG": "الضريبة عند الاستخدام",
+              "zh-CN": "使用时计税",
+              "zh-TW": "使用時計稅"
             }
           },
           {
@@ -6025,7 +6594,14 @@
               "zh-CN": "从",
               "zh-TW": "從"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "copy": {
+                "via": "purchase_id",
+                "from": "buyer_name",
+                "mode": "always"
+              }
+            }
           },
           {
             "ref": "language",
@@ -6078,6 +6654,11 @@
                     "label": "繁體中文"
                   }
                 ]
+              },
+              "copy": {
+                "via": "purchase_id",
+                "from": "language",
+                "mode": "always"
               }
             }
           },
@@ -6299,6 +6880,73 @@
             "nullable": true
           },
           {
+            "ref": "what",
+            "type": "enum",
+            "enum": [
+              "item",
+              "category",
+              "type",
+              "tag"
+            ],
+            "default": "item",
+            "label": {
+              "en-US": "Covers",
+              "de-DE": "Gilt für",
+              "fr-FR": "Couvre",
+              "da-DK": "Dækker",
+              "cs-CZ": "Pokrývá",
+              "ar-EG": "يشمل",
+              "zh-CN": "适用于",
+              "zh-TW": "適用於"
+            },
+            "rules": {
+              "enumLabels": {
+                "labels": {
+                  "item": {
+                    "en-US": "This service",
+                    "de-DE": "Diese Leistung",
+                    "fr-FR": "Ce service",
+                    "da-DK": "Denne behandling",
+                    "cs-CZ": "Tato služba",
+                    "ar-EG": "هذه الخدمة",
+                    "zh-CN": "此服务",
+                    "zh-TW": "此服務"
+                  },
+                  "category": {
+                    "en-US": "This category",
+                    "de-DE": "Diese Kategorie",
+                    "fr-FR": "Cette catégorie",
+                    "da-DK": "Denne kategori",
+                    "cs-CZ": "Tato kategorie",
+                    "ar-EG": "هذه الفئة",
+                    "zh-CN": "此类别",
+                    "zh-TW": "此類別"
+                  },
+                  "type": {
+                    "en-US": "A type",
+                    "de-DE": "Ein Typ",
+                    "fr-FR": "Un type",
+                    "da-DK": "En type",
+                    "cs-CZ": "Typ",
+                    "ar-EG": "نوع",
+                    "zh-CN": "某一类型",
+                    "zh-TW": "某一類型"
+                  },
+                  "tag": {
+                    "en-US": "A tag",
+                    "de-DE": "Ein Schlagwort",
+                    "fr-FR": "Une étiquette",
+                    "da-DK": "Et mærke",
+                    "cs-CZ": "Štítek",
+                    "ar-EG": "وسم",
+                    "zh-CN": "某一标签",
+                    "zh-TW": "某一標籤"
+                  }
+                }
+              }
+            }
+          },
+          {
             "ref": "valid_days",
             "type": "int",
             "label": {
@@ -6376,6 +7024,43 @@
           "zh-CN": "付款记录",
           "zh-TW": "付款紀錄"
         },
+        "postings": [
+          {
+            "id": "card",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "spend"
+            },
+            "needs": "offers",
+            "via": "booking_id",
+            "only": {
+              "column": "card_code",
+              "set": true
+            },
+            "post": {
+              "on": {
+                "create": true
+              }
+            },
+            "reverse": {
+              "on": {
+                "column": "gives_back",
+                "in": [
+                  1
+                ]
+              }
+            },
+            "map": {
+              "card": "card_id",
+              "due": {
+                "parent": "pay_due"
+              },
+              "amount": "amount",
+              "balance_after": "card_balance_after"
+            }
+          }
+        ],
         "columns": [
           {
             "ref": "id",
@@ -6465,6 +7150,7 @@
             "ref": "amount",
             "type": "decimal",
             "scale": "currency",
+            "nullable": true,
             "label": {
               "en-US": "Amount",
               "de-DE": "Betrag",
@@ -6478,6 +7164,14 @@
             "rules": {
               "validation": {
                 "min": 0.01
+              },
+              "requiredWhen": {
+                "column": "method",
+                "in": [
+                  "online",
+                  "cash",
+                  "card"
+                ]
               }
             }
           },
@@ -6613,6 +7307,82 @@
             "nullable": true
           },
           {
+            "ref": "card_code",
+            "type": "text",
+            "maxLength": 64,
+            "label": {
+              "en-US": "Card code",
+              "de-DE": "Kartencode",
+              "fr-FR": "Code de la carte",
+              "da-DK": "Kortkode",
+              "cs-CZ": "Kód karty",
+              "ar-EG": "رمز البطاقة",
+              "zh-CN": "卡号",
+              "zh-TW": "卡號"
+            },
+            "nullable": true,
+            "rules": {
+              "requiredWhen": {
+                "column": "method",
+                "in": [
+                  "gift_card"
+                ]
+              }
+            }
+          },
+          {
+            "ref": "card_id",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Gift card",
+              "de-DE": "Geschenkkarte",
+              "fr-FR": "Carte cadeau",
+              "da-DK": "Gavekort",
+              "cs-CZ": "Dárková karta",
+              "ar-EG": "بطاقة هدية",
+              "zh-CN": "礼品卡",
+              "zh-TW": "禮品卡"
+            },
+            "rules": {
+              "addOnLink": {
+                "addOn": "offers",
+                "table": "gift_cards"
+              },
+              "lookup": {
+                "from": "card_code",
+                "table": {
+                  "addOn": "offers",
+                  "table": "gift_cards"
+                },
+                "column": "code",
+                "where": [
+                  {
+                    "column": "status",
+                    "eq": "active"
+                  }
+                ],
+                "held": "recipient_email"
+              }
+            }
+          },
+          {
+            "ref": "card_balance_after",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Left on the card",
+              "de-DE": "Restguthaben",
+              "fr-FR": "Reste sur la carte",
+              "da-DK": "Tilbage på kortet",
+              "cs-CZ": "Zůstatek na kartě",
+              "ar-EG": "المتبقي على البطاقة",
+              "zh-CN": "卡内余额",
+              "zh-TW": "卡內餘額"
+            }
+          },
+          {
             "ref": "refunded",
             "type": "decimal",
             "scale": "currency",
@@ -6655,12 +7425,22 @@
                   {
                     "sub": [
                       0,
-                      "amount"
+                      {
+                        "coalesce": [
+                          "amount",
+                          0
+                        ]
+                      }
                     ]
                   },
                   {
                     "sub": [
-                      "amount",
+                      {
+                        "coalesce": [
+                          "amount",
+                          0
+                        ]
+                      },
                       {
                         "coalesce": [
                           "refunded",
@@ -6697,7 +7477,12 @@
                       "given_back"
                     ]
                   },
-                  "amount",
+                  {
+                    "coalesce": [
+                      "amount",
+                      0
+                    ]
+                  },
                   {
                     "coalesce": [
                       "refunded",
@@ -8522,6 +9307,7 @@
             "language",
             "note",
             "staff_note",
+            "no_review_request",
             "client_key",
             "starts_at",
             "balance",
@@ -8541,6 +9327,7 @@
             "language",
             "note",
             "staff_note",
+            "no_review_request",
             "channel",
             "client_key",
             "waitlist_id",
@@ -8668,6 +9455,7 @@
             "language",
             "note",
             "staff_note",
+            "no_review_request",
             "client_key",
             "starts_at",
             "balance",
@@ -8687,6 +9475,7 @@
             "language",
             "note",
             "staff_note",
+            "no_review_request",
             "channel",
             "client_key",
             "waitlist_id",
@@ -8829,6 +9618,7 @@
             "language",
             "note",
             "staff_note",
+            "no_review_request",
             "channel",
             "made_at",
             "waitlist_id",
@@ -9723,7 +10513,8 @@
         "language",
         "note",
         "channel",
-        "client_key"
+        "client_key",
+        "no_review_request"
       ],
       "writableValues": {
         "channel": [
@@ -9757,6 +10548,24 @@
       "level": "verified",
       "clientKey": "client_key",
       "dryRun": true,
+      "consent": {
+        "column": "no_review_request",
+        "purpose": "surveys",
+        "means": "no",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Don't send me a review request after my visit",
+            "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+            "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+            "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+            "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+            "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+            "zh-CN": "到访后请勿向我发送评价请求",
+            "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
       "maxOpen": {
         "column": "state",
         "values": [
@@ -9774,6 +10583,18 @@
       ],
       "defaults": {
         "door": "at_studio"
+      },
+      "children": {
+        "booking_codes": {
+          "via": "booking_id",
+          "writable": [
+            "typed"
+          ],
+          "select": [
+            "id"
+          ],
+          "max": 2
+        }
       },
       "anonymous": {
         "perValue": {
@@ -9835,7 +10656,8 @@
         "language",
         "note",
         "channel",
-        "client_key"
+        "client_key",
+        "no_review_request"
       ],
       "writableValues": {
         "channel": [
@@ -9869,6 +10691,24 @@
       "level": "verified",
       "clientKey": "client_key",
       "dryRun": true,
+      "consent": {
+        "column": "no_review_request",
+        "purpose": "surveys",
+        "means": "no",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Don't send me a review request after my visit",
+            "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+            "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+            "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+            "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+            "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+            "zh-CN": "到访后请勿向我发送评价请求",
+            "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
       "maxOpen": {
         "column": "state",
         "values": [
@@ -9898,6 +10738,32 @@
         "state": "paying",
         "ask_online": true,
         "pay_started": true
+      },
+      "children": {
+        "booking_codes": {
+          "via": "booking_id",
+          "writable": [
+            "typed"
+          ],
+          "select": [
+            "id"
+          ],
+          "max": 2
+        },
+        "payments": {
+          "via": "booking_id",
+          "writable": [
+            "card_code"
+          ],
+          "defaults": {
+            "method": "gift_card"
+          },
+          "select": [
+            "id",
+            "amount"
+          ],
+          "max": 1
+        }
       },
       "anonymous": {
         "perValue": {
@@ -9959,7 +10825,8 @@
         "language",
         "note",
         "channel",
-        "client_key"
+        "client_key",
+        "no_review_request"
       ],
       "writableValues": {
         "channel": [
@@ -9993,6 +10860,24 @@
       "level": "verified",
       "clientKey": "client_key",
       "dryRun": true,
+      "consent": {
+        "column": "no_review_request",
+        "purpose": "surveys",
+        "means": "no",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Don't send me a review request after my visit",
+            "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+            "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+            "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+            "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+            "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+            "zh-CN": "到访后请勿向我发送评价请求",
+            "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
       "maxOpen": {
         "column": "state",
         "values": [
@@ -10017,6 +10902,18 @@
       ],
       "defaults": {
         "door": "deposits_off"
+      },
+      "children": {
+        "booking_codes": {
+          "via": "booking_id",
+          "writable": [
+            "typed"
+          ],
+          "select": [
+            "id"
+          ],
+          "max": 2
+        }
       },
       "anonymous": {
         "perValue": {
@@ -10095,6 +10992,172 @@
         "plainText": [
           "name"
         ]
+      }
+    },
+    {
+      "table": "purchases",
+      "methods": [
+        "POST"
+      ],
+      "select": [
+        "id",
+        "code",
+        "state",
+        "total",
+        "due",
+        "pay_until"
+      ],
+      "requireSetting": [
+        {
+          "table": "settings",
+          "column": "online_booking"
+        },
+        {
+          "table": "settings",
+          "column": "online_payments",
+          "in": [
+            "on"
+          ]
+        }
+      ],
+      "requirePayments": "on",
+      "pay": true,
+      "humanCheck": true,
+      "level": "verified",
+      "clientKey": "client_key",
+      "writable": [
+        "buyer_name",
+        "buyer_email",
+        "language",
+        "client_key"
+      ],
+      "requires": [
+        "buyer_name",
+        "buyer_email"
+      ],
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id",
+        "optional": true
+      },
+      "anonymous": {
+        "perValue": {
+          "columns": [
+            "buyer_email"
+          ],
+          "n": 3
+        },
+        "perIpHour": 3,
+        "perKeyHour": 30,
+        "plainText": [
+          "buyer_name"
+        ]
+      },
+      "children": {
+        "purchase_lines": {
+          "via": "purchase_id",
+          "writable": [
+            "gift_amount_id",
+            "to_name",
+            "to_email",
+            "message",
+            "send_on"
+          ],
+          "defaults": {
+            "kind": "card"
+          },
+          "requires": [
+            "gift_amount_id",
+            "to_name",
+            "to_email"
+          ],
+          "select": [
+            "id",
+            "amount"
+          ],
+          "min": 1,
+          "max": 1,
+          "plainText": [
+            "to_name",
+            "message"
+          ]
+        }
+      }
+    },
+    {
+      "table": "purchases",
+      "methods": [
+        "POST"
+      ],
+      "select": [
+        "id",
+        "code",
+        "state",
+        "total",
+        "due",
+        "pay_until"
+      ],
+      "requireSetting": [
+        {
+          "table": "settings",
+          "column": "online_booking"
+        },
+        {
+          "table": "settings",
+          "column": "online_payments",
+          "in": [
+            "on"
+          ]
+        }
+      ],
+      "requirePayments": "on",
+      "pay": true,
+      "humanCheck": true,
+      "level": "verified",
+      "clientKey": "client_key",
+      "writable": [
+        "buyer_name",
+        "buyer_email",
+        "language",
+        "client_key"
+      ],
+      "requires": [
+        "buyer_name",
+        "buyer_email"
+      ],
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "defaults": {
+        "customer_proved": true
+      },
+      "maxOpen": {
+        "column": "state",
+        "values": [
+          "paying"
+        ],
+        "n": 2
+      },
+      "children": {
+        "purchase_lines": {
+          "via": "purchase_id",
+          "writable": [
+            "pack_id"
+          ],
+          "defaults": {
+            "kind": "pack"
+          },
+          "requires": [
+            "pack_id"
+          ],
+          "select": [
+            "id",
+            "amount"
+          ],
+          "min": 1,
+          "max": 1
+        }
       }
     },
     {
@@ -10604,6 +11667,18 @@
         {
           "table": "purchases",
           "column": "buyer_email",
+          "holds": "email",
+          "via": "customer_id"
+        },
+        {
+          "table": "purchases",
+          "column": "holder_name",
+          "holds": "name",
+          "via": "customer_id"
+        },
+        {
+          "table": "purchases",
+          "column": "holder_email",
           "holds": "email",
           "via": "customer_id"
         },
