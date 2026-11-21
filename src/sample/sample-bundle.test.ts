@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import { sampleText } from "../../scripts/write-sample.ts";
 import { TABLES } from "../manifest/tables.ts";
-import { sampleBundle, WORLD } from "./lumen.ts";
+import { SAMPLE_ACCOUNT, sampleBundle, WORLD } from "./lumen.ts";
 
 const bundle = sampleBundle();
 const rowsOf = (ref: string) => bundle.tables.find((t) => t.ref === ref)!.rows;
@@ -41,9 +41,13 @@ describe("the sample file", () => {
     }
   });
 
-  it("brings no calendar, no review and nothing that names a time zone", () => {
+  it("brings the eight busy times under an account no connection owns, no review, and nothing that names a time zone", () => {
     const refs = bundle.tables.map((t) => t.ref);
-    expect(refs).not.toContain("calendar_busy");
+    const busy = rowsOf("calendar_busy");
+    expect(busy.length).toBe(WORLD.demoOnly.busy.length);
+    // One that looked like Adminium's own (`cac_…`) would be swept as an orphan.
+    expect([...new Set(busy.map((b) => b["account"]))]).toEqual([SAMPLE_ACCOUNT]);
+    expect(SAMPLE_ACCOUNT.startsWith("cac_")).toBe(false);
     expect(refs.filter((r) => r.startsWith("forms_"))).toEqual([]);
     expect(Object.keys(WORLD.settings).filter((k) => /zone/.test(k))).toEqual([]);
   });
@@ -53,6 +57,24 @@ describe("the sample file", () => {
     expect(rows.filter((b) => b["code"] !== undefined).length).toBe(Number(figure("Bookings in the sample (all time)")));
     expect(rows.filter((b) => b["state"] === "offered").map((b) => b["code"])).toEqual([undefined]);
     expect(`LMN-${String(Math.max(...WORLD.bookings.map((b) => b.number)) + 1)}`).toBe(figure("Next booking code"));
+  });
+
+  it("writes the moments a live save would stamp, since Adminium stamps no history", () => {
+    const rows = rowsOf("bookings");
+    for (const name of ["made_at", "free_until", "link_expires"]) expect(rows.filter((b) => b[name] === undefined).length, name).toBe(0);
+    const ava = rows.find((b) => b["code"] === "LMN-1807")!;
+    const start = ava["starts_at"] as { "@day": number; "@time": string };
+    expect(ava["free_until"]).toEqual({ "@day": start["@day"] - 1, "@time": start["@time"], "@week": true });
+    expect(ava["link_expires"]).toEqual({ "@day": start["@day"] + 30, "@time": start["@time"], "@week": true });
+    expect(rowsOf("customers").filter((c) => c["created_at"] === undefined).length).toBe(WORLD.customers.filter((c) => !WORLD.bookings.some((b) => b.customer === c.id)).length);
+  });
+
+  it("marks as proved only what was made at the desk or by someone who signs in (ACC-6)", () => {
+    const accounts = new Set(WORLD.customers.filter((c) => c.account).map((c) => c.id));
+    for (const b of WORLD.bookings) {
+      const row = rowsOf("bookings").find((r) => r["code"] === b.code)!;
+      expect(row["customer_proved"] === true, b.code).toBe(b.channel === "desk" || accounts.has(b.customer));
+    }
   });
 
   it("offers Dana a time that fits her specialist's Wednesday", () => {

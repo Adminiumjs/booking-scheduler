@@ -24,6 +24,7 @@
  *     pack use's reverse watches it, so a late cancel or a no-show keeps the
  *     use (MON-10, cQ31).
  */
+import { CALENDAR_ADD_ONS } from "./add-ons.ts";
 import { l, type Labels } from "./labels.ts";
 
 type Tone = "pos" | "warn" | "danger" | "info" | "neutral" | "accent";
@@ -58,6 +59,7 @@ export interface Table {
   postings?: Record<string, unknown>[];
   review?: Record<string, unknown>;
   belongs?: Record<string, unknown>[];
+  connectedAccounts?: Record<string, unknown>;
   indexes?: string[][];
   keep?: { law: "tax" | "health" | "contract" | "safety" };
   columns: Column[];
@@ -179,6 +181,18 @@ export const OPEN_STATES = ["booked", "paying"];
 
 export const PAY_MODES: Record<string, string> = { none: "At the studio", deposit: "Deposit online", full: "In full online" };
 export const CHANNELS: Record<string, string> = { page: "Booking page", embed: "Your website", desk: "Front desk" };
+
+/** The line every calendar entry carries (cQ9). */
+const CALENDAR_NOTICE = {
+  "en-US": "Declining in your calendar does not cancel. Use your booking link.",
+  "de-DE": "Eine Absage im Kalender storniert den Termin nicht. Nutzen Sie Ihren Buchungslink.",
+  "fr-FR": "Refuser dans votre agenda n'annule pas le rendez-vous. Utilisez votre lien de réservation.",
+  "da-DK": "Et afslag i din kalender aflyser ikke besøget. Brug dit bookinglink.",
+  "cs-CZ": "Odmítnutí v kalendáři návštěvu nezruší. Použijte odkaz na svou rezervaci.",
+  "ar-EG": "الرفض في التقويم لا يلغي الموعد. استخدم رابط حجزك.",
+  "zh-CN": "在日历中拒绝不会取消预约。请使用您的预约链接。",
+  "zh-TW": "在行事曆中拒絕不會取消預約。請使用您的預約連結。",
+};
 
 /** Who may undo a step taken by mistake: never a specialist (`roles.ts`). */
 const DESK = ["owner", "front-desk"];
@@ -318,7 +332,7 @@ export const TABLES: Table[] = [
       int("review_reminder_days", "Remind about a review after (days)", { default: 4, rules: { validation: { min: 1, max: 14 } } }),
       text("google_review_link", 300, "Google review link", { ...opt, rules: { validation: { format: "url" } } }),
       // What a booking's event says in a person's own calendar (cQ19).
-      choice("event_detail", "Calendar events show", { first_initial: "First name and initial", service: "The service only" }, { default: "first_initial" }),
+      choice("event_detail", "Calendar events show", { name: "First name and initial", service: "The service only" }, { default: "name" }),
     ],
   },
   {
@@ -385,6 +399,8 @@ export const TABLES: Table[] = [
     labelPlural: l("Team"),
     keyField: "name",
     belongs: [{ column: "user_id" }],
+    // Each person may connect their own calendar. A person switched off has their connection ended.
+    connectedAccounts: { from: CALENDAR_ADD_ONS, address: "email", name: "name", active: "active" },
     columns: [
       id,
       text("name", 80, "Name", { semantic: "name", rules: { personal: false } }),
@@ -443,6 +459,7 @@ export const TABLES: Table[] = [
     label: l("Calendar busy time"),
     labelPlural: l("Calendar busy times"),
     private: true,
+    indexes: [["team_id", "starts_at"]],
     columns: [
       id,
       fk("team_id", "team", "Team member"),
@@ -529,6 +546,22 @@ export const TABLES: Table[] = [
         { table: "calendar_busy", resource: "team_id", start: "starts_at", end: "ends_at", engine: { account: "account" } },
       ],
       anyone: { pick: { column: "anyone_pick" }, made: "made_at", flag: "picked_by_anyone" },
+      // Out to each person's own calendar, and their busy times in. A booking still being paid for is on nobody's phone.
+      sync: {
+        when: { column: "state", values: ["booked", "arrived", "done"] },
+        calendarName: { table: "settings", column: "studio_name" },
+        title: { service: "service_id.name", person: "name" },
+        detail: { default: "first-name+initial", max: "first-name+initial" },
+      },
+      // A booking as a calendar entry: the invitation, the add-to-calendar links, and a person's private feed. No note, phone or price.
+      calendar: {
+        revision: "revision",
+        title: ["service_id", "name"],
+        code: "code",
+        studio: { name: setting("studio_name"), address: setting("address_line1"), website: setting("website") },
+        notice: CALENDAR_NOTICE,
+        feed: { own: "email", active: "active", detail: setting("event_detail"), customer: ["customer_id", "name"] },
+      },
       grid: setting("grid_min"),
       windowDays: setting("window_days"),
       windowFor: "guests",

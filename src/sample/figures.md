@@ -1,7 +1,7 @@
 # Lumen Studio sample — the figures (written by gen.py; do not edit)
 
-`engine`: worked out from the rows the app's installable sample holds. `demo`: leans on what only the demo seeds
-(calendars and busy times) or on an add-on's own history (Forms' reviews, Offers' ledger).
+`engine`: worked out from the rows the app's installable sample holds, its calendar busy times included. `demo`: leans
+on an add-on's own history (Forms' reviews, Offers' ledger) or on a connected calendar, which no sample brings.
 
 | Figure | Value | Proved by |
 |---|---|---|
@@ -28,8 +28,8 @@
 | Today by state | done 1 · arrived 2 · booked 7 · paying 1 · no_show 1 · cancelled 0 | engine |
 | Deposits held for upcoming visits | 13 · $630 | engine |
 | Deposits kept after a late cancel or no-show, last 28 days | 2 | engine |
-| Review requests sent (all time) | 621 | demo |
-| Not asked (said no to review e-mails) | 44 | demo |
+| Review requests sent (all time) | 621 | engine |
+| Not asked (said no to review e-mails) | 44 | engine |
 | Reviews received | 229 | demo |
 | Reviews published / waiting / hidden | 223 / 5 / 1 | demo |
 | Average of published reviews | 4.5 from 223 | demo |
@@ -44,7 +44,7 @@
 | Free times, Deep-Tissue Massage, Wed 16 Sep, anyone | 22: 9 AM, 9:15 AM, 9:30 AM, 9:45 AM, 10 AM, 10:15 AM, 10:30 AM, 10:45 AM, 11 AM, 11:15 AM … | engine |
 | Free times, Balayage, Sat 19 Sep, Elin | 0: none | engine |
 | Free times, Signature Facial, Tue 15 Sep, Noor | 0: none | engine |
-| Gel Manicure, anyone: free starts per day from today | Tue 15 Sep 4 · Wed 16 Sep 2 · Thu 17 Sep 28 · Fri 18 Sep 9 · Sat 19 Sep 16 · Sun 20 Sep closed · Mon 21 Sep 3 · Tue 22 Sep 6 · Wed 23 Sep 15 · Thu 24 Sep 27 · Fri 25 Sep 28 · Sat 26 Sep 24 · Sun 27 Sep closed · Mon 28 Sep 18 | demo |
+| Gel Manicure, anyone: free starts per day from today | Tue 15 Sep 4 · Wed 16 Sep 2 · Thu 17 Sep 28 · Fri 18 Sep 9 · Sat 19 Sep 16 · Sun 20 Sep closed · Mon 21 Sep 3 · Tue 22 Sep 6 · Wed 23 Sep 15 · Thu 24 Sep 27 · Fri 25 Sep 28 · Sat 26 Sep 24 · Sun 27 Sep closed · Mon 28 Sep 18 | engine |
 | 'Anyone' for Gel Manicure Thu 17 Sep 10 AM | June Alvarez | engine |
 | 'Anyone' for Cut & Style Sat 19 Sep 10 AM | Rafa Ortiz | engine |
 | 'Anyone' for Deep-Tissue Massage Wed 16 Sep 10:30 AM | Marco Bellini | engine |

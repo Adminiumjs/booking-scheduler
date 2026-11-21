@@ -12,10 +12,13 @@
  * anchor, Tuesday 15 September 2026, 10:40.
  *
  * A sample row writes what a person typed and the moments a stamp would have
- * written; every copy, total and formula is Adminium's. Not here, because no
- * app's sample may bring them: Forms' reviews, Offers' cards and pack uses, and
- * the calendar states and busy times, which the engine's demo provider seeds
- * (T08, MOD-12). `figures.md` marks each figure "engine" or "demo".
+ * written, because Adminium stamps no history (`stampsOfAVisit`); every copy,
+ * total and formula is Adminium's. The eight calendar busy
+ * times are here too, under a sample account no connection owns, for the
+ * sample's own people only, so the free times and the clash are the real ones.
+ * Not here, because no app's sample may bring them: Forms' reviews, Offers'
+ * cards and pack uses, and connected accounts: no sample claims to have signed
+ * in to somebody's Google. `figures.md` marks each figure "engine" or "demo".
  */
 import { readFileSync } from "node:fs";
 
@@ -97,6 +100,9 @@ const passed = ({ day, time }: WorldMoment): Row => {
   return { "@ago": span(Math.max(0, ANCHOR_MINUTES - minutesOf(time))) };
 };
 
+/** Whose busy times these are: no connected account. (One that looked like Adminium's own, `cac_…`, would be swept as an orphan.) */
+export const SAMPLE_ACCOUNT = "sample";
+
 const ref = (label: string) => ({ "@ref": label });
 const serviceById = new Map(WORLD.services.map((s) => [s.id, s]));
 const customerById = new Map(WORLD.customers.map((c) => [c.id, c]));
@@ -134,8 +140,15 @@ function stateOf(b: WorldBooking): Row {
   }
 }
 
+/** The sample's cancel window, the settings' default: a visit may be moved and cancelled free until a day before. */
+const CANCEL_DAYS = 1;
+/** What a live save stamps from a visit's start: until when it may be changed free, and how long its link works. */
+const stampsOfAVisit = (day: number, time: string): Row => ({ free_until: at(day - CANCEL_DAYS, time), link_expires: at(day + 30, time) });
+
 function bookingRow(b: WorldBooking): Row {
   const customer = customerById.get(b.customer)!;
+  // Made at the desk, or by someone who signs in: proved. A guest's typed address proves nothing (ACC-6).
+  const proved = b.channel === "desk" || customer.account;
   return {
     "@label": `booking:${b.code}`,
     // Its own number: Adminium moves the series past the sample's, so the next real code is the next one.
@@ -153,6 +166,9 @@ function bookingRow(b: WorldBooking): Row {
     starts_at: at(b.day, b.start),
     ask_online: b.deposit !== null,
     google_pressed: b.googlePressed,
+    ...(b.googlePressed ? { google_pressed_at: passed({ day: b.day + 1, time: "12:00" }) } : {}),
+    ...(proved ? { proved_by: "sample", customer_proved: true } : {}),
+    ...stampsOfAVisit(b.day, b.start),
     ...stateOf(b),
   };
 }
@@ -180,6 +196,13 @@ function offeredStart(w: World["waitlist"][number]): string {
 
 // ── the bundle ──────────────────────────────────────────────────────────────
 
+/** When each customer first booked: when their row was added. */
+const firstMade = new Map<number, WorldMoment>();
+for (const b of WORLD.bookings) {
+  const held = firstMade.get(b.customer);
+  if (held === undefined || b.made.day < held.day || (b.made.day === held.day && b.made.time < held.time)) firstMade.set(b.customer, b.made);
+}
+
 export function sampleBundle(): SampleBundle {
   const waitLabel = (i: number) => `wait:${String(i)}`;
   const offered: Row[] = WORLD.waitlist.flatMap((w, i) => {
@@ -199,6 +222,9 @@ export function sampleBundle(): SampleBundle {
         language: "en-US",
         channel: "desk",
         made_at: { "@ago": "PT40M" },
+        proved_by: "sample",
+        customer_proved: true,
+        ...stampsOfAVisit(w.day, offeredStart(w)),
         starts_at: at(w.day, offeredStart(w)),
         state: "offered",
         offer_until: { "@in": "PT20H" },
@@ -252,8 +278,15 @@ export function sampleBundle(): SampleBundle {
       },
       { ref: "time_off", rows: WORLD.timeOff.map((o) => ({ team_id: ref(`team:${o.team}`), starts_at: at(o.day, o.from), ends_at: at(o.day, o.to), why: o.why })) },
       {
+        ref: "calendar_busy",
+        rows: WORLD.demoOnly.busy.map((b) => ({ team_id: ref(`team:${b.team}`), starts_at: at(b.day, b.from), ends_at: at(b.day, b.to), account: SAMPLE_ACCOUNT })),
+      },
+      {
         ref: "customers",
-        rows: WORLD.customers.map((c) => ({ "@label": customerLabel(c.id), name: c.name, email: c.email, language: "en-US", review_requests: c.reviewRequests })),
+        rows: WORLD.customers.map((c) => {
+          const first = firstMade.get(c.id);
+          return { "@label": customerLabel(c.id), name: c.name, email: c.email, language: "en-US", review_requests: c.reviewRequests, ...(first === undefined ? {} : { created_at: passed(first) }) };
+        }),
       },
       {
         ref: "waitlist",
@@ -269,6 +302,7 @@ export function sampleBundle(): SampleBundle {
             team_id: w.team === null ? null : ref(`team:${w.team}`),
             day: week(w.day),
             state: w.state,
+            created_at: passed({ day: Math.min(-1, w.day - 3), time: "12:00" }),
           };
         }),
       },
@@ -310,6 +344,16 @@ export function sampleBundle(): SampleBundle {
           ...giftBuyers.map(({ g, label }) => ({ purchase_id: ref(label), kind: "taken", amount: g.amount, method: "online", paid_at: when(g.day), payment_ref: `sample_${g.code}`, provider: "stripe", refunded: 0 })),
           ...packBuyers.map(({ label, pack, p }, i) => ({ purchase_id: ref(label), kind: "taken", amount: pack.price, method: "online", paid_at: when(p.day), payment_ref: `sample_pack_${String(i)}`, provider: "stripe", refunded: 0 })),
         ],
+      },
+      {
+        // The review requests that went out: the morning after each done visit, to whoever had not said no.
+        ref: "messages",
+        rows: WORLD.bookings
+          .filter((b) => b.review !== null && b.review !== "opted-out")
+          .map((b) => {
+            const customer = customerById.get(b.customer)!;
+            return { kind: "review-request", status: "sent", to_address: customer.email, language: "en-US", booking_id: ref(`booking:${b.code}`), customer_id: ref(customerLabel(b.customer)), created_at: passed({ day: b.day + 1, time: "10:00" }), sent_at: passed({ day: b.day + 1, time: "10:00" }) };
+          }),
       },
     ],
   };
