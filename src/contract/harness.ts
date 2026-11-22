@@ -11,7 +11,7 @@
  * Tests only; nothing that ships imports it.
  */
 import { spawn, type ChildProcess } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
@@ -269,10 +269,21 @@ export async function boot(engine: Engine, port: number, now: number, options: B
     sink: `http://127.0.0.1:${String(port + 2)}`,
     log: () => log,
     setClock: async (at, still = false) => {
-      writeFileSync(clockFile, still ? `${String(at)} still` : String(at));
+      const turn = randomUUID();
+      writeFileSync(clockFile, `${String(at)} ${still ? "still" : "runs"} ${turn}`);
       child.kill("SIGUSR2");
-      // The signal is handled on the server's next turn of its loop.
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // The signal is handled on the server's next turn of its loop, which a busy machine puts off: wait until it says so.
+      const giveUpAt = Date.now() + 30_000;
+      for (;;) {
+        try {
+          if (readFileSync(`${clockFile}.done`, "utf8") === turn) return;
+        } catch {
+          // not written yet
+        }
+        if (child.exitCode !== null) throw new Error(`the ${engine} server exited while its clock was set:\n${log.slice(-4000)}`);
+        if (Date.now() > giveUpAt) throw new Error(`the ${engine} server did not take the new clock within 30 s`);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
     },
     stop: () =>
       new Promise<void>((resolve) => {

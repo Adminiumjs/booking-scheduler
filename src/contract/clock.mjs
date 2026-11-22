@@ -9,7 +9,7 @@
  * moves; the server reads its "now" from it. The contract may set it again
  * while the server runs (`Server.setClock`).
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const target = Number(process.env.CONTRACT_NOW);
 if (Number.isFinite(target)) {
@@ -23,11 +23,13 @@ if (Number.isFinite(target)) {
   const file = process.env.CONTRACT_CLOCK_FILE;
   if (file) {
     process.on("SIGUSR2", () => {
-      const [at, mode] = readFileSync(file, "utf8").trim().split(/\s+/);
+      const [at, mode, turn] = readFileSync(file, "utf8").trim().split(/\s+/);
       const next = Number(at);
       if (!Number.isFinite(next)) return;
       offset = next - RealDate.now();
       still = mode === "still" ? next : null;
+      // Says it has moved, so the contract's next request is never answered on the old clock.
+      if (turn !== undefined) writeFileSync(`${file}.done`, turn);
     });
   }
   class ContractDate extends RealDate {
