@@ -4116,6 +4116,38 @@
                           },
                           24
                         ]
+                      },
+                      {
+                        "gte": [
+                          {
+                            "coalesce": [
+                              {
+                                "hoursBetween": [
+                                  "booked_at",
+                                  "remind_at"
+                                ]
+                              },
+                              -1
+                            ]
+                          },
+                          0
+                        ]
+                      },
+                      {
+                        "gte": [
+                          {
+                            "coalesce": [
+                              {
+                                "hoursBetween": [
+                                  "booked_at",
+                                  "starts_at"
+                                ]
+                              },
+                              0
+                            ]
+                          },
+                          24
+                        ]
                       }
                     ]
                   },
@@ -4158,6 +4190,32 @@
             }
           },
           {
+            "ref": "booked_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Booked at",
+              "de-DE": "Gebucht am",
+              "fr-FR": "Réservé le",
+              "da-DK": "Booket den",
+              "cs-CZ": "Rezervováno v",
+              "ar-EG": "وقت الحجز",
+              "zh-CN": "预约时间",
+              "zh-TW": "預約時間"
+            },
+            "nullable": true,
+            "rules": {
+              "stamp": {
+                "set": "now",
+                "on": {
+                  "column": "state",
+                  "values": [
+                    "booked"
+                  ]
+                }
+              }
+            }
+          },
+          {
             "ref": "free_hours",
             "type": "int",
             "label": {
@@ -4174,9 +4232,78 @@
             "rules": {
               "formula": {
                 "floor": {
-                  "hoursBetween": [
-                    "time_set_at",
-                    "free_until"
+                  "if": [
+                    {
+                      "isNull": "booked_at"
+                    },
+                    {
+                      "hoursBetween": [
+                        "time_set_at",
+                        "free_until"
+                      ]
+                    },
+                    {
+                      "if": [
+                        {
+                          "and": [
+                            {
+                              "gte": [
+                                {
+                                  "coalesce": [
+                                    {
+                                      "hoursBetween": [
+                                        "time_set_at",
+                                        "free_until"
+                                      ]
+                                    },
+                                    -1
+                                  ]
+                                },
+                                0
+                              ]
+                            },
+                            {
+                              "gte": [
+                                {
+                                  "coalesce": [
+                                    {
+                                      "hoursBetween": [
+                                        "booked_at",
+                                        "free_until"
+                                      ]
+                                    },
+                                    -1
+                                  ]
+                                },
+                                0
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "min": [
+                            {
+                              "hoursBetween": [
+                                "time_set_at",
+                                "free_until"
+                              ]
+                            },
+                            {
+                              "hoursBetween": [
+                                "booked_at",
+                                "free_until"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "div": [
+                            1,
+                            0
+                          ]
+                        }
+                      ]
+                    }
                   ]
                 }
               }
@@ -4879,6 +5006,29 @@
             }
           },
           {
+            "ref": "paid_online",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Paid online",
+              "de-DE": "Online bezahlt",
+              "fr-FR": "Payé en ligne",
+              "da-DK": "Betalt online",
+              "cs-CZ": "Zaplaceno online",
+              "ar-EG": "مدفوع عبر الإنترنت",
+              "zh-CN": "已在线支付",
+              "zh-TW": "已線上付款"
+            },
+            "rules": {
+              "rollup": {
+                "from": "payments",
+                "via": "booking_id",
+                "sum": "online_part"
+              }
+            }
+          },
+          {
             "ref": "shown_paid",
             "type": "decimal",
             "scale": "currency",
@@ -4900,14 +5050,14 @@
                     "gt": [
                       {
                         "coalesce": [
-                          "paid",
+                          "paid_online",
                           0
                         ]
                       },
                       0
                     ]
                   },
-                  "paid",
+                  "paid_online",
                   {
                     "div": [
                       1,
@@ -5002,6 +5152,55 @@
                 ]
               }
             }
+          },
+          {
+            "ref": "named_person",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Person chosen by name (for the e-mails)",
+              "de-DE": "Person namentlich gewählt (für die E-Mails)",
+              "fr-FR": "Personne choisie par son nom (pour les e-mails)",
+              "da-DK": "Person valgt ved navn (til e-mails)",
+              "cs-CZ": "Osoba vybraná jménem (pro e-maily)",
+              "ar-EG": "شخص مختار بالاسم (للرسائل)",
+              "zh-CN": "按姓名选择的人员（用于邮件）",
+              "zh-TW": "依姓名選擇的人員（用於郵件）"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "eq": [
+                      "picked_by_anyone",
+                      true
+                    ]
+                  },
+                  {
+                    "div": [
+                      1,
+                      0
+                    ]
+                  },
+                  1
+                ]
+              }
+            }
+          },
+          {
+            "ref": "specialist_told_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Specialist told",
+              "de-DE": "Fachkraft informiert",
+              "fr-FR": "Spécialiste prévenu",
+              "da-DK": "Specialist underrettet",
+              "cs-CZ": "Specialista informován",
+              "ar-EG": "أُبلغ المختص",
+              "zh-CN": "已通知专员",
+              "zh-TW": "已通知專員"
+            },
+            "nullable": true
           },
           {
             "ref": "shown_anyone",
@@ -7990,6 +8189,46 @@
             }
           },
           {
+            "ref": "online_part",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Paid online",
+              "de-DE": "Online bezahlt",
+              "fr-FR": "Payé en ligne",
+              "da-DK": "Betalt online",
+              "cs-CZ": "Zaplaceno online",
+              "ar-EG": "مدفوع عبر الإنترنت",
+              "zh-CN": "已在线支付",
+              "zh-TW": "已線上付款"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "or": [
+                      {
+                        "eq": [
+                          "method",
+                          "online"
+                        ]
+                      },
+                      {
+                        "eq": [
+                          "method",
+                          "gift_card"
+                        ]
+                      }
+                    ]
+                  },
+                  "kept",
+                  0
+                ]
+              }
+            }
+          },
+          {
             "ref": "kept",
             "type": "decimal",
             "scale": "currency",
@@ -10578,7 +10817,7 @@
                     {
                       "column": "kind",
                       "op": "eq",
-                      "value": "review-request"
+                      "value": "review_request"
                     },
                     {
                       "column": "status",
@@ -12603,11 +12842,12 @@
             "remind_at",
             "reminds",
             "review_from",
+            "booked_at",
             "free_hours",
             "free_at_reminder",
             "revision",
-            "shown_paid",
-            "rest_at_studio",
+            "named_person",
+            "specialist_told_at",
             "shown_anyone",
             "state",
             "offer_until",
@@ -15201,7 +15441,8 @@
         "onChange": {
           "table": "bookings",
           "columns": [
-            "starts_at"
+            "starts_at",
+            "team_id"
           ],
           "changed": true,
           "where": {
@@ -15303,6 +15544,7 @@
           "days": 1,
           "at": "10:00"
         },
+        "repeatBy": "arrived_at",
         "supersede": "review",
         "dropWhen": [
           {
@@ -15348,6 +15590,7 @@
           },
           "at": "10:00"
         },
+        "repeatBy": "arrived_at",
         "supersede": "review",
         "dropWhen": [
           {
@@ -16551,7 +16794,7 @@
       "locales": {
         "en-US": {
           "subject": "Booked: {{service.name}}, {{booking.starts_at.date}} at {{booking.starts_at.time}}",
-          "preheader": "Your payment is in. {{booking.starts_at.date}}, {{booking.starts_at.time}} with {{team.name}}.",
+          "preheader": "Your time is held. {{booking.starts_at.date}}, {{booking.starts_at.time}} with {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -16567,7 +16810,11 @@
                 "paras": [
                   "We have your payment, so your time is held for you."
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "Your time is held for you."
             },
             {
               "block": "email.tax-breakdown",
@@ -16692,13 +16939,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Free to cancel or move until {{booking.free_until.date}}, {{booking.free_until.time}}, and what you paid comes back automatically. After that, moving isn't possible online and it is kept. If you don't come, it is kept."
+                  "Free to cancel or move until {{booking.free_until.date}}, {{booking.free_until.time}}. After that, moving isn't possible online."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "This visit is less than {{practice.cancel_hours}} hours away, so it can't be moved online and what you paid is kept if you cancel. Reply to this e-mail to ask us."
+              "otherwise": "This visit is less than {{practice.cancel_hours}} hours away, so it can't be moved online. Reply to this e-mail to ask us."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "What you paid online comes back automatically if you cancel in time. After that it is kept, and it is kept if you don't come."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -16717,7 +16976,7 @@
         },
         "de-DE": {
           "subject": "Gebucht: {{service.name}}, {{booking.starts_at.date}} um {{booking.starts_at.time}}",
-          "preheader": "Ihre Zahlung ist eingegangen. {{booking.starts_at.date}}, {{booking.starts_at.time}} bei {{team.name}}.",
+          "preheader": "Ihr Termin ist reserviert. {{booking.starts_at.date}}, {{booking.starts_at.time}} bei {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -16733,7 +16992,11 @@
                 "paras": [
                   "Ihre Zahlung ist da, Ihr Termin ist für Sie reserviert."
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "Ihr Termin ist für Sie reserviert."
             },
             {
               "block": "email.tax-breakdown",
@@ -16858,13 +17121,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Kostenlos stornieren oder verschieben bis {{booking.free_until.date}}, {{booking.free_until.time}}; Ihre Zahlung kommt dann automatisch zurück. Danach ist ein Verschieben online nicht mehr möglich und die Zahlung wird einbehalten. Wenn Sie nicht kommen, wird sie einbehalten."
+                  "Kostenlos stornieren oder verschieben bis {{booking.free_until.date}}, {{booking.free_until.time}}. Danach ist ein Verschieben online nicht mehr möglich."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Dieser Besuch ist weniger als {{practice.cancel_hours}} Stunden entfernt. Er kann online nicht verschoben werden, und Ihre Zahlung wird bei einer Stornierung einbehalten. Antworten Sie auf diese E-Mail, um uns zu fragen."
+              "otherwise": "Dieser Besuch ist weniger als {{practice.cancel_hours}} Stunden entfernt und kann daher online nicht verschoben werden. Antworten Sie auf diese E-Mail, um uns zu fragen."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Was Sie online bezahlt haben, kommt bei rechtzeitiger Stornierung automatisch zurück. Danach wird es einbehalten, ebenso wenn Sie nicht kommen."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -16883,7 +17158,7 @@
         },
         "fr-FR": {
           "subject": "Réservé : {{service.name}}, {{booking.starts_at.date}} à {{booking.starts_at.time}}",
-          "preheader": "Votre paiement est reçu. {{booking.starts_at.date}}, {{booking.starts_at.time}} avec {{team.name}}.",
+          "preheader": "Votre créneau est réservé. {{booking.starts_at.date}}, {{booking.starts_at.time}} avec {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -16899,7 +17174,11 @@
                 "paras": [
                   "Nous avons reçu votre paiement, votre créneau vous est réservé."
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "Votre créneau vous est réservé."
             },
             {
               "block": "email.tax-breakdown",
@@ -17024,13 +17303,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Annulation ou déplacement gratuits jusqu'au {{booking.free_until.date}}, {{booking.free_until.time}}, et ce que vous avez payé revient automatiquement. Ensuite, le déplacement n'est plus possible en ligne et ce paiement est conservé. Si vous ne venez pas, il est conservé."
+                  "Annulation ou déplacement gratuits jusqu'au {{booking.free_until.date}}, {{booking.free_until.time}}. Ensuite, le déplacement n'est plus possible en ligne."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Cette visite a lieu dans moins de {{practice.cancel_hours}} heures : elle ne peut pas être déplacée en ligne et ce que vous avez payé est conservé si vous annulez. Répondez à cet e-mail pour nous le demander."
+              "otherwise": "Cette visite a lieu dans moins de {{practice.cancel_hours}} heures et ne peut donc pas être déplacée en ligne. Répondez à cet e-mail pour nous le demander."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Ce que vous avez payé en ligne revient automatiquement si vous annulez à temps. Ensuite, il est conservé, de même si vous ne venez pas."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -17049,7 +17340,7 @@
         },
         "da-DK": {
           "subject": "Booket: {{service.name}}, {{booking.starts_at.date}} kl. {{booking.starts_at.time}}",
-          "preheader": "Din betaling er modtaget. {{booking.starts_at.date}}, {{booking.starts_at.time}} hos {{team.name}}.",
+          "preheader": "Din tid er holdt. {{booking.starts_at.date}}, {{booking.starts_at.time}} hos {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -17065,7 +17356,11 @@
                 "paras": [
                   "Vi har din betaling, så din tid er holdt til dig."
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "Din tid er holdt til dig."
             },
             {
               "block": "email.tax-breakdown",
@@ -17190,13 +17485,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Gratis at aflyse eller flytte indtil {{booking.free_until.date}}, {{booking.free_until.time}}, og det, du har betalt, kommer automatisk tilbage. Derefter kan den ikke flyttes online, og beløbet beholdes. Hvis du ikke kommer, beholdes det."
+                  "Gratis at aflyse eller flytte indtil {{booking.free_until.date}}, {{booking.free_until.time}}. Derefter kan den ikke flyttes online."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Dette besøg er mindre end {{practice.cancel_hours}} timer væk, så det kan ikke flyttes online, og det, du har betalt, beholdes, hvis du aflyser. Svar på denne e-mail for at spørge os."
+              "otherwise": "Dette besøg er mindre end {{practice.cancel_hours}} timer væk, så det kan ikke flyttes online. Svar på denne e-mail for at spørge os."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Det, du har betalt online, kommer automatisk tilbage, hvis du aflyser i tide. Derefter beholdes det, også hvis du ikke kommer."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -17215,7 +17522,7 @@
         },
         "cs-CZ": {
           "subject": "Rezervováno: {{service.name}}, {{booking.starts_at.date}} v {{booking.starts_at.time}}",
-          "preheader": "Platba dorazila. {{booking.starts_at.date}}, {{booking.starts_at.time}}, {{team.name}}.",
+          "preheader": "Termín je pro vás držen. {{booking.starts_at.date}}, {{booking.starts_at.time}}, {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -17231,7 +17538,11 @@
                 "paras": [
                   "Vaši platbu máme, termín je pro vás držen."
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "Termín je pro vás držen."
             },
             {
               "block": "email.tax-breakdown",
@@ -17356,13 +17667,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Zrušení nebo přesun zdarma do {{booking.free_until.date}}, {{booking.free_until.time}}, zaplacená částka se vrátí automaticky. Poté už přesun online není možný a částka propadá. Pokud nepřijdete, propadá."
+                  "Zrušení nebo přesun zdarma do {{booking.free_until.date}}, {{booking.free_until.time}}. Poté už přesun online není možný."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Do této návštěvy zbývá méně než {{practice.cancel_hours}} hodin, proto ji nelze přesunout online a při zrušení zaplacená částka propadá. Odpovězte na tento e-mail a zeptejte se nás."
+              "otherwise": "Do této návštěvy zbývá méně než {{practice.cancel_hours}} hodin, proto ji nelze přesunout online. Odpovězte na tento e-mail a zeptejte se nás."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "To, co jste zaplatili online, se při včasném zrušení automaticky vrátí. Poté propadá, stejně jako když nepřijdete."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -17381,7 +17704,7 @@
         },
         "ar-EG": {
           "subject": "تم الحجز: {{service.name}}، {{booking.starts_at.date}}، {{booking.starts_at.time}}",
-          "preheader": "وصلتنا دفعتك. {{booking.starts_at.date}}، {{booking.starts_at.time}} مع {{team.name}}.",
+          "preheader": "موعدك محجوز. {{booking.starts_at.date}}، {{booking.starts_at.time}} مع {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -17397,7 +17720,11 @@
                 "paras": [
                   "وصلتنا دفعتك، وموعدك محجوز لك."
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "موعدك محجوز لك."
             },
             {
               "block": "email.tax-breakdown",
@@ -17522,13 +17849,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "يمكنك الإلغاء أو تغيير الموعد مجانًا حتى {{booking.free_until.date}}, {{booking.free_until.time}}، ويُعاد ما دفعته تلقائيًا. بعد ذلك لا يمكن تغيير الموعد عبر الإنترنت ويُحتفظ بالمبلغ. ويُحتفظ به أيضًا إذا لم تحضر."
+                  "يمكنك الإلغاء أو تغيير الموعد مجانًا حتى {{booking.free_until.date}}, {{booking.free_until.time}}. بعد ذلك لا يمكن تغيير الموعد عبر الإنترنت."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "يفصلنا عن هذه الزيارة أقل من {{practice.cancel_hours}} ساعة، لذا لا يمكن تغيير موعدها عبر الإنترنت ويُحتفظ بما دفعته عند الإلغاء. ردّ على هذه الرسالة لتسألنا."
+              "otherwise": "يفصلنا عن هذه الزيارة أقل من {{practice.cancel_hours}} ساعة، لذا لا يمكن تغيير موعدها عبر الإنترنت. ردّ على هذه الرسالة لتسألنا."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "يُعاد ما دفعته عبر الإنترنت تلقائيًا إذا ألغيت في الوقت المناسب. بعد ذلك يُحتفظ به، وكذلك إذا لم تحضر."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -17547,7 +17886,7 @@
         },
         "zh-CN": {
           "subject": "已预约：{{service.name}}，{{booking.starts_at.date}} {{booking.starts_at.time}}",
-          "preheader": "已收到您的付款。{{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
+          "preheader": "您的时段已保留。{{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
           "blocks": [
             {
               "block": "email.heading",
@@ -17563,7 +17902,11 @@
                 "paras": [
                   "我们已收到您的付款，您的时段已为您保留。"
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "您的时段已为您保留。"
             },
             {
               "block": "email.tax-breakdown",
@@ -17688,13 +18031,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免费取消或改期，已付款项将自动退回。此后无法在线改期，款项不予退还。如未到场，款项同样不予退还。"
+                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免费取消或改期。此后无法在线改期。"
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "距离此次到访不足 {{practice.cancel_hours}} 小时，因此无法在线改期，取消时已付款项不予退还。如需帮助，请回复此邮件。"
+              "otherwise": "距离此次到访不足 {{practice.cancel_hours}} 小时，因此无法在线改期。如需帮助，请回复此邮件。"
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按时取消，您在线支付的款项将自动退回。此后不予退还，未到场同样不予退还。"
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -17713,7 +18068,7 @@
         },
         "zh-TW": {
           "subject": "已預約：{{service.name}}，{{booking.starts_at.date}} {{booking.starts_at.time}}",
-          "preheader": "已收到您的付款。{{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
+          "preheader": "您的時段已保留。{{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
           "blocks": [
             {
               "block": "email.heading",
@@ -17729,7 +18084,11 @@
                 "paras": [
                   "我們已收到您的付款，您的時段已為您保留。"
                 ]
-              }
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              },
+              "otherwise": "您的時段已為您保留。"
             },
             {
               "block": "email.tax-breakdown",
@@ -17854,13 +18213,25 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免費取消或改期，已付款項將自動退回。此後無法線上改期，款項不予退還。如未到場，款項同樣不予退還。"
+                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免費取消或改期。此後無法線上改期。"
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "距離此次到訪不足 {{practice.cancel_hours}} 小時，因此無法線上改期，取消時已付款項不予退還。如需協助，請回覆此郵件。"
+              "otherwise": "距離此次到訪不足 {{practice.cancel_hours}} 小時，因此無法線上改期。如需協助，請回覆此郵件。"
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按時取消，您線上支付的款項將自動退回。此後不予退還，未到場同樣不予退還。"
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -17927,7 +18298,7 @@
       "locales": {
         "en-US": {
           "subject": "Pay your deposit to keep {{booking.starts_at.date}}, {{booking.starts_at.time}}",
-          "preheader": "{{service.name}} with {{team.name}}. We hold the time for {{practice.hold_min}} minutes after you open the link.",
+          "preheader": "{{service.name}}, {{booking.starts_at.date}}. We hold the time for {{practice.hold_min}} minutes after you open the link.",
           "blocks": [
             {
               "block": "email.heading",
@@ -17957,11 +18328,30 @@
                   {
                     "label": "When",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "With",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Booking code",
                     "amount": "{{booking.code}}"
@@ -18033,20 +18423,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Free to cancel or move until {{booking.free_until.date}}, {{booking.free_until.time}}, and what you paid comes back automatically. After that, moving isn't possible online and it is kept. If you don't come, it is kept."
+                  "Free to cancel or move until {{booking.free_until.date}}, {{booking.free_until.time}}. After that, moving isn't possible online."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "This visit is less than {{practice.cancel_hours}} hours away, so it can't be moved online and what you paid is kept if you cancel. Reply to this e-mail to ask us."
+              "otherwise": "This visit is less than {{practice.cancel_hours}} hours away, so it can't be moved online. Reply to this e-mail to ask us."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "What you paid online comes back automatically if you cancel in time. After that it is kept, and it is kept if you don't come."
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "de-DE": {
           "subject": "Zahlen Sie Ihre Anzahlung, um {{booking.starts_at.date}}, {{booking.starts_at.time}} zu behalten",
-          "preheader": "{{service.name}} bei {{team.name}}. Wir halten den Termin {{practice.hold_min}} Minuten, nachdem Sie den Link geöffnet haben.",
+          "preheader": "{{service.name}}, {{booking.starts_at.date}}. Wir halten den Termin {{practice.hold_min}} Minuten, nachdem Sie den Link geöffnet haben.",
           "blocks": [
             {
               "block": "email.heading",
@@ -18076,11 +18475,30 @@
                   {
                     "label": "Wann",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "Bei",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Buchungscode",
                     "amount": "{{booking.code}}"
@@ -18152,20 +18570,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Kostenlos stornieren oder verschieben bis {{booking.free_until.date}}, {{booking.free_until.time}}; Ihre Zahlung kommt dann automatisch zurück. Danach ist ein Verschieben online nicht mehr möglich und die Zahlung wird einbehalten. Wenn Sie nicht kommen, wird sie einbehalten."
+                  "Kostenlos stornieren oder verschieben bis {{booking.free_until.date}}, {{booking.free_until.time}}. Danach ist ein Verschieben online nicht mehr möglich."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Dieser Besuch ist weniger als {{practice.cancel_hours}} Stunden entfernt. Er kann online nicht verschoben werden, und Ihre Zahlung wird bei einer Stornierung einbehalten. Antworten Sie auf diese E-Mail, um uns zu fragen."
+              "otherwise": "Dieser Besuch ist weniger als {{practice.cancel_hours}} Stunden entfernt und kann daher online nicht verschoben werden. Antworten Sie auf diese E-Mail, um uns zu fragen."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Was Sie online bezahlt haben, kommt bei rechtzeitiger Stornierung automatisch zurück. Danach wird es einbehalten, ebenso wenn Sie nicht kommen."
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "fr-FR": {
           "subject": "Payez votre acompte pour garder {{booking.starts_at.date}}, {{booking.starts_at.time}}",
-          "preheader": "{{service.name}} avec {{team.name}}. Nous gardons le créneau {{practice.hold_min}} minutes après l'ouverture du lien.",
+          "preheader": "{{service.name}}, {{booking.starts_at.date}}. Nous gardons le créneau {{practice.hold_min}} minutes après l'ouverture du lien.",
           "blocks": [
             {
               "block": "email.heading",
@@ -18195,11 +18622,30 @@
                   {
                     "label": "Quand",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "Avec",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Code de réservation",
                     "amount": "{{booking.code}}"
@@ -18271,20 +18717,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Annulation ou déplacement gratuits jusqu'au {{booking.free_until.date}}, {{booking.free_until.time}}, et ce que vous avez payé revient automatiquement. Ensuite, le déplacement n'est plus possible en ligne et ce paiement est conservé. Si vous ne venez pas, il est conservé."
+                  "Annulation ou déplacement gratuits jusqu'au {{booking.free_until.date}}, {{booking.free_until.time}}. Ensuite, le déplacement n'est plus possible en ligne."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Cette visite a lieu dans moins de {{practice.cancel_hours}} heures : elle ne peut pas être déplacée en ligne et ce que vous avez payé est conservé si vous annulez. Répondez à cet e-mail pour nous le demander."
+              "otherwise": "Cette visite a lieu dans moins de {{practice.cancel_hours}} heures et ne peut donc pas être déplacée en ligne. Répondez à cet e-mail pour nous le demander."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Ce que vous avez payé en ligne revient automatiquement si vous annulez à temps. Ensuite, il est conservé, de même si vous ne venez pas."
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "da-DK": {
           "subject": "Betal dit depositum for at beholde {{booking.starts_at.date}}, {{booking.starts_at.time}}",
-          "preheader": "{{service.name}} hos {{team.name}}. Vi holder tiden i {{practice.hold_min}} minutter, efter du åbner linket.",
+          "preheader": "{{service.name}}, {{booking.starts_at.date}}. Vi holder tiden i {{practice.hold_min}} minutter, efter du åbner linket.",
           "blocks": [
             {
               "block": "email.heading",
@@ -18314,11 +18769,30 @@
                   {
                     "label": "Hvornår",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "Hos",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Bookingkode",
                     "amount": "{{booking.code}}"
@@ -18390,20 +18864,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Gratis at aflyse eller flytte indtil {{booking.free_until.date}}, {{booking.free_until.time}}, og det, du har betalt, kommer automatisk tilbage. Derefter kan den ikke flyttes online, og beløbet beholdes. Hvis du ikke kommer, beholdes det."
+                  "Gratis at aflyse eller flytte indtil {{booking.free_until.date}}, {{booking.free_until.time}}. Derefter kan den ikke flyttes online."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Dette besøg er mindre end {{practice.cancel_hours}} timer væk, så det kan ikke flyttes online, og det, du har betalt, beholdes, hvis du aflyser. Svar på denne e-mail for at spørge os."
+              "otherwise": "Dette besøg er mindre end {{practice.cancel_hours}} timer væk, så det kan ikke flyttes online. Svar på denne e-mail for at spørge os."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Det, du har betalt online, kommer automatisk tilbage, hvis du aflyser i tide. Derefter beholdes det, også hvis du ikke kommer."
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "cs-CZ": {
           "subject": "Zaplaťte zálohu a udržte si {{booking.starts_at.date}}, {{booking.starts_at.time}}",
-          "preheader": "{{service.name}}, {{team.name}}. Termín držíme {{practice.hold_min}} minut po otevření odkazu.",
+          "preheader": "{{service.name}}, {{booking.starts_at.date}}. Termín držíme {{practice.hold_min}} minut po otevření odkazu.",
           "blocks": [
             {
               "block": "email.heading",
@@ -18433,11 +18916,30 @@
                   {
                     "label": "Kdy",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "U",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Kód rezervace",
                     "amount": "{{booking.code}}"
@@ -18509,20 +19011,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "Zrušení nebo přesun zdarma do {{booking.free_until.date}}, {{booking.free_until.time}}, zaplacená částka se vrátí automaticky. Poté už přesun online není možný a částka propadá. Pokud nepřijdete, propadá."
+                  "Zrušení nebo přesun zdarma do {{booking.free_until.date}}, {{booking.free_until.time}}. Poté už přesun online není možný."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "Do této návštěvy zbývá méně než {{practice.cancel_hours}} hodin, proto ji nelze přesunout online a při zrušení zaplacená částka propadá. Odpovězte na tento e-mail a zeptejte se nás."
+              "otherwise": "Do této návštěvy zbývá méně než {{practice.cancel_hours}} hodin, proto ji nelze přesunout online. Odpovězte na tento e-mail a zeptejte se nás."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "To, co jste zaplatili online, se při včasném zrušení automaticky vrátí. Poté propadá, stejně jako když nepřijdete."
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "ar-EG": {
           "subject": "ادفع العربون لتحتفظ بموعد {{booking.starts_at.date}}، {{booking.starts_at.time}}",
-          "preheader": "{{service.name}} مع {{team.name}}. نحجز الموعد {{practice.hold_min}} دقيقة بعد فتح الرابط.",
+          "preheader": "{{service.name}}، {{booking.starts_at.date}}. نحجز الموعد {{practice.hold_min}} دقيقة بعد فتح الرابط.",
           "blocks": [
             {
               "block": "email.heading",
@@ -18552,11 +19063,30 @@
                   {
                     "label": "الموعد",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "مع",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "رمز الحجز",
                     "amount": "{{booking.code}}"
@@ -18628,20 +19158,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "يمكنك الإلغاء أو تغيير الموعد مجانًا حتى {{booking.free_until.date}}, {{booking.free_until.time}}، ويُعاد ما دفعته تلقائيًا. بعد ذلك لا يمكن تغيير الموعد عبر الإنترنت ويُحتفظ بالمبلغ. ويُحتفظ به أيضًا إذا لم تحضر."
+                  "يمكنك الإلغاء أو تغيير الموعد مجانًا حتى {{booking.free_until.date}}, {{booking.free_until.time}}. بعد ذلك لا يمكن تغيير الموعد عبر الإنترنت."
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "يفصلنا عن هذه الزيارة أقل من {{practice.cancel_hours}} ساعة، لذا لا يمكن تغيير موعدها عبر الإنترنت ويُحتفظ بما دفعته عند الإلغاء. ردّ على هذه الرسالة لتسألنا."
+              "otherwise": "يفصلنا عن هذه الزيارة أقل من {{practice.cancel_hours}} ساعة، لذا لا يمكن تغيير موعدها عبر الإنترنت. ردّ على هذه الرسالة لتسألنا."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "يُعاد ما دفعته عبر الإنترنت تلقائيًا إذا ألغيت في الوقت المناسب. بعد ذلك يُحتفظ به، وكذلك إذا لم تحضر."
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "zh-CN": {
           "subject": "支付定金以保留 {{booking.starts_at.date}} {{booking.starts_at.time}}",
-          "preheader": "{{service.name}}，{{team.name}}。打开链接后我们为您保留 {{practice.hold_min}} 分钟。",
+          "preheader": "{{service.name}}，{{booking.starts_at.date}}。打开链接后我们为您保留 {{practice.hold_min}} 分钟。",
           "blocks": [
             {
               "block": "email.heading",
@@ -18671,11 +19210,30 @@
                   {
                     "label": "时间",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "服务人员",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "预约码",
                     "amount": "{{booking.code}}"
@@ -18747,20 +19305,29 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免费取消或改期，已付款项将自动退回。此后无法在线改期，款项不予退还。如未到场，款项同样不予退还。"
+                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免费取消或改期。此后无法在线改期。"
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "距离此次到访不足 {{practice.cancel_hours}} 小时，因此无法在线改期，取消时已付款项不予退还。如需帮助，请回复此邮件。"
+              "otherwise": "距离此次到访不足 {{practice.cancel_hours}} 小时，因此无法在线改期。如需帮助，请回复此邮件。"
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按时取消，您在线支付的款项将自动退回。此后不予退还，未到场同样不予退还。"
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
         },
         "zh-TW": {
           "subject": "支付訂金以保留 {{booking.starts_at.date}} {{booking.starts_at.time}}",
-          "preheader": "{{service.name}}，{{team.name}}。開啟連結後我們為您保留 {{practice.hold_min}} 分鐘。",
+          "preheader": "{{service.name}}，{{booking.starts_at.date}}。開啟連結後我們為您保留 {{practice.hold_min}} 分鐘。",
           "blocks": [
             {
               "block": "email.heading",
@@ -18790,11 +19357,30 @@
                   {
                     "label": "時間",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "服務人員",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "預約碼",
                     "amount": "{{booking.code}}"
@@ -18866,13 +19452,22 @@
               "id": "policy",
               "data": {
                 "paras": [
-                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免費取消或改期，已付款項將自動退回。此後無法線上改期，款項不予退還。如未到場，款項同樣不予退還。"
+                  "在 {{booking.free_until.date}}, {{booking.free_until.time}} 前可免費取消或改期。此後無法線上改期。"
                 ]
               },
               "showWhen": {
                 "var": "booking.free_hours"
               },
-              "otherwise": "距離此次到訪不足 {{practice.cancel_hours}} 小時，因此無法線上改期，取消時已付款項不予退還。如需協助，請回覆此郵件。"
+              "otherwise": "距離此次到訪不足 {{practice.cancel_hours}} 小時，因此無法線上改期。如需協助，請回覆此郵件。"
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按時取消，您線上支付的款項將自動退回。此後不予退還，未到場同樣不予退還。"
+                ]
+              }
             }
           ],
           "footer": "{{appName}} · {{practice.address_line1}}, {{practice.city}}, {{practice.region}} {{practice.zip}}"
@@ -18946,11 +19541,30 @@
                   {
                     "label": "When",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "With",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Booking code",
                     "amount": "{{booking.code}}"
@@ -19001,11 +19615,30 @@
                   {
                     "label": "Wann",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "Bei",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Buchungscode",
                     "amount": "{{booking.code}}"
@@ -19056,11 +19689,30 @@
                   {
                     "label": "Quand",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "Avec",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Code de réservation",
                     "amount": "{{booking.code}}"
@@ -19111,11 +19763,30 @@
                   {
                     "label": "Hvornår",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "Hos",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Bookingkode",
                     "amount": "{{booking.code}}"
@@ -19166,11 +19837,30 @@
                   {
                     "label": "Kdy",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "U",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "Kód rezervace",
                     "amount": "{{booking.code}}"
@@ -19221,11 +19911,30 @@
                   {
                     "label": "الموعد",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "مع",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "رمز الحجز",
                     "amount": "{{booking.code}}"
@@ -19276,11 +19985,30 @@
                   {
                     "label": "时间",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "服务人员",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "预约码",
                     "amount": "{{booking.code}}"
@@ -19331,11 +20059,30 @@
                   {
                     "label": "時間",
                     "amount": "{{booking.starts_at.date}} · {{booking.time_range}}"
-                  },
+                  }
+                ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "with",
+              "data": {
+                "lines": [
                   {
                     "label": "服務人員",
                     "amount": "{{team.name}}"
-                  },
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.named_person"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "code",
+              "data": {
+                "lines": [
                   {
                     "label": "預約碼",
                     "amount": "{{booking.code}}"
@@ -19512,6 +20259,18 @@
               "otherwise": "This visit is less than {{practice.cancel_hours}} hours away, so it can't be moved online. Reply to this e-mail to ask us."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "What you paid online comes back automatically if you cancel in time. After that it is kept, and it is kept if you don't come."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -19636,6 +20395,18 @@
                 "var": "booking.free_at_reminder"
               },
               "otherwise": "Dieser Besuch ist weniger als {{practice.cancel_hours}} Stunden entfernt und kann daher online nicht verschoben werden. Antworten Sie auf diese E-Mail, um uns zu fragen."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Was Sie online bezahlt haben, kommt bei rechtzeitiger Stornierung automatisch zurück. Danach wird es einbehalten, ebenso wenn Sie nicht kommen."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -19764,6 +20535,18 @@
               "otherwise": "Cette visite a lieu dans moins de {{practice.cancel_hours}} heures et ne peut donc pas être déplacée en ligne. Répondez à cet e-mail pour nous le demander."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Ce que vous avez payé en ligne revient automatiquement si vous annulez à temps. Ensuite, il est conservé, de même si vous ne venez pas."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -19888,6 +20671,18 @@
                 "var": "booking.free_at_reminder"
               },
               "otherwise": "Dette besøg er mindre end {{practice.cancel_hours}} timer væk, så det kan ikke flyttes online. Svar på denne e-mail for at spørge os."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Det, du har betalt online, kommer automatisk tilbage, hvis du aflyser i tide. Derefter beholdes det, også hvis du ikke kommer."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -20016,6 +20811,18 @@
               "otherwise": "Do této návštěvy zbývá méně než {{practice.cancel_hours}} hodin, proto ji nelze přesunout online. Odpovězte na tento e-mail a zeptejte se nás."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "To, co jste zaplatili online, se při včasném zrušení automaticky vrátí. Poté propadá, stejně jako když nepřijdete."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -20140,6 +20947,18 @@
                 "var": "booking.free_at_reminder"
               },
               "otherwise": "يفصلنا عن هذه الزيارة أقل من {{practice.cancel_hours}} ساعة، لذا لا يمكن تغيير موعدها عبر الإنترنت. ردّ على هذه الرسالة لتسألنا."
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "يُعاد ما دفعته عبر الإنترنت تلقائيًا إذا ألغيت في الوقت المناسب. بعد ذلك يُحتفظ به، وكذلك إذا لم تحضر."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -20268,6 +21087,18 @@
               "otherwise": "距离此次到访不足 {{practice.cancel_hours}} 小时，因此无法在线改期。如需帮助，请回复此邮件。"
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按时取消，您在线支付的款项将自动退回。此后不予退还，未到场同样不予退还。"
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -20394,6 +21225,18 @@
               "otherwise": "距離此次到訪不足 {{practice.cancel_hours}} 小時，因此無法線上改期。如需協助，請回覆此郵件。"
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按時取消，您線上支付的款項將自動退回。此後不予退還，未到場同樣不予退還。"
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -20458,7 +21301,7 @@
       "locales": {
         "en-US": {
           "subject": "Moved: {{service.name}}, now {{booking.starts_at.date}} at {{booking.starts_at.time}}",
-          "preheader": "Your new time is {{booking.starts_at.date}}, {{booking.starts_at.time}} with {{team.name}}.",
+          "preheader": "Now {{booking.starts_at.date}}, {{booking.starts_at.time}} with {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -20472,7 +21315,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "Hi {{recipient.first_name}}, here is your new time. Your booking code stays the same."
+                  "Hi {{recipient.first_name}}, here are your visit's new details. Your booking code stays the same."
                 ]
               }
             },
@@ -20597,6 +21440,18 @@
               "otherwise": "This visit is less than {{practice.cancel_hours}} hours away, so it can't be moved online. Reply to this e-mail to ask us."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "What you paid online comes back automatically if you cancel in time. After that it is kept, and it is kept if you don't come."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -20613,7 +21468,7 @@
         },
         "de-DE": {
           "subject": "Verschoben: {{service.name}}, jetzt {{booking.starts_at.date}} um {{booking.starts_at.time}}",
-          "preheader": "Ihr neuer Termin ist {{booking.starts_at.date}}, {{booking.starts_at.time}} bei {{team.name}}.",
+          "preheader": "Jetzt {{booking.starts_at.date}}, {{booking.starts_at.time}} bei {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -20627,7 +21482,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "Hallo {{recipient.first_name}}, hier ist Ihr neuer Termin. Ihr Buchungscode bleibt gleich."
+                  "Hallo {{recipient.first_name}}, hier sind die neuen Angaben zu Ihrem Besuch. Ihr Buchungscode bleibt gleich."
                 ]
               }
             },
@@ -20752,6 +21607,18 @@
               "otherwise": "Dieser Besuch ist weniger als {{practice.cancel_hours}} Stunden entfernt und kann daher online nicht verschoben werden. Antworten Sie auf diese E-Mail, um uns zu fragen."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Was Sie online bezahlt haben, kommt bei rechtzeitiger Stornierung automatisch zurück. Danach wird es einbehalten, ebenso wenn Sie nicht kommen."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -20768,7 +21635,7 @@
         },
         "fr-FR": {
           "subject": "Déplacé : {{service.name}}, maintenant {{booking.starts_at.date}} à {{booking.starts_at.time}}",
-          "preheader": "Votre nouveau créneau est {{booking.starts_at.date}}, {{booking.starts_at.time}} avec {{team.name}}.",
+          "preheader": "Désormais {{booking.starts_at.date}}, {{booking.starts_at.time}} avec {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -20782,7 +21649,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "Bonjour {{recipient.first_name}}, voici votre nouveau créneau. Votre code de réservation reste le même."
+                  "Bonjour {{recipient.first_name}}, voici les nouvelles informations de votre visite. Votre code de réservation reste le même."
                 ]
               }
             },
@@ -20907,6 +21774,18 @@
               "otherwise": "Cette visite a lieu dans moins de {{practice.cancel_hours}} heures et ne peut donc pas être déplacée en ligne. Répondez à cet e-mail pour nous le demander."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Ce que vous avez payé en ligne revient automatiquement si vous annulez à temps. Ensuite, il est conservé, de même si vous ne venez pas."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -20923,7 +21802,7 @@
         },
         "da-DK": {
           "subject": "Flyttet: {{service.name}}, nu {{booking.starts_at.date}} kl. {{booking.starts_at.time}}",
-          "preheader": "Din nye tid er {{booking.starts_at.date}}, {{booking.starts_at.time}} hos {{team.name}}.",
+          "preheader": "Nu {{booking.starts_at.date}}, {{booking.starts_at.time}} hos {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -20937,7 +21816,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "Hej {{recipient.first_name}}, her er din nye tid. Din bookingkode er den samme."
+                  "Hej {{recipient.first_name}}, her er de nye oplysninger om dit besøg. Din bookingkode er den samme."
                 ]
               }
             },
@@ -21062,6 +21941,18 @@
               "otherwise": "Dette besøg er mindre end {{practice.cancel_hours}} timer væk, så det kan ikke flyttes online. Svar på denne e-mail for at spørge os."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "Det, du har betalt online, kommer automatisk tilbage, hvis du aflyser i tide. Derefter beholdes det, også hvis du ikke kommer."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -21078,7 +21969,7 @@
         },
         "cs-CZ": {
           "subject": "Přesunuto: {{service.name}}, nově {{booking.starts_at.date}} v {{booking.starts_at.time}}",
-          "preheader": "Váš nový termín je {{booking.starts_at.date}}, {{booking.starts_at.time}}, {{team.name}}.",
+          "preheader": "Nově {{booking.starts_at.date}}, {{booking.starts_at.time}}, {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -21092,7 +21983,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "Dobrý den, {{recipient.first_name}}, zde je váš nový termín. Kód rezervace zůstává stejný."
+                  "Dobrý den, {{recipient.first_name}}, zde jsou nové údaje o vaší návštěvě. Kód rezervace zůstává stejný."
                 ]
               }
             },
@@ -21217,6 +22108,18 @@
               "otherwise": "Do této návštěvy zbývá méně než {{practice.cancel_hours}} hodin, proto ji nelze přesunout online. Odpovězte na tento e-mail a zeptejte se nás."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "To, co jste zaplatili online, se při včasném zrušení automaticky vrátí. Poté propadá, stejně jako když nepřijdete."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -21233,7 +22136,7 @@
         },
         "ar-EG": {
           "subject": "تم النقل: {{service.name}}، الآن {{booking.starts_at.date}}، {{booking.starts_at.time}}",
-          "preheader": "موعدك الجديد {{booking.starts_at.date}}، {{booking.starts_at.time}} مع {{team.name}}.",
+          "preheader": "الآن {{booking.starts_at.date}}، {{booking.starts_at.time}} مع {{team.name}}.",
           "blocks": [
             {
               "block": "email.heading",
@@ -21247,7 +22150,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "مرحبًا {{recipient.first_name}}، هذا موعدك الجديد. يبقى رمز حجزك كما هو."
+                  "مرحبًا {{recipient.first_name}}، هذه التفاصيل الجديدة لزيارتك. يبقى رمز حجزك كما هو."
                 ]
               }
             },
@@ -21372,6 +22275,18 @@
               "otherwise": "يفصلنا عن هذه الزيارة أقل من {{practice.cancel_hours}} ساعة، لذا لا يمكن تغيير موعدها عبر الإنترنت. ردّ على هذه الرسالة لتسألنا."
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "يُعاد ما دفعته عبر الإنترنت تلقائيًا إذا ألغيت في الوقت المناسب. بعد ذلك يُحتفظ به، وكذلك إذا لم تحضر."
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -21388,7 +22303,7 @@
         },
         "zh-CN": {
           "subject": "已改期：{{service.name}}，现为 {{booking.starts_at.date}} {{booking.starts_at.time}}",
-          "preheader": "您的新时间为 {{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
+          "preheader": "现为 {{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
           "blocks": [
             {
               "block": "email.heading",
@@ -21402,7 +22317,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "{{recipient.first_name}} 您好，这是您的新时间。预约码保持不变。"
+                  "{{recipient.first_name}} 您好，这是您到访的新信息。预约码保持不变。"
                 ]
               }
             },
@@ -21527,6 +22442,18 @@
               "otherwise": "距离此次到访不足 {{practice.cancel_hours}} 小时，因此无法在线改期。如需帮助，请回复此邮件。"
             },
             {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按时取消，您在线支付的款项将自动退回。此后不予退还，未到场同样不予退还。"
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
               "block": "email.social",
               "id": "manage",
               "data": {
@@ -21543,7 +22470,7 @@
         },
         "zh-TW": {
           "subject": "已改期：{{service.name}}，現為 {{booking.starts_at.date}} {{booking.starts_at.time}}",
-          "preheader": "您的新時間為 {{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
+          "preheader": "現為 {{booking.starts_at.date}} {{booking.starts_at.time}}，{{team.name}}。",
           "blocks": [
             {
               "block": "email.heading",
@@ -21557,7 +22484,7 @@
               "id": "intro",
               "data": {
                 "paras": [
-                  "{{recipient.first_name}} 您好，這是您的新時間。預約碼維持不變。"
+                  "{{recipient.first_name}} 您好，這是您到訪的新資訊。預約碼維持不變。"
                 ]
               }
             },
@@ -21680,6 +22607,18 @@
                 "var": "booking.free_hours"
               },
               "otherwise": "距離此次到訪不足 {{practice.cancel_hours}} 小時，因此無法線上改期。如需協助，請回覆此郵件。"
+            },
+            {
+              "block": "email.text",
+              "id": "paid-policy",
+              "data": {
+                "paras": [
+                  "如按時取消，您線上支付的款項將自動退回。此後不予退還，未到場同樣不予退還。"
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
             },
             {
               "block": "email.social",
@@ -26768,6 +27707,12 @@
             },
             "op": "is",
             "right": "booked"
+          },
+          {
+            "left": {
+              "field": "specialist_told_at"
+            },
+            "op": "is_empty"
           }
         ]
       },
@@ -26786,6 +27731,28 @@
               "ar-EG": "إنشاء حجز",
               "zh-CN": "新建预约",
               "zh-TW": "新建預約"
+            }
+          },
+          {
+            "id": "stamp",
+            "kind": "action",
+            "title": {
+              "en-US": "Note that they were told",
+              "de-DE": "Vermerken, dass informiert wurde",
+              "fr-FR": "Noter qu'il a été prévenu",
+              "da-DK": "Notér, at de har fået besked",
+              "cs-CZ": "Zaznamenat, že byli informováni",
+              "ar-EG": "تسجيل أنه تم الإبلاغ",
+              "zh-CN": "记录已通知",
+              "zh-TW": "記錄已通知"
+            },
+            "action": {
+              "kind": "record.update",
+              "values": {
+                "specialist_told_at": {
+                  "now": true
+                }
+              }
             }
           },
           {
@@ -26829,14 +27796,14 @@
         "zh-TW": "預約已付款：通知對應專員"
       },
       "description": {
-        "en-US": "The same e-mail for a booking that waited for its payment, once the money has landed.",
-        "de-DE": "Dieselbe E-Mail für eine Buchung, die auf ihre Zahlung gewartet hat, sobald das Geld eingegangen ist.",
-        "fr-FR": "Le même e-mail pour une réservation qui attendait son paiement, une fois l'argent reçu.",
-        "da-DK": "Samme e-mail for en booking, der ventede på betaling, når pengene er modtaget.",
-        "cs-CZ": "Stejný e-mail pro rezervaci, která čekala na platbu, jakmile peníze dorazí.",
-        "ar-EG": "الرسالة نفسها لحجز كان ينتظر الدفع، بعد وصول المبلغ.",
-        "zh-CN": "等待付款的预约在款项到账后发送同样的邮件。",
-        "zh-TW": "等待付款的預約在款項入帳後寄送同樣的郵件。"
+        "en-US": "The same e-mail for a booking that waited for its payment or was offered, once it is booked.",
+        "de-DE": "Dieselbe E-Mail für eine Buchung, die auf ihre Zahlung wartete oder angeboten wurde, sobald sie gebucht ist.",
+        "fr-FR": "Le même e-mail pour une réservation qui attendait son paiement ou qui était proposée, une fois réservée.",
+        "da-DK": "Samme e-mail for en booking, der ventede på betaling eller blev tilbudt, når den er booket.",
+        "cs-CZ": "Stejný e-mail pro rezervaci, která čekala na platbu nebo byla nabídnuta, jakmile je rezervována.",
+        "ar-EG": "الرسالة نفسها لحجز كان ينتظر الدفع أو عُرض، بعد تأكيده.",
+        "zh-CN": "等待付款或候补提供的预约在确认后发送同样的邮件。",
+        "zh-TW": "等待付款或候補提供的預約在確認後寄送同樣的郵件。"
       },
       "enabled": true,
       "trigger": {
@@ -26854,9 +27821,9 @@
           },
           {
             "left": {
-              "field": "link_until"
+              "field": "specialist_told_at"
             },
-            "op": "not_empty"
+            "op": "is_empty"
           }
         ]
       },
@@ -26875,6 +27842,28 @@
               "ar-EG": "دفع حجز",
               "zh-CN": "预约已付款",
               "zh-TW": "預約已付款"
+            }
+          },
+          {
+            "id": "stamp",
+            "kind": "action",
+            "title": {
+              "en-US": "Note that they were told",
+              "de-DE": "Vermerken, dass informiert wurde",
+              "fr-FR": "Noter qu'il a été prévenu",
+              "da-DK": "Notér, at de har fået besked",
+              "cs-CZ": "Zaznamenat, že byli informováni",
+              "ar-EG": "تسجيل أنه تم الإبلاغ",
+              "zh-CN": "记录已通知",
+              "zh-TW": "記錄已通知"
+            },
+            "action": {
+              "kind": "record.update",
+              "values": {
+                "specialist_told_at": {
+                  "now": true
+                }
+              }
             }
           },
           {

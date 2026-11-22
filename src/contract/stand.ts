@@ -119,8 +119,9 @@ export class Guest {
       asked = await this.proved("claim", "/api/v1/public/claim/link", { email });
     }
     if (asked.status !== 202 && asked.status !== 200) throw new Error(`sign-in link for ${email}: ${String(asked.status)} ${JSON.stringify(asked.body).slice(0, 400)}`);
-    const mail = await until(async () => (await inbox(server)).slice(before).find((m) => m.to.includes(email)), `the sign-in e-mail to ${email}`, 90_000);
-    const code = /\b(\d{6})\b/.exec(mail.text)?.[1];
+    // A booking's own mails go to the same address: the code's is the one with it in the subject.
+    const mail = await until(async () => (await inbox(server)).slice(before).find((m) => m.to.includes(email) && /\b\d{6}\b/.test(m.subject)), `the sign-in e-mail to ${email}`, 90_000);
+    const code = /\b(\d{6})\b/.exec(mail.subject)?.[1];
     if (code === undefined) throw new Error(`no code in the sign-in e-mail: ${mail.text.slice(0, 400)}`);
     const verified = await this.raw<{ session: string }>("POST", "/api/v1/public/claim/link/verify", { email, code });
     if (verified.status !== 200) throw new Error(`verify ${email}: ${String(verified.status)} ${JSON.stringify(verified.body).slice(0, 400)}`);

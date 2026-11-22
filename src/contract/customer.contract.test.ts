@@ -93,8 +93,8 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
       const signIn = async (door: LumenDoor, email: string) => {
         const before = (await inbox(stand.server)).length;
         await door.requestSignIn(email, "en-US");
-        const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(email)), `the code for ${email}`, 90_000);
-        const code = /\b(\d{6})\b/.exec(mail.text)?.[1];
+        const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(email) && /\b\d{6}\b/.test(m.subject)), `the code for ${email}`, 90_000);
+        const code = /\b(\d{6})\b/.exec(mail.subject)?.[1];
         expect(code).toBeTruthy();
         const verified = await door.verifySignIn(email, code!);
         expect(verified.ok).toBe(true);

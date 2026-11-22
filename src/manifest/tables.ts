@@ -680,6 +680,8 @@ export const TABLES: Table[] = [
                   { eq: ["state", "booked"] },
                   { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "remind_at"] }, -1] }, 0] },
                   { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "starts_at"] }, 0] }, 24] },
+                  { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "remind_at"] }, -1] }, 0] },
+                  { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "starts_at"] }, 0] }, 24] },
                 ],
               },
               1,
@@ -690,8 +692,31 @@ export const TABLES: Table[] = [
       },
       // The morning the review request goes: the review reminder's days count from here, as K10 says them.
       at("review_from", "Review reminder counts from", { ...opt, rules: stamp({ moment: { column: "starts_at", plus: { days: 1 } } }, { columns: ["starts_at"] }) }),
-      // Empty once the free window had already closed when the time was set, or when the reminder goes: the mail says the other sentence (L3-F7).
-      int("free_hours", "Hours free to change, when set", { ...opt, rules: { formula: { floor: { hoursBetween: ["time_set_at", "free_until"] } } } }),
+      // Each time it becomes booked: a time paid for later, or an offer taken later, was not "booked" until then.
+      at("booked_at", "Booked at", { ...opt, rules: stamp("now", onState("state", "booked")) }),
+      // Empty once the free window had already closed when the time was set or the booking became booked, or when the
+      // reminder goes: the mail then says the other sentence (L3-F7).
+      int("free_hours", "Hours free to change, when set", {
+        ...opt,
+        rules: {
+          formula: {
+            floor: {
+              if: [
+                { isNull: "booked_at" },
+                { hoursBetween: ["time_set_at", "free_until"] },
+                {
+                  if: [
+                    // A moment after the deadline reads as empty, which `min` would pass over: asked of each in turn.
+                    { and: [{ gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "free_until"] }, -1] }, 0] }, { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "free_until"] }, -1] }, 0] }] },
+                    { min: [{ hoursBetween: ["time_set_at", "free_until"] }, { hoursBetween: ["booked_at", "free_until"] }] },
+                    NOTHING,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      }),
       int("free_at_reminder", "Hours free to change, at the reminder", { ...opt, rules: { formula: { floor: { hoursBetween: ["remind_at", "free_until"] } } } }),
       // The calendar file's count: a change of time or a cancel is a new revision of the same event (cT12).
       int("revision", "Revision", { default: 0 }),
@@ -759,12 +784,18 @@ export const TABLES: Table[] = [
       money("pay_due", "Still to pay online", { formula: { max: [0, { sub: ["asked", c0("paid")] }] } }),
       money("refunded", "Refunded", { rollup: { from: "payments", via: "booking_id", sum: "returned" } }),
       // For the e-mails: each is empty when there is nothing to say, so the line is left out (a formula divided by zero is empty).
-      money("shown_paid", "Paid (for the e-mails)", { formula: { if: [{ gt: [c0("paid"), 0] }, "paid", NOTHING] } }),
+      // What came in online or from a gift card: the only money a cancel gives back by itself. Cash at the studio is the desk's to return.
+      money("paid_online", "Paid online", { rollup: { from: "payments", via: "booking_id", sum: "online_part" } }),
+      money("shown_paid", "Paid (for the e-mails)", { formula: { if: [{ gt: [c0("paid_online"), 0] }, "paid_online", NOTHING] } }),
       money("rest_at_studio", "To pay at the studio", {
         formula: {
           if: [{ gt: [{ sub: [c0("net_price"), { max: [c0("asked"), c0("paid")] }] }, 0] }, { sub: [c0("net_price"), { max: [c0("asked"), c0("paid")] }] }, NOTHING],
         },
       }),
+      // Empty while "Anyone" chose the person: a mail about a time still being paid for does not say who (§7).
+      { ref: "named_person", type: "int", nullable: true, label: l("Person chosen by name (for the e-mails)"), rules: { formula: { if: [{ eq: ["picked_by_anyone", true] }, NOTHING, 1] } } },
+      // Written by the rule that tells the specialist, so an undo back to booked does not tell them again.
+      at("specialist_told_at", "Specialist told", opt),
       { ref: "shown_anyone", type: "int", nullable: true, label: l("Chosen as Anyone (for the e-mails)"), rules: { formula: { if: [{ eq: ["picked_by_anyone", true] }, 1, NOTHING] } } },
       // R5: a deposit link holds the time until `link_until`; pressing Pay starts the usual minutes.
       bool("deposit_link", "Deposit link sent", false),
@@ -1021,6 +1052,7 @@ export const TABLES: Table[] = [
       money("refund_rows", "Refunded with its sale", { rollup: { from: "purchase_refunds", via: "payment_id", sum: "counted" } }),
       money("card_part", "Paid by gift card", { formula: { if: [{ eq: ["method", "gift_card"] }, c0("amount"), 0] } }),
       // What the row holds: a row of money given back counts against the booking, whatever way it went.
+      money("online_part", "Paid online", { formula: { if: [{ or: [{ eq: ["method", "online"] }, { eq: ["method", "gift_card"] }] }, "kept", 0] } }),
       money("kept", "Kept", { formula: { if: [{ eq: ["kind", "given_back"] }, { sub: [0, c0("amount")] }, { sub: [c0("amount"), { add: [c0("refunded"), c0("refund_rows")] }] }] } }),
       money("returned", "Given back", { formula: { if: [{ eq: ["kind", "given_back"] }, c0("amount"), { add: [c0("refunded"), c0("refund_rows")] }] } }),
       text("client_key", 64, "Retry key", { ...opt, unique: true }),

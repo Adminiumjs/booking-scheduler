@@ -58,6 +58,8 @@ const reviewMail = (kind: Kind, date: string, days: number | { setting: { table:
   gate: { setting: { table: "settings", column: "reviews_on" } },
   ...onBooking("state", ["arrived", "done"]),
   due: { date, days, at: "10:00" },
+  // One for each time the visit is marked arrived: an arrival taken back drops the waiting mail, and the real one asks again.
+  repeatBy: "arrived_at",
   supersede: "review",
   dropWhen: [
     { column: "reviewed_at", isNull: false, reason: "no-longer-needed" },
@@ -125,7 +127,8 @@ export const OUTBOX = {
     {
       kind: "moved",
       link: "booking_id",
-      onChange: { table: "bookings", columns: ["starts_at"], changed: true, where: { column: "state", eq: "booked" } },
+      // A new time or a new person: the guest was told who, and when.
+      onChange: { table: "bookings", columns: ["starts_at", "team_id"], changed: true, where: { column: "state", eq: "booked" } },
       repeat: true,
       was: ["starts_at"],
     },

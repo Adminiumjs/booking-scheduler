@@ -209,7 +209,7 @@ export const OVERVIEW_LAYOUT = {
     card("requests-sent", "kpi-stat-card", [0, 24, 3, 3], "Review requests sent", {
       ...COUNT,
       iconName: "bell-ring",
-      binding: metric((rest) => query("messages", rest), count("sent"), { filters: [eq("kind", "review-request"), eq("status", "sent")] }),
+      binding: metric((rest) => query("messages", rest), count("sent"), { filters: [eq("kind", "review_request"), eq("status", "sent")] }),
     }),
     card("requests-no", "kpi-stat-card", [3, 24, 3, 3], "Visits not asked", {
       ...COUNT,

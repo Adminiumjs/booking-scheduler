@@ -60,6 +60,12 @@ const facts = (w: Words) =>
     { label: w.with, amount: "{P}" },
     { label: w.code, amount: "{{booking.code}}" },
   );
+/** The same, for a time nobody has paid for yet: while "Anyone" chose the person, the mail does not say who (§7). */
+const factsUnsaid = (w: Words): Block[] => [
+  lines("booking", { label: "{S}", amount: `{{booking.minutes}} ${w.minutes}` }, { label: w.when, amount: "{D} · {{booking.time_range}}" }),
+  when("booking.named_person", lines("with", { label: w.with, amount: "{P}" })),
+  lines("code", { label: w.code, amount: "{{booking.code}}" }),
+];
 const priceAtStudio = (w: Words) => lines("price", { label: `${w.price} · ${w.atStudio}`, amount: "{{booking.net_price.money}}" });
 /** What is owed on a visit already booked: what it costs, what came in online, what is left to pay at the studio. */
 const owed = (w: Words): Block[] => [
@@ -76,7 +82,9 @@ const manage = (w: Words) => links("manage", { label: w.manage, url: OWN_LINK })
 const bookAnother = (w: Words) => button("again", w.bookAnother, "{{booking_url}}");
 
 /** The policy line follows the deadline: never a "free until" that has already passed (L3-F7). */
-const policy = (w: Words, paid: boolean) => when("booking.free_hours", para("policy", paid ? w.freeUntilPaid : w.freeUntil), paid ? w.tooLatePaid : w.tooLate);
+const policy = (w: Words): Block => when("booking.free_hours", para("policy", w.freeUntil), w.tooLate);
+/** Said only when money came in online, so a visit paid at the studio or covered by a code is promised nothing. */
+const paidPolicy = (w: Words): Block => when("booking.shown_paid", para("paid-policy", w.paidPolicy));
 
 function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blocks: Block[] } {
   const anyoneLine = when("booking.shown_anyone", para("anyone", w.anyone));
@@ -85,7 +93,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
       return {
         subject: w.bookedSubject,
         preheader: `${w.bookedPre} ${w.atStudio}.`,
-        blocks: [heading(w.bookedHeading), para("thanks", w.bookedThanks), facts(w), anyoneLine, priceAtStudio(w), ...addToCalendar(w), para("file", w.fileAttached), policy(w, false), manage(w)],
+        blocks: [heading(w.bookedHeading), para("thanks", w.bookedThanks), facts(w), anyoneLine, priceAtStudio(w), ...addToCalendar(w), para("file", w.fileAttached), policy(w), manage(w)],
       };
     case "deposit_receipt":
       return {
@@ -93,13 +101,14 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
         preheader: w.paidPre,
         blocks: [
           heading(w.bookedHeading),
-          para("thanks", w.paidThanks),
+          when("booking.shown_paid", para("thanks", w.paidThanks), w.heldThanks),
           facts(w),
           anyoneLine,
           ...owed(w),
           ...addToCalendar(w),
           para("file", w.fileAttached),
-          policy(w, true),
+          policy(w),
+          paidPolicy(w),
           manage(w),
         ],
       };
@@ -110,20 +119,21 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
         blocks: [
           heading(w.linkHeading),
           para("intro", w.linkIntro),
-          facts(w),
+          ...factsUnsaid(w),
           lines("price", { label: w.price, amount: "{{booking.net_price.money}}" }, { label: w.toPayOnline, amount: "{DUE}" }),
           when("booking.rest_at_studio", lines("rest", { label: w.toPayStudio, amount: "{REST}" })),
           para("hold", w.linkHold, w.linkUntil),
           button("pay", w.linkPay, OWN_LINK),
           para("secure", w.linkSecure, w.linkNoCard),
-          policy(w, true),
+          policy(w),
+          para("paid-policy", w.paidPolicy),
         ],
       };
     case "let_go":
       return {
         subject: w.letSubject,
         preheader: w.letPre,
-        blocks: [heading(w.letHeading), para("body", w.letBody), facts(w), bookAnother(w)],
+        blocks: [heading(w.letHeading), para("body", w.letBody), ...factsUnsaid(w), bookAnother(w)],
       };
     case "reminder":
       return {
@@ -136,6 +146,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
           ...owed(w),
           when("service.bring", para("bring", w.remBring)),
           when("booking.free_at_reminder", para("policy", w.remFree), w.remLate),
+          paidPolicy(w),
           manage(w),
         ],
       };
@@ -143,7 +154,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
       return {
         subject: w.movedSubject,
         preheader: w.movedPre,
-        blocks: [heading(w.movedHeading), para("intro", w.movedIntro), facts(w), ...owed(w), ...addToCalendar(w), para("file", w.movedFile, w.movedOld), policy(w, false), manage(w)],
+        blocks: [heading(w.movedHeading), para("intro", w.movedIntro), facts(w), ...owed(w), ...addToCalendar(w), para("file", w.movedFile, w.movedOld), policy(w), paidPolicy(w), manage(w)],
       };
     case "cancelled":
       return {

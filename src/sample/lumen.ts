@@ -162,6 +162,8 @@ function bookingRow(b: WorldBooking): Row {
     email: customer.email,
     language: "en-US",
     channel: b.channel,
+    // Already announced: moving a sample visit back to booked tells nobody.
+    specialist_told_at: b.state === "paying" ? null : passed(b.made),
     made_at: b.state === "paying" ? { "@ago": "PT6M" } : passed(b.made),
     starts_at: at(b.day, b.start),
     ask_online: b.deposit !== null,

@@ -365,9 +365,15 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
       it("a front desk that may not read addresses sends the link, and is not told where it went", async () => {
         const address = `noor.desk.${engine}@lumen-staff.dev`;
         const before = (await inbox(stand.server)).length;
-        expect(await doors.desk.sendConnectLink(noorTeam["id"] as string)).toBeNull();
-        const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(address)), "the connect link's mail", 60_000);
-        expect(mail.text).toMatch(/https?:\/\//);
+        // A connect link needs a public address to come back to.
+        ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: "https://studio.lumen-staff.dev" }));
+        try {
+          expect(await doors.desk.sendConnectLink(noorTeam["id"] as string)).toBeNull();
+          const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(address)), "the connect link's mail", 60_000);
+          expect(mail.text).toMatch(/https:\/\/studio\.lumen-staff\.dev/);
+        } finally {
+          ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: stand.server.base }));
+        }
       });
 
       it.skipIf(!staffReachCalendars)(`the private feed link is shown only to its own person; the front desk reaches neither (A5)${staffReachCalendars ? "" : " — skipped: screens-only staff cannot reach the calendar routes on this engine"}`, async () => {

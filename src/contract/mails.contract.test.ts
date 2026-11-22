@@ -84,6 +84,20 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         }
         throw new Error(`nothing free for ${service} from ${day}`);
       };
+      /** Several separate hours on the first day from this one that has them. */
+      const hours = async (service: string, day: string, who: string, count: number) => {
+        for (let d = 0; d < 12; d += 1) {
+          const date = new Date(Date.parse(`${day}T12:00:00Z`) + d * 86_400_000).toISOString().slice(0, 10);
+          const open = (await tab().times(String(services[service]!["id"]), String(team[who]!["id"]), date)).filter((s) => s.state === "free" && s.time >= "10:00");
+          const picked: string[] = [];
+          for (const slot of open) {
+            const minute = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+            if (picked.every((p) => minute(slot.time) - minute(p) >= 60)) picked.push(slot.time);
+          }
+          if (picked.length >= count) return { date, times: picked.slice(0, count).map((time) => pdt(date, time)) };
+        }
+        throw new Error(`no day with ${String(count)} free hours for ${service}`);
+      };
       /** The mails to one address so far. */
       const to = async (email: string) => (await inbox(stand.server)).filter((m) => m.to.some((t) => t.toLowerCase().includes(email.toLowerCase())));
       const mailTo = (email: string, subject: RegExp, label = subject.source) =>
@@ -194,6 +208,20 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         const reader = tab();
         expect(await reader.openLink(token!)).toBe("opened");
         expect((await reader.linkBooking())!["state"]).toBe("offered");
+
+        // Taken with nothing to pay: the guest gets the confirmation, and the specialist is told.
+        const noorStart = await free("Aromatherapy Ritual", "2026-10-16", "Noor");
+        const noorDay = new Date(Date.parse(noorStart) - 7 * 3_600_000).toISOString().slice(0, 10);
+        await tab().joinList({ service_id: services["Aromatherapy Ritual"]!["id"], team_id: team["Noor"]!["id"], day: noorDay, name: "Ona Offer", email: address("ona"), language: "en-US" }, retryKey("m7"));
+        const ona = (await stand.rows("waitlist")).find((w) => w["name"] === "Ona Offer")!;
+        const offered = await desk.offerTime({ entry: ona, person: team["Noor"]!["id"], startsAt: noorStart, key: key() } as never);
+        const onaMail = await mailTo(address("ona"), /A time opened/);
+        const onaTab = tab();
+        await onaTab.openLink(linkIn(onaMail.text, "/b")!);
+        await onaTab.takeOffer(offered["id"], false, false);
+        await mailTo(address("ona"), /^Booked/);
+        const code = String((await stand.row("bookings", offered["id"]))["code"]);
+        await until(async () => (await to(noorEmail)).find((m) => m.text.includes(code)), "the specialist told of the taken offer", 120_000);
       });
 
       it("a booking made inside the last day gets no reminder, and one made earlier gets it at 10 AM the day before (cQ11)", async () => {
@@ -223,6 +251,15 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         const inTime = await mailTo(address("mover"), /^Cancelled/);
         clean(inTime);
         expect(inTime.text).toContain("you cancelled in time");
+
+        // A new person at the same time is told too: the guest was told who.
+        const swap = await stand.create("bookings", { service_id: services["Gel Manicure"]!["id"], team_id: team["Ivy"]!["id"], starts_at: await free("Gel Manicure", "2026-10-02", "Ivy"), name: "Sol Swap", email: address("sol"), language: "en-US", channel: "desk" });
+        await mailTo(address("sol"), /Booked/);
+        await desk.load();
+        await desk.saveBooking(swap as never, { team_id: team["June"]!["id"] });
+        const told = await mailTo(address("sol"), /^Moved/);
+        clean(told);
+        expect(told.text).toContain("June Alvarez");
 
         const late = await tab().book("studio", values("Gel Manicure", await free("Gel Manicure", "2026-09-17", null, "13:00"), "latecomer"), retryKey("m5"));
         await mailTo(address("latecomer"), /Booked/);
@@ -262,9 +299,9 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
           language: "en-US",
           channel: "desk",
         });
-        const mail = await mailTo(noorEmail, /New booking/);
+        const mail = await until(async () => (await to(noorEmail)).find((m) => m.text.includes(String(made["code"]))), "the specialist's mail", 120_000);
         clean(mail);
-        expect(mail.text).toContain(String(made["code"]));
+        expect(mail.subject).toMatch(/New booking/);
         expect(mail.text).toContain("Aromatherapy Ritual");
         for (const secret of ["Private Person", address("private"), "$"]) expect(mail.text).not.toContain(secret);
       });
@@ -290,20 +327,43 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         expect((await stand.row("bookings", made["id"]))["state"]).toBe("lapsed");
       });
 
+      it("a specialist is told once: a move back to booked says nothing new", async () => {
+        const noorFree = await free("Signature Facial", "2026-09-21", "Noor", "14:00");
+        const day = new Date(Date.parse(noorFree) - 7 * 3_600_000).toISOString().slice(0, 10);
+        await stand.server.setClock(at(day, "08:00"));
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        await deskAgain();
+        const made = await stand.create("bookings", { service_id: services["Signature Facial"]!["id"], team_id: team["Noor"]!["id"], starts_at: noorFree, name: "Una Undo", email: address("una"), language: "en-US", channel: "desk" });
+        const code = String(made["code"]);
+        const noorMails = async () => (await to(noorEmail)).filter((m) => m.text.includes(code));
+        await until(async () => ((await noorMails()).length === 1 ? true : undefined), "the specialist's one mail", 120_000);
+        await desk.load();
+        const arrived = await desk.moveBooking(made as never, "arrived");
+        await desk.moveBooking(arrived, "booked");
+        await new Promise((resolve) => setTimeout(resolve, 3_000));
+        expect(await noorMails()).toHaveLength(1);
+      });
+
       it("the morning after a visit the request goes with a link that reviews it, and an answered visit gets no reminder", async () => {
         await stand.server.setClock(at("2026-09-22", "07:30"));
-        const first = await free("Gel Manicure", "2026-09-22", "Ivy");
-        const day = new Date(Date.parse(first) - 7 * 3_600_000).toISOString().slice(0, 10);
+        const { date: day, times } = await hours("Gel Manicure", "2026-09-22", "Ivy", 3);
         const plus = (days: number) => new Date(Date.parse(`${day}T12:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
         await stand.server.setClock(at(day, "07:30"));
-        const answered = (await tab().book("studio", values("Gel Manicure", await free("Gel Manicure", day, "Ivy", "10:00"), "rita", { team_id: team["Ivy"]!["id"] }), retryKey("r1"))).row;
-        const silent = (await tab().book("studio", values("Gel Manicure", await free("Gel Manicure", day, "Ivy", "10:00"), "sam", { team_id: team["Ivy"]!["id"] }), retryKey("r2"))).row;
+        const answered = (await tab().book("studio", values("Gel Manicure", times[0]!, "rita", { team_id: team["Ivy"]!["id"] }), retryKey("r1"))).row;
+        const silent = (await tab().book("studio", values("Gel Manicure", times[1]!, "sam", { team_id: team["Ivy"]!["id"] }), retryKey("r2"))).row;
+        const again3 = (await tab().book("studio", values("Gel Manicure", times[2]!, "tess", { team_id: team["Ivy"]!["id"] }), retryKey("r3"))).row;
         await mailTo(address("rita"), /Booked/);
         await mailTo(address("sam"), /Booked/);
+        await mailTo(address("tess"), /Booked/);
         await stand.server.setClock(at(day, "19:00"));
         await deskAgain();
         await desk.moveBooking(answered as never, "arrived");
         await desk.moveBooking(silent as never, "arrived");
+        // An arrival taken back and made again still asks, once.
+        const back = await desk.moveBooking(again3 as never, "arrived");
+        const undone = await desk.moveBooking(back, "booked");
+        await new Promise((resolve) => setTimeout(resolve, 2_000));
+        await desk.moveBooking(undone, "arrived");
 
         await stand.server.setClock(at(plus(1), "10:05"));
         const request = await mailTo(address("rita"), /How was your/);
@@ -318,6 +378,8 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         expect(opened).toBeTruthy();
         await reader.sendReviewLink(token!, 5, "Lovely.");
         await mailTo(address("sam"), /How was your/);
+        await mailTo(address("tess"), /How was your/);
+        expect((await to(address("tess"))).filter((m) => /How was your/.test(m.subject))).toHaveLength(1);
 
         await stand.server.setClock(at(plus(5), "10:05"));
         const again = await mailTo(address("sam"), /One last question/);
@@ -348,6 +410,33 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
           await stand.staff.signIn(ADMIN.email, ADMIN.password);
           ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: stand.server.base }));
         }
+      });
+      it("a time paid for after its free window says so, gets no reminder, and cash is not promised back", async () => {
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        const starts = await free("Root Color", "2026-10-13", "Elin", "11:00");
+        const made = await stand.create("bookings", { service_id: services["Root Color"]!["id"], team_id: team["Elin"]!["id"], customer_id: customer["id"], starts_at: starts, name: "Dana Desk", email: address("dana"), language: "en-US", channel: "desk", state: "paying", ask_online: true, deposit_link: true });
+        await mailTo(address("dana"), /Pay your deposit/);
+        // Twenty hours before it starts: inside the 24, and not yet the visit.
+        await stand.server.setClock(Date.parse(starts) - 20 * 3_600_000);
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        const due = Number((await stand.row("bookings", made["id"]))["pay_due"]);
+        await stand.create("payments", { booking_id: made["id"], amount: due, method: "cash" });
+        await stand.patch("bookings", made["id"], { state: "booked" });
+        const mail = await until(async () => (await to(address("dana"))).find((m) => m.subject.startsWith("Booked") && m.text.includes(String(made["code"]))), "the mail for the paid booking", 120_000);
+        clean(mail);
+        expect(mail.text).toContain(EN.heldThanks);
+        expect(mail.text).toContain("less than 24 hours away");
+        expect(mail.text).not.toContain("Free to cancel or move until");
+        expect(mail.text).not.toContain(EN.paidOnline);
+        expect(mail.text).not.toContain(EN.paidPolicy);
+        const row = await stand.row("bookings", made["id"]);
+        expect(Number(row["reminds"])).toBe(0);
+        expect(row["free_hours"]).toBeNull();
+        await deskAgain();
+        await desk.moveBooking((await desk.load()).bookings.find((b) => String(b.id) === String(made["id"]))!, "cancelled", { cancelled_by: "studio", cancel_reason: "The room is closed." });
+        const off = await until(async () => (await to(address("dana"))).find((m) => /had to cancel/.test(m.subject) && m.text.includes("The room is closed.")), "the studio's cancel", 120_000);
+        expect(off.text).toContain(EN.studioNothing);
+        expect(off.text).not.toContain("refunded in full.");
       });
     });
   });

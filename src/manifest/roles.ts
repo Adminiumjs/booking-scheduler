@@ -46,6 +46,7 @@ const allBut = (ref: string, ...leaveOut: string[]): string[] =>
 
 /** What on a booking is the guest's, the guard's or an add-on's: no member of staff types it. */
 export const NOT_TYPED_ON_A_BOOKING = [
+  "specialist_told_at",
   "made_proved",
   "card_paid",
   "no_review_request",
@@ -65,6 +66,9 @@ export const NOT_TYPED_ON_A_BOOKING = [
 
 /** What a specialist may never read of a booking: money, and how to reach the customer (§7). */
 export const NOT_THE_SPECIALISTS = [
+  "paid_online",
+  "shown_paid",
+  "rest_at_studio",
   "made_proved",
   "card_paid",
   "no_review_request",

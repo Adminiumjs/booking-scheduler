@@ -21,8 +21,8 @@ export interface Words {
   fileRemoves: string;
   freeUntil: string;
   tooLate: string;
-  freeUntilPaid: string;
-  tooLatePaid: string;
+  paidPolicy: string;
+  heldThanks: string;
   manage: string;
   bookAnother: string;
   anyone: string;
@@ -129,8 +129,8 @@ export const EMAIL_EN: Words = {
   fileRemoves: "The attached calendar file removes it from your calendar.",
   freeUntil: "Free to cancel or move until {FREE}. After that, moving isn't possible online.",
   tooLate: "This visit is less than {H} hours away, so it can't be moved online. Reply to this e-mail to ask us.",
-  freeUntilPaid: "Free to cancel or move until {FREE}, and what you paid comes back automatically. After that, moving isn't possible online and it is kept. If you don't come, it is kept.",
-  tooLatePaid: "This visit is less than {H} hours away, so it can't be moved online and what you paid is kept if you cancel. Reply to this e-mail to ask us.",
+  paidPolicy: "What you paid online comes back automatically if you cancel in time. After that it is kept, and it is kept if you don't come.",
+  heldThanks: "Your time is held for you.",
   manage: "Manage your booking",
   bookAnother: "Book another time",
   anyone: "You chose Anyone, so we booked {P}.",
@@ -138,10 +138,10 @@ export const EMAIL_EN: Words = {
   bookedPre: "{D}, {T} with {P}.",
   bookedHeading: "You're booked, {N}",
   bookedThanks: "Thanks for booking. Keep this e-mail: its link opens your booking.",
-  paidPre: "Your payment is in. {D}, {T} with {P}.",
+  paidPre: "Your time is held. {D}, {T} with {P}.",
   paidThanks: "We have your payment, so your time is held for you.",
   linkSubject: "Pay your deposit to keep {D}, {T}",
-  linkPre: "{S} with {P}. We hold the time for {HOLD} minutes after you open the link.",
+  linkPre: "{S}, {D}. We hold the time for {HOLD} minutes after you open the link.",
   linkHeading: "Pay your deposit to keep your time",
   linkIntro: "Hi {N}, our front desk booked this for you. {S} takes a {DUE} deposit online.",
   linkHold: "We'll hold the time for {HOLD} minutes after you open this link.",
@@ -161,9 +161,9 @@ export const EMAIL_EN: Words = {
   remFree: "You can still move or cancel it free until {FREE}.",
   remLate: "This visit is less than {H} hours away, so it can't be moved online. Reply to this e-mail to ask us.",
   movedSubject: "Moved: {S}, now {D} at {T}",
-  movedPre: "Your new time is {D}, {T} with {P}.",
+  movedPre: "Now {D}, {T} with {P}.",
   movedHeading: "Your booking has moved",
-  movedIntro: "Hi {N}, here is your new time. Your booking code stays the same.",
+  movedIntro: "Hi {N}, here are your visit's new details. Your booking code stays the same.",
   movedFile: "Your calendar file has been updated.",
   movedOld: "If you added the old time with the Google or Outlook link, remove it: those entries don't change by themselves.",
   cancelSubject: "Cancelled: {S}, {D}",

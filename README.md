@@ -79,18 +79,10 @@ somewhere else. Full reference: [db/README.md](db/README.md).
 
 ## Connecting to Adminium
 
-All scheduling data goes through a thin `DataSource` interface
-([`src/data/source.ts`](src/data/source.ts)) with a single `demoSource`
-implementation backed by the bundled demo business. To be honest about what runs
-today: **nothing is persisted and nothing is charged** — bookings, gift cards and
-cancellations live in memory for the length of the session, and reloading the
-page resets everything.
-
-Once Adminium's browser-safe **publishable key** (`adm_pub_…`) ships, the
-frontend will read and write **live** data — your real services, staff,
-availability and appointments from an Adminium-managed database — through the
-Adminium records API via a second `DataSource` implementation, without touching
-any of the screens or the store. The seam is already in place.
+The app runs on Adminium: install it from the marketplace and its tables, roles, e-mails and sample come with it. The
+customer pages read and write through the public API, and the desk runs inside Adminium on the signed-in person's
+session. The demo build (`npm run build:demo`) holds a copy of the studio in the page, for the website's demo card, and
+keeps nothing.
 
 ## License
 
