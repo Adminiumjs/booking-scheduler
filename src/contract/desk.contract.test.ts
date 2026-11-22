@@ -226,6 +226,8 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         const slots = await doors.desk.slots({ service: gel.id, person: null, day: "2026-09-15" });
         // The desk is offered 11 AM; a guest's 2 hours of notice would start at 3 PM (K4's check).
         expect(slots.find((s) => s.state === "free")?.time).toBe("11:00");
+        // The comp's "Tue 15 · 5 open", now that the sample carries its busy times.
+        expect(slots.filter((s) => s.state === "free").map((s) => s.time)).toEqual(["11:00", "15:00", "15:15", "17:00", "17:15"]);
         const customer = fresh.customers.find((c) => c["name"] === "Ava Reyes")!;
         const made = await doors.desk.createBooking({
           service: gel.id,
