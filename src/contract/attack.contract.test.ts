@@ -9,7 +9,7 @@ import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, type Engine } from "./harness.ts";
-import { ADD_ONS, inbox, num, retryKey, standUp, type Row, type Stand } from "./stand.ts";
+import { ADD_ONS, Guest, inbox, num, retryKey, standUp, type Row, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the attack contract must run here, and cannot: ${why}`);
@@ -168,6 +168,59 @@ describe.skipIf(why !== null)(`an attacker at Lumen${why === null ? "" : ` — s
         const tooLong = await (await stand.rehearsing()).create(creates("purchases")[0]!, card(`${message} and more words past the end`, "len-d"));
         expect(tooLong.status).toBe(400);
       }, 120_000);
+
+      it("no public entry shows or changes another person's row, whoever asks", async () => {
+        const all = await stand.rows("bookings");
+        const victim = (await stand.rows("customers")).find((c) => String(c["name"]).startsWith("Priya"))!;
+        const theirs = all.find((b) => b["customer_id"] === victim["id"] && b["state"] === "booked")!;
+        expect(theirs, "a booking of the victim's").toBeTruthy();
+        const secrets = [String(victim["email"]), String(theirs["email"])].filter((s) => s !== "null");
+        const before = JSON.stringify([await stand.row("bookings", theirs["id"]), await stand.row("customers", victim["id"])]);
+
+        const served = ok(await new Caller(stand.server.base).get<{ publicKeys?: Record<string, string> }>("/apps/bookings/customer/surface-config.json"));
+        const refsOf = async (key: string) => ok(await new Caller(stand.server.base, { origin: stand.server.base, authorization: `Bearer ${key}` }).get<{ data?: { refs?: Record<string, Row> } }>("/api/v1/public/config")).data?.refs ?? {};
+
+        await nextHour();
+        const atStudio = await service((s) => s["online"] === "none" && s["active"] === true);
+        const at = (await freeTimes(atStudio["id"], "2026-10-12"))[0]!;
+        const own = await stand.guest("studio").create(creates("bookings")[0]!, { values: { service_id: atStudio["id"], starts_at: pdt("2026-10-12", at), name: "Mallory Own", email: `mallory.${engine}@lumen-guests.dev`, language: "en-US", channel: "page", client_key: retryKey("matrix") } });
+        expect(own.status, JSON.stringify(own.body).slice(0, 200)).toBe(201);
+
+        const signedOut = stand.guest("studio");
+        const otherCustomer = stand.guest("studio");
+        const other = (await stand.rows("customers")).find((c) => String(c["name"]).startsWith("Ava"))!;
+        await otherCustomer.signIn(stand.server, String(other["email"]));
+        const forwarded = stand.guest("link");
+        expect((await forwarded.openLink(String(own.body.link?.token))).status).toBe(200);
+        const sale = new Guest(stand.server.base, String(served.publicKeys?.["sale"]));
+
+        const tabs: [string, Guest, Record<string, Row>][] = [
+          ["signed out", signedOut, await refsOf(stand.studioKey)],
+          ["another customer", otherCustomer, await refsOf(stand.studioKey)],
+          ["a forwarded link", forwarded, await refsOf(stand.linkKey)],
+          ["a sale's key", sale, await refsOf(String(served.publicKeys?.["sale"]))],
+        ];
+        for (const [who, tab, refs] of tabs) {
+          for (const [ref, entry] of Object.entries(refs)) {
+            if (entry["kind"] === "availability") continue;
+            const actions = (entry["actions"] ?? []) as string[];
+            if (actions.includes("read")) {
+              const list = await tab.raw("GET", `/api/v1/public/records/${ref}?limit=100`);
+              const byId = await tab.raw("GET", `/api/v1/public/records/${ref}/${String(theirs["id"])}`);
+              for (const reply of [list, byId]) for (const secret of secrets) expect(JSON.stringify(reply.body), `${who} reading ${ref}`).not.toContain(secret);
+            }
+            if (actions.includes("update")) {
+              for (const values of [{ state: "cancelled" }, { name: "Changed" }, { pay_started: true }]) {
+                const onBooking = await tab.patch(ref, theirs["id"], values);
+                expect(onBooking.status, `${who} changing a booking through ${ref}`).not.toBe(200);
+              }
+              const onPerson = await tab.patch(ref, victim["id"], { name: "Changed" });
+              expect(onPerson.status, `${who} changing a person through ${ref}`).not.toBe(200);
+            }
+          }
+        }
+        expect(JSON.stringify([await stand.row("bookings", theirs["id"]), await stand.row("customers", victim["id"])])).toBe(before);
+      }, 420_000);
     });
   });
 });
