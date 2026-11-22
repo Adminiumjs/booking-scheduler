@@ -786,3 +786,14 @@ export class LumenDoor {
     }
   }
 }
+
+/** What the customer pages use of a door: the real one above, or anything else that answers the same. */
+export type CustomerDoor = Pick<
+  LumenDoor,
+  | "served" | "addOn" | "newKey" | "book" | "holdsLink" | "holdsSale" | "days" | "times" | "packCovers" | "nothingDue"
+  | "requestSignIn" | "verifySignIn" | "openSignInLink" | "mayForget" | "signedIn" | "signOut" | "me" | "setAskReviews"
+  | "myBookings" | "myWaitlist" | "leaveList" | "held" | "forgetMe" | "cancelBooking" | "moveBooking" | "startPaying"
+  | "payState" | "pressedGoogle" | "takeOffer" | "reviews" | "googlePlace" | "readReviewLink" | "sendReviewLink"
+  | "reviewState" | "sendReview" | "buyCard" | "buyPack" | "payPurchase" | "purchaseState" | "joinList" | "openLink"
+  | "linkBooking" | "linkCalendar"
+>;

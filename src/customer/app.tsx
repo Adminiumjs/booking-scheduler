@@ -7,7 +7,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { useI18n } from "../i18n/index.tsx";
 import type { LocaleTag } from "../i18n/locales.ts";
-import type { LumenDoor, Row, StudioRows } from "./door.ts";
+import type { CustomerDoor, Row, StudioRows } from "./door.ts";
 import type { Clock } from "./format.ts";
 import { FRAMED_SCREENS, routeOf, type Route, type Screen } from "./route.ts";
 import type { PayMode } from "./rules.ts";
@@ -109,7 +109,7 @@ export interface SheetSpec {
 }
 
 export interface AppValue {
-  door: LumenDoor;
+  door: CustomerDoor;
   studio: Studio;
   clock: Clock;
   locale: LocaleTag;
@@ -142,7 +142,7 @@ export function useApp(): AppValue {
 
 const screenOfPath = (path: string, base: string): Screen => routeOf(path.split("?")[0]!.split("#")[0]!, "", base).screen;
 
-export function AppProvider({ door, rows, base, frame, children }: { door: LumenDoor; rows: StudioRows; base: string; frame: FrameLink | null; children: ReactNode }) {
+export function AppProvider({ door, rows, base, frame, clockNow, children }: { door: CustomerDoor; rows: StudioRows; base: string; frame: FrameLink | null; clockNow?: () => number; children: ReactNode }) {
   const { locale } = useI18n();
   const [words, setWords] = useState<Words>(EN);
   const [route, setRoute] = useState<Route>(() => routeOf(window.location.pathname, window.location.search, base));
@@ -215,7 +215,7 @@ export function AppProvider({ door, rows, base, frame, children }: { door: Lumen
       route,
       base,
       frame,
-      now: () => Date.now() + skew.current,
+      now: clockNow ?? (() => Date.now() + skew.current),
       go,
       me,
       refreshMe,
@@ -233,7 +233,7 @@ export function AppProvider({ door, rows, base, frame, children }: { door: Lumen
       toastText,
       liveText,
     };
-  }, [door, rows, words, locale, route, base, frame, go, me, refreshMe, sheet, toastText, liveText]);
+  }, [door, rows, words, locale, route, base, frame, go, me, refreshMe, sheet, toastText, liveText, clockNow]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
