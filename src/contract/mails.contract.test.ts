@@ -182,9 +182,11 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
       });
 
       it("a time offered from the waiting list goes by mail, on a link that opens the offer", async () => {
-        await tab().joinList({ service_id: services["Gel Manicure"]!["id"], team_id: null, day: "2026-10-20", name: "Wes Waiting", email: address("wes"), language: "en-US" }, retryKey("m6"));
+        const startsAt = await free("Gel Manicure", "2026-10-16", "Ivy");
+        const day = new Date(Date.parse(startsAt) - 7 * 3_600_000).toISOString().slice(0, 10);
+        await tab().joinList({ service_id: services["Gel Manicure"]!["id"], team_id: null, day, name: "Wes Waiting", email: address("wes"), language: "en-US" }, retryKey("m6"));
         const entry = (await stand.rows("waitlist")).find((w) => w["name"] === "Wes Waiting")!;
-        const made = await desk.offerTime({ entry, person: team["Ivy"]!["id"], startsAt: await free("Gel Manicure", "2026-10-20", "Ivy"), key: key() } as never);
+        const made = await desk.offerTime({ entry, person: team["Ivy"]!["id"], startsAt, key: key() } as never);
         expect(made["state"]).toBe("offered");
         const mail = await mailTo(address("wes"), /A time opened/);
         clean(mail);
