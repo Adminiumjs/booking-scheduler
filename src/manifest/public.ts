@@ -237,6 +237,8 @@ const JOIN_WAITLIST = {
   humanCheck: true,
   level: "verified",
   clientKey: "client_key",
+  // Signed in, the caps below do not count: at most five days of waiting at once.
+  maxOpen: { column: "state", values: ["waiting", "offered"], n: 5 },
   anonymous: { perValue: { columns: ["email"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
 };
 
@@ -260,6 +262,8 @@ const BUY_CARD = {
   writable: ["buyer_name", "buyer_email", "language", "client_key"],
   requires: ["buyer_name", "buyer_email"],
   claimedBy: { table: "customers", column: "customer_id", optional: true },
+  // Signed in, the caps below do not count: two orders waiting for payment at once, as for a pack.
+  maxOpen: { column: "state", values: ["paying"], n: 2 },
   anonymous: { perValue: { columns: ["buyer_email"], n: 3 }, perIpHour: 3, perKeyHour: 30, plainText: ["buyer_name"] },
   children: {
     purchase_lines: { via: "purchase_id", writable: ["gift_amount_id", "to_name", "to_email", "message", "send_on"], defaults: { kind: "card" }, requires: ["gift_amount_id", "to_name", "to_email"], select: ["id", "amount"], min: 1, max: 1, plainText: ["to_name", "message"] },

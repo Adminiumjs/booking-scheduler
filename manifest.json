@@ -14418,6 +14418,14 @@
       "humanCheck": true,
       "level": "verified",
       "clientKey": "client_key",
+      "maxOpen": {
+        "column": "state",
+        "values": [
+          "waiting",
+          "offered"
+        ],
+        "n": 5
+      },
       "anonymous": {
         "perValue": {
           "columns": [
@@ -14478,6 +14486,13 @@
         "table": "customers",
         "column": "customer_id",
         "optional": true
+      },
+      "maxOpen": {
+        "column": "state",
+        "values": [
+          "paying"
+        ],
+        "n": 2
       },
       "anonymous": {
         "perValue": {

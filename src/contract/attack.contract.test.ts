@@ -112,6 +112,37 @@ describe.skipIf(why !== null)(`an attacker at Lumen${why === null ? "" : ` — s
         expect(corrected.status).toBe(200);
         ok(await owner.patch(`${stand.data("customers")}/${String(target["id"])}`, { values: { email: target["email"] } }));
       }, 120_000);
+
+      it("a signed-in customer cannot pile up waiting rows or unpaid gift orders", async () => {
+        await nextHour();
+        await paymentsOn();
+        const waiting = await stand.rows("waitlist");
+        const person = (await stand.rows("customers")).find((c) => typeof c["email"] === "string" && !waiting.some((w) => w["customer_id"] === c["id"]) && String(c["name"]).startsWith("L"))!;
+        const email = String(person["email"]);
+        const atStudio = await service((s) => s["online"] === "none" && s["active"] === true);
+        const tab = stand.guest("studio");
+        await tab.signIn(stand.server, email);
+        const joins: number[] = [];
+        for (let i = 0; i < 7; i += 1) {
+          const made = await tab.create(creates("waitlist")[0]!, { values: { service_id: atStudio["id"], day: `2026-10-${String(10 + i)}`, name: String(person["name"]), email, language: "en-US", client_key: retryKey(`cap-w${String(i)}`) } });
+          joins.push(made.status);
+          if (made.status !== 201) expect(made.code).toBe("PUBLIC_LIMIT_REACHED");
+        }
+        expect(joins.filter((s) => s === 201).length).toBe(5);
+        const buyer = await stand.rehearsing();
+        await buyer.signIn(stand.server, email);
+        const amount = (await stand.rows("gift_amounts"))[0]!;
+        const orders: number[] = [];
+        for (let i = 0; i < 4; i += 1) {
+          const made = await buyer.create(creates("purchases")[0]!, {
+            values: { buyer_name: String(person["name"]), buyer_email: email, language: "en-US", client_key: retryKey(`cap-c${String(i)}`) },
+            children: { purchase_lines: [{ values: { gift_amount_id: amount["id"], to_name: "A Friend", to_email: `friend${String(i)}.${engine}@lumen-guests.dev` } }] },
+          });
+          orders.push(made.status);
+          if (made.status !== 201) expect(made.code).toBe("PUBLIC_LIMIT_REACHED");
+        }
+        expect(orders.filter((s) => s === 201).length).toBe(2);
+      }, 240_000);
     });
   });
 });
