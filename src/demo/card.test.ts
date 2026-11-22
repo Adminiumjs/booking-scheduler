@@ -60,6 +60,13 @@ describe("demo.json", () => {
     expect(doc.note!.labels["en-US"]).toBe("Demo: no money moves, no e-mail is sent, no calendar is touched");
   });
 
+  it("addresses a German reader as the guest's pages do, with Sie", () => {
+    const german = Object.values(CARD_MESSAGES["de-DE"]).join("\n");
+    expect(german).not.toMatch(/\b(du|dich|dein\w*)\b/i);
+    expect(CARD_MESSAGES["de-DE"]["screen.yours"]).toBe("Ihre Buchung");
+    expect(CARD_MESSAGES["de-DE"]["screen.visits"]).toBe("Ihre Besuche");
+  });
+
   it("names each figure as the sample has it", () => {
     const w = new LumenWorld();
     expect(figureRow("Free times, Gel Manicure, Thu 17 Sep, anyone")[1]).toContain("10 AM");
