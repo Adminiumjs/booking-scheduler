@@ -398,7 +398,7 @@ export class LumenWorld {
     if (person === null) throw new DemoRefusal(409, "PUBLIC_SLOT_FULL", "That time was just taken.", { reason: "taken" });
     if (guest) {
       const wanted = input.email.trim().toLowerCase();
-      const ahead = this.all("bookings").filter((b) => String(b["email"] ?? "").toLowerCase() === wanted && (b["state"] === "booked" || b["state"] === "paying") && Date.parse(String(b["starts_at"])) > this.now);
+      const ahead = this.all("bookings").filter((b) => String(b["email"] ?? "").toLowerCase() === wanted && (b["state"] === "booked" || b["state"] === "paying") && b["from_card"] !== true && Date.parse(String(b["starts_at"])) > this.now);
       if (ahead.length >= 3) throw new DemoRefusal(429, "PUBLIC_LIMIT_REACHED", "Three visits ahead already.");
     }
     const customer = input.customerId !== undefined && input.customerId !== null ? this.get("customers", input.customerId) : (this.customerByEmail(input.email) ?? this.insert("customers", { name: input.name, email: input.email.trim(), phone: input.phone ?? null, language: input.language ?? "en-US", review_requests: input.noReview !== true, staff_note: null, forgotten_at: null, created_at: this.nowIso() }));

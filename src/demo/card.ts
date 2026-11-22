@@ -144,6 +144,8 @@ const WORDS: Record<string, Eight> = {
   "clock.hour": ["+1 hour", "+1 Stunde", "+1 heure", "+1 time", "+1 hodina", "+1 ساعة", "+1 小时", "+1 小時"],
   "clock.morning": ["Next morning", "Nächster Morgen", "Lendemain matin", "Næste morgen", "Další ráno", "الصباح التالي", "第二天早上", "隔天早上"],
   "clock.reset": ["Back to Tuesday morning", "Zurück zum Dienstagmorgen", "Retour à mardi matin", "Tilbage til tirsdag morgen", "Zpět na úterní ráno", "العودة إلى صباح الثلاثاء", "回到星期二上午", "回到星期二上午"],
+  "web.book": ["Book a visit", "Termin buchen", "Prendre rendez-vous", "Book en tid", "Rezervovat termín", "احجز موعدًا", "预约到访", "預約到訪"],
+  "web.close": ["Close", "Schließen", "Fermer", "Luk", "Zavřít", "إغلاق", "关闭", "關閉"],
   "note.line": [
     "Demo: no money moves, no e-mail is sent, no calendar is touched",
     "Demo: Es fließt kein Geld, keine E-Mail geht raus, kein Kalender wird berührt",

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:demo": "tsc -b && vite build --base=/demo/booking-scheduler/",
+    "build:demo": "tsc -b && vite build --base=/demo/booking-scheduler/app/",
     "preview": "vite preview",
     "test": "vitest run",
     "demo:status": "node db/demo.mjs status",

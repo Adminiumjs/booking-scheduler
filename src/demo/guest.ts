@@ -47,10 +47,10 @@ body{margin:0;font:600 13.5px/1.5 system-ui,sans-serif;color:#4a4a54;padding:14p
 body.dark{color:#b7b7c3;background:#1b1b22}
 </style></head><body><div id="m"></div><script>
 var W=${JSON.stringify(words).replace(/</g, "\\u003c")},C="adminium-google-reviews";
-parent.postMessage({channel:C,event:"ready"},"*");
+function H(){parent.postMessage({channel:C,event:"height",px:Math.max(document.body.offsetHeight,document.documentElement.scrollHeight,64)},"*");}
+parent.postMessage({channel:C,event:"ready"},"*");addEventListener("resize",H);
 addEventListener("message",function(e){var d=e.data;if(!d||d.channel!==C||d.event!=="show")return;
-document.getElementById("m").textContent=W[d.language]||W["en-US"];document.body.className=d.dark?"dark":"";
-parent.postMessage({channel:C,event:"height",px:document.documentElement.scrollHeight},"*");});
+document.getElementById("m").textContent=W[d.language]||W["en-US"];document.body.className=d.dark?"dark":"";document.documentElement.dir=String(d.language).startsWith("ar")?"rtl":"ltr";H();setTimeout(H,0);});
 </script></body></html>`;
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}#`;
 }

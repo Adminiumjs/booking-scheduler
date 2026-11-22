@@ -1,4 +1,6 @@
 import { surfaceJsonPlugin } from "./surface-emit.ts";
+import { demoJsonPlugin } from "./demo-emit.ts";
+import { CARD_MESSAGES, DEMO_CARD } from "./src/demo/card.ts";
 import { APP_KEY, APP_LABEL_KEY, SURFACE_NAV } from "./src/surface-nav.ts";
 import { SURFACE_MESSAGES } from "./src/surface-words.ts";
 
@@ -7,7 +9,7 @@ import react from "@vitejs/plugin-react";
 
 // https://vite.dev/config/
 // `base` defaults to "/" (root deploy on Vercel / DigitalOcean). The
-// `build:demo` script overrides it with --base=/demo/booking-scheduler/ so the
+// `build:demo` script overrides it with --base=/demo/booking-scheduler/app/ so the
 // app can be served from the Adminium demo sub-path.
 /*
  * Every build-time flag is defined here, ALWAYS, even when unset.
@@ -82,6 +84,13 @@ export default defineConfig({
      * nothing. The nav is the module the desk itself routes with.
      */
     surfaceJsonPlugin({ appKey: APP_KEY, appLabelKey: APP_LABEL_KEY, nav: SURFACE_NAV, messages: SURFACE_MESSAGES }),
+    /*
+     * `demo.json` beside the demo build's `index.html`, for the website's demo
+     * card: the guest's screens and the studio desk's, the shortcuts, the two
+     * people and the clock, in the card's eight languages. Only a `/demo/`
+     * build writes it.
+     */
+    demoJsonPlugin({ ...DEMO_CARD, messages: CARD_MESSAGES }),
   ],
   build: {
     rollupOptions: {
