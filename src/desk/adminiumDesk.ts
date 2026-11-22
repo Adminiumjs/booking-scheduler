@@ -326,13 +326,15 @@ export class AdminiumDesk implements DeskDoor {
       team.map(async (person) => {
         try {
           const query = await this.teamQuery(person.id);
-          const [row, sync] = await Promise.all([
-            this.t.get<Omit<PersonCalendar, "sync">>(`/api/v1/connected-accounts?${query}`),
-            this.t.get<{ calendar: CalendarSyncState | null }>(`/api/v1/calendar-sync/row?${query}`).catch((error: unknown) => {
-              if (absent(error)) return { calendar: null };
-              throw error;
-            }),
-          ]);
+          const row = await this.t.get<Omit<PersonCalendar, "sync">>(`/api/v1/connected-accounts?${query}`);
+          // No account, no sync state: one request fewer for each person with no calendar, on every load.
+          const sync =
+            row.accounts.length === 0
+              ? { calendar: null }
+              : await this.t.get<{ calendar: CalendarSyncState | null }>(`/api/v1/calendar-sync/row?${query}`).catch((error: unknown) => {
+                  if (absent(error)) return { calendar: null };
+                  throw error;
+                });
           out[String(person.id)] = { accounts: row.accounts as CalendarAccount[], providers: row.providers, reach: row.reach, may: row.may, sync: sync.calendar };
         } catch (error) {
           if (!absent(error)) throw error;
