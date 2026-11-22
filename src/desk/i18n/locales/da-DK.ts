@@ -433,6 +433,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "fra {count} offentliggjort anmeldelse|fra {count} offentliggjorte anmeldelser",
   "reviews.alike": "Gode og dårlige anmeldelser offentliggøres på samme vis. En anmeldelse skjules kun for chikane, for at nævne en person, der ikke er i teamet, for ikke at handle om studiet, for at se falsk ud eller fordi skribenten har bedt om det.",
   "reviews.googleLink": "Link til Anmeld os på Google",
+  "reviews.googleBad": "Brug den fulde https://-adresse til jeres Google-anmeldelsesside.",
   "reviews.googleEvery": "Alle, der skriver en anmeldelse, ser “Anmeld os på Google”, uanset hvad de gav.",
   "reviews.googleNone": "Uden link ser de, der anmelder, ingen Google-knap.",
   "reviews.testLink": "Test linket",

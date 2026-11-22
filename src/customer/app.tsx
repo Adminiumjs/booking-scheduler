@@ -12,6 +12,7 @@ import type { Clock } from "./format.ts";
 import { FRAMED_SCREENS, routeOf, type Route, type Screen } from "./route.ts";
 import type { PayMode } from "./rules.ts";
 import { EN, loadWords, say, type Params, type T, type Word, type Words } from "./words/index.ts";
+import { webLink } from "../safeLink.ts";
 
 export interface Service {
   id: string;
@@ -81,7 +82,7 @@ export function studioOf(rows: StudioRows): Studio {
     onlineBooking: s["online_booking"] === undefined ? true : yes(s["online_booking"]),
     ownerSwitch: s["online_payments"] === "on" ? "on" : "off",
     reviewsOn: s["reviews_on"] === undefined ? true : yes(s["reviews_on"]),
-    googleLink: typeof s["google_review_link"] === "string" && s["google_review_link"] !== "" ? s["google_review_link"] : null,
+    googleLink: webLink(s["google_review_link"]),
     categories: rows.categories.map((c) => ({ id: String(c["id"]), name: String(c["name"] ?? ""), icon: String(c["icon"] ?? "sparkles") })),
     services: rows.services.map((v) => ({
       id: String(v["id"]),

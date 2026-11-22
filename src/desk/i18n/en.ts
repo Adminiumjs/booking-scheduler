@@ -434,6 +434,7 @@ export const en = {
   "reviews.from": "from {count} published review|from {count} published reviews",
   "reviews.alike": "Good and bad reviews are published alike. A review is hidden only for abuse, for naming someone who isn't on the team, for not being about the studio, for looking fake, or because its author asked.",
   "reviews.googleLink": "Review us on Google link",
+  "reviews.googleBad": "Use the full https:// address of your Google review page.",
   "reviews.googleEvery": "Every reviewer sees \"Review us on Google\", whatever they rated.",
   "reviews.googleNone": "With no link, reviewers see no Google button.",
   "reviews.testLink": "Test the link",

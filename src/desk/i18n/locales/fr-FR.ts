@@ -433,6 +433,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "sur {count} avis publié|sur {count} avis publiés",
   "reviews.alike": "Les bons et les mauvais avis sont publiés de la même façon. Un avis n’est masqué que pour propos injurieux, pour mention d’une personne qui ne fait pas partie de l’équipe, pour absence de rapport avec le studio, pour apparence de faux avis, ou à la demande de son auteur.",
   "reviews.googleLink": "Lien « Donnez-nous votre avis sur Google »",
+  "reviews.googleBad": "Indiquez l’adresse https:// complète de votre page d’avis Google.",
   "reviews.googleEvery": "Chaque personne qui laisse un avis voit « Donnez-nous votre avis sur Google », quelle que soit sa note.",
   "reviews.googleNone": "Sans lien, aucun bouton Google n’est affiché.",
   "reviews.testLink": "Tester le lien",

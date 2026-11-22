@@ -433,6 +433,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "aus {count} veröffentlichten Bewertung|aus {count} veröffentlichten Bewertungen",
   "reviews.alike": "Gute und schlechte Bewertungen werden gleich veröffentlicht. Eine Bewertung wird nur ausgeblendet bei Beleidigungen, bei Namen von Personen, die nicht im Team sind, wenn sie nicht das Studio betrifft, wenn sie gefälscht wirkt oder wenn der Verfasser darum bittet.",
   "reviews.googleLink": "Link „Bewerten Sie uns bei Google“",
+  "reviews.googleBad": "Geben Sie die vollständige https://-Adresse Ihrer Google-Bewertungsseite ein.",
   "reviews.googleEvery": "Alle, die eine Bewertung abgeben, sehen „Bewerten Sie uns bei Google“, unabhängig von der Note.",
   "reviews.googleNone": "Ohne Link sehen Bewertende keinen Google-Button.",
   "reviews.testLink": "Link testen",

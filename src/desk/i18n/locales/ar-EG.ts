@@ -433,6 +433,7 @@ export const ar: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "من {count} تقييم منشور|من {count} تقييم منشور|من {count} تقييمين منشورين|من {count} تقييمات منشورة|من {count} تقييمًا منشورًا|من {count} تقييم منشور",
   "reviews.alike": "تُنشر التقييمات الجيدة والسيئة بالتساوي. لا يُخفى التقييم إلا بسبب الإساءة، أو ذكر شخص ليس في الفريق، أو لأنه لا يتعلق بالاستوديو، أو لأنه يبدو مزيفًا، أو بناءً على طلب كاتبه.",
   "reviews.googleLink": "رابط «قيّمونا على Google»",
+  "reviews.googleBad": "أدخل عنوان https:// الكامل لصفحة تقييماتكم على Google.",
   "reviews.googleEvery": "يرى كل من يكتب تقييمًا «قيّمونا على Google»، مهما كانت درجته.",
   "reviews.googleNone": "بدون رابط، لا يظهر زر Google لمن يكتبون التقييمات.",
   "reviews.testLink": "اختبار الرابط",

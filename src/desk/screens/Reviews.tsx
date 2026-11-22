@@ -15,6 +15,7 @@ import { openBooking, openSheet, useDesk } from "../store.ts";
 import { Fig } from "../ui.tsx";
 import { num, text, type Row } from "../wire.ts";
 import { HIDE_REASONS } from "./Sheets.tsx";
+import { webLink } from "../../safeLink.ts";
 
 const PAGE = 8;
 
@@ -150,6 +151,8 @@ export function ReviewsScreen() {
   const saidNo = data.customers.filter((c) => c["review_requests"] === false).length;
   const saved = text(data.settings?.["google_review_link"]) ?? "";
   const value = link ?? saved;
+  const linkBad = value.trim() !== "" && webLink(value) === null;
+  const testable = webLink(saved);
   const hasBox = door.facts().addOns.includes("google-reviews");
   const tabs = [
     { id: "waiting", label: t("reviews.toRead") },
@@ -201,18 +204,23 @@ export function ReviewsScreen() {
           <section className="lm-card lm-pad">
             <div className="lm-field">
               <label htmlFor="lm-google-link">{t("reviews.googleLink")}</label>
-              <input id="lm-google-link" dir="ltr" readOnly={!mayEdit} value={value} onChange={(e) => setLink(e.target.value)} />
+              <input id="lm-google-link" dir="ltr" readOnly={!mayEdit} value={value} aria-invalid={linkBad} {...(linkBad ? { "aria-describedby": "lm-google-link-err" } : {})} onChange={(e) => setLink(e.target.value)} />
             </div>
+            {linkBad && (
+              <p id="lm-google-link-err" className="lm-hint" role="alert">
+                {t("reviews.googleBad")}
+              </p>
+            )}
             <p className="lm-hint">{value === "" ? t("reviews.googleNone") : t("reviews.googleEvery")}</p>
             <div className="lm-row-gap">
               {mayEdit && link !== null && link !== saved && (
                 <button
                   type="button"
                   className="lm-btn lm-btn--primary"
-                  disabled={busy || data.settings === null}
+                  disabled={busy || data.settings === null || linkBad}
                   onClick={() =>
                     void run(async (d) => {
-                      await d.saveSettings(data.settings!, { google_review_link: link.trim() === "" ? null : link.trim() });
+                      await d.saveSettings(data.settings!, { google_review_link: link.trim() === "" ? null : webLink(link) });
                       setLink(null);
                       return t("toast.saved");
                     })
@@ -221,8 +229,8 @@ export function ReviewsScreen() {
                   {t("common.save")}
                 </button>
               )}
-              {saved !== "" && (
-                <a className="lm-btn" href={saved} target="_blank" rel="noreferrer">
+              {testable !== null && (
+                <a className="lm-btn" href={testable} target="_blank" rel="noopener noreferrer">
                   {t("reviews.testLink")}
                 </a>
               )}

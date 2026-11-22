@@ -433,6 +433,7 @@ export const cs: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "z {count} zveřejněné recenze|ze {count} zveřejněných recenzí|z {count} zveřejněných recenzí",
   "reviews.alike": "Dobré i špatné recenze se zveřejňují stejně. Recenze se skryje jen kvůli urážkám, kvůli jménu někoho, kdo není v týmu, kvůli tomu, že není o studiu, kvůli dojmu, že je falešná, nebo na žádost jejího autora.",
   "reviews.googleLink": "Odkaz Ohodnoťte nás na Googlu",
+  "reviews.googleBad": "Zadejte úplnou adresu https:// své stránky recenzí na Googlu.",
   "reviews.googleEvery": "Každý, kdo recenzi píše, vidí „Ohodnoťte nás na Googlu“, ať dal jakékoli hodnocení.",
   "reviews.googleNone": "Bez odkazu se tlačítko Google nezobrazí.",
   "reviews.testLink": "Vyzkoušet odkaz",

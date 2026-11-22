@@ -433,6 +433,7 @@ export const zhTW: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "來自 {count} 則已發布評價",
   "reviews.alike": "好評與差評一視同仁地發布。評價只會因以下原因被隱藏：含有辱罵內容、提到不在團隊中的人、與工作室無關、看起來是假評價，或作者本人要求隱藏。",
   "reviews.googleLink": "「在 Google 上評價我們」連結",
+  "reviews.googleBad": "請填寫 Google 評論頁面完整的 https:// 網址。",
   "reviews.googleEvery": "無論評分高低，每位評價者都會看到「在 Google 上評價我們」。",
   "reviews.googleNone": "未設定連結時，評價者不會看到 Google 按鈕。",
   "reviews.testLink": "測試連結",

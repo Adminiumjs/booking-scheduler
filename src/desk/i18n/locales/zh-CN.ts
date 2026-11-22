@@ -433,6 +433,7 @@ export const zhCN: Partial<Record<keyof typeof en, string>> = {
   "reviews.from": "来自 {count} 条已发布评价",
   "reviews.alike": "好评和差评一视同仁地发布。评价只会因以下原因被隐藏：含有辱骂内容、提到不在团队中的人、与工作室无关、看起来是虚假评价，或作者本人要求隐藏。",
   "reviews.googleLink": "“在 Google 上评价我们”链接",
+  "reviews.googleBad": "请填写 Google 评价页面完整的 https:// 地址。",
   "reviews.googleEvery": "无论评分高低，每位评价者都会看到“在 Google 上评价我们”。",
   "reviews.googleNone": "未设置链接时，评价者不会看到 Google 按钮。",
   "reviews.testLink": "测试链接",
