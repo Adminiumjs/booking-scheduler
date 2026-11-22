@@ -12,8 +12,9 @@ import { addDays, dayOf, fmtDay, fmtMoney } from "../format.ts";
 import { Err, Icon } from "../parts.tsx";
 import { GIFT_MESSAGE_MAX, NAME_MAX } from "../../limits.ts";
 import { looksLikeEmail, refusalOf } from "../rules.ts";
+import { PURCHASE_SLOT } from "../session.ts";
 
-const KEPT = "lumen.purchase";
+const KEPT = PURCHASE_SLOT;
 
 interface KeptPurchase {
   kind: "card" | "pack";

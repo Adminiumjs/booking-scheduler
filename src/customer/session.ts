@@ -15,6 +15,17 @@ export interface KeptBooking {
   signedIn?: boolean;
 }
 
+/** The gift or pack order on its way through the pay page: who it is for, for the thank-you on the way back. */
+export const PURCHASE_SLOT = "lumen.purchase";
+
+export function forgetPurchase(): void {
+  try {
+    sessionStorage.removeItem(PURCHASE_SLOT);
+  } catch {
+    // nothing kept
+  }
+}
+
 export function keepBooking(kept: KeptBooking): void {
   try {
     sessionStorage.setItem(SLOT, JSON.stringify(kept));

@@ -26,6 +26,7 @@ import {
 import { frameStore } from "@adminiumjs/public-client/frame";
 
 import type { DoorName } from "./rules.ts";
+import { forgetPurchase } from "./session.ts";
 
 export type { Row };
 
@@ -492,6 +493,7 @@ export class LumenDoor {
   async signOut(): Promise<void> {
     this.provedAt = null;
     this.store.remove(PROVED_SLOT);
+    forgetPurchase();
     await Promise.allSettled([this.client.signOut(), this.linkClient?.signOut(), this.saleClient?.signOut()]);
   }
 
@@ -573,6 +575,7 @@ export class LumenDoor {
     }
     for (const row of await this.myWaitlist()) if (row["state"] === "waiting") await this.leaveList(row["id"]);
     await this.client.forgetMe();
+    forgetPurchase();
   }
 
   // ── changing a booking, signed in or by its link ──────────────────────────
