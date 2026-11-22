@@ -6,8 +6,7 @@ dist-surface
 *.local
 .vercel
 
-# .env holds a real ADMINIUM_SECRET — README and .env.example both tell the
-# reader to put one there, so it must never be committable by a stray `git add`.
+# A local .env can hold keys, so it must never be committable by a stray `git add`.
 .env
 .env.*
 !.env.example

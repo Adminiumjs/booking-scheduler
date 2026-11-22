@@ -2,7 +2,7 @@
  * LUMEN'S UPDATE CONTRACT: A STUDIO ON THE OLD EXAMPLE TAKES THE REWORK (MOD-14).
  *
  * The old `booking-scheduler` example was never released as a package: what is
- * out there is its own database (`db/schema.sql`), eleven bare tables. So the
+ * out there is its own database (`old-example-schema.sql`), eleven bare tables. So the
  * update is the rework installed into a database that already holds them. On
  * SQLite, Postgres and MySQL:
  *
@@ -54,9 +54,9 @@ const OLD: Record<string, string[]> = {
 const OLD_NAMES = Object.keys(OLD);
 const NEW_PREFIXES = ["bookings_", "offers_", "forms_"];
 
-/** `db/schema.sql` itself, in each engine's own words: what is out there. */
+/** The old example's schema, kept as it shipped, in each engine's own words: what is out there. */
 function oldSchema(engine: Engine): string[] {
-  const statements = readFileSync(join(REPO, "db", "schema.sql"), "utf8")
+  const statements = readFileSync(join(REPO, "src", "contract", "old-example-schema.sql"), "utf8")
     .split("\n")
     .filter((line) => !line.trim().startsWith("--"))
     .join("\n")
