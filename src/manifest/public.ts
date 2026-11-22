@@ -25,6 +25,7 @@
  * What never leaves through these keys: another customer's anything, staff
  * notes, who "Anyone" will be before it is booked, a link's code.
  */
+import { GIFT_MESSAGE_DIGITS, GIFT_MESSAGE_MAX } from "../limits.ts";
 import { setting } from "./tables.ts";
 
 export const LINK_KEY = "link";
@@ -266,7 +267,7 @@ const BUY_CARD = {
   maxOpen: { column: "state", values: ["paying"], n: 2 },
   anonymous: { perValue: { columns: ["buyer_email"], n: 3 }, perIpHour: 3, perKeyHour: 30, plainText: ["buyer_name"] },
   children: {
-    purchase_lines: { via: "purchase_id", writable: ["gift_amount_id", "to_name", "to_email", "message", "send_on"], defaults: { kind: "card" }, requires: ["gift_amount_id", "to_name", "to_email"], select: ["id", "amount"], min: 1, max: 1, plainText: ["to_name", "message"] },
+    purchase_lines: { via: "purchase_id", writable: ["gift_amount_id", "to_name", "to_email", "message", "send_on"], defaults: { kind: "card" }, requires: ["gift_amount_id", "to_name", "to_email"], select: ["id", "amount"], min: 1, max: 1, plainText: ["to_name", { column: "message", digits: GIFT_MESSAGE_DIGITS, max: GIFT_MESSAGE_MAX }] },
   },
 };
 /** A pack, by a signed-in customer only: it needs a holder who proved their address (G13). */

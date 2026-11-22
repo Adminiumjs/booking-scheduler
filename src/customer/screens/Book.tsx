@@ -14,6 +14,7 @@ import type { Booked, Held, Row } from "../door.ts";
 import { addDays, dayNumber, dayOf, firstName, fmtDay, fmtMoney, fmtRange, fmtTime, hhmm, initials, momentOf, monthShort, weekdayShort } from "../format.ts";
 import { Blank, Err, Icon, Rows } from "../parts.tsx";
 import { doorFor, dueNow, letGoLine, looksLikeEmail, nearestTimes, nextFreeDay, partOf, refusalOf, usesLeft, type DayPart, type Refusal, type StripDay } from "../rules.ts";
+import { NAME_MAX } from "../../limits.ts";
 import { keepBooking } from "../session.ts";
 import type { Word } from "../words/index.ts";
 
@@ -742,7 +743,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                         >
                           <div className="lm-field">
                             <label htmlFor="lm-wl-name">{t("fName")}</label>
-                            <input id="lm-wl-name" className="lm-input" autoComplete="name" value={wlForm.name} aria-invalid={wlErrs.name === true} onChange={(e) => setWlForm({ ...wlForm, name: e.target.value })} />
+                            <input id="lm-wl-name" className="lm-input" autoComplete="name" maxLength={NAME_MAX} value={wlForm.name} aria-invalid={wlErrs.name === true} onChange={(e) => setWlForm({ ...wlForm, name: e.target.value })} />
                             {wlErrs.name === true ? <Err>{t("errName")}</Err> : null}
                           </div>
                           <div className="lm-field">
@@ -822,7 +823,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                 <>
                   <div className="lm-field">
                     <label htmlFor="lm-name">{t("fName")}</label>
-                    <input id="lm-name" className="lm-input" autoComplete="name" maxLength={120} value={form.name} aria-invalid={errs.name === true} {...(errs.name === true ? { "aria-describedby": "lm-name-err" } : {})} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                    <input id="lm-name" className="lm-input" autoComplete="name" maxLength={NAME_MAX} value={form.name} aria-invalid={errs.name === true} {...(errs.name === true ? { "aria-describedby": "lm-name-err" } : {})} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                     {errs.name === true ? <Err id="lm-name-err">{t("errName")}</Err> : null}
                   </div>
                   <div className="lm-field">

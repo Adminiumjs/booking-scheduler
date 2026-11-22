@@ -24,6 +24,7 @@
  *     pack use's reverse watches it, so a late cancel or a no-show keeps the
  *     use (MON-10, cQ31).
  */
+import { GIFT_MESSAGE_MAX, NAME_MAX } from "../limits.ts";
 import { EMAIL_EN } from "./email-en.ts";
 import { KINDS } from "./outbox.ts";
 import { CALENDAR_ADD_ONS } from "./add-ons.ts";
@@ -485,7 +486,7 @@ export const TABLES: Table[] = [
     columns: [
       id,
       // Empty once the person asked to be forgotten.
-      text("name", 120, "Name", { ...opt, semantic: "name" }),
+      text("name", NAME_MAX, "Name", { ...opt, semantic: "name" }),
       // Empty for a walk-in with no address. Unique once folded.
       text("email", 254, "E-mail", { ...opt, unique: true, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
       text("phone", 32, "Phone", { ...opt, rules: { validation: { format: "phone" } } }),
@@ -506,7 +507,7 @@ export const TABLES: Table[] = [
       id,
       fk("customer_id", "customers", "Customer", opt),
       // Both empty once the person is erased; the door requires them.
-      text("name", 120, "Name", { ...opt, semantic: "name" }),
+      text("name", NAME_MAX, "Name", { ...opt, semantic: "name" }),
       text("email", 254, "E-mail", { ...opt, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
       language("language"),
       fk("service_id", "services", "Service"),
@@ -643,7 +644,7 @@ export const TABLES: Table[] = [
       // 1 when it was made signed in or at the desk. What Your visits sorts by, with or without Offers, and without showing whose id `proved_by` holds.
       { ref: "made_proved", type: "int", nullable: true, label: l("Made signed in or at the desk"), rules: { formula: { if: [{ isNull: "proved_by" }, 0, 1] } } },
       // Empty once the person is erased; every door and the desk's form require it.
-      text("name", 120, "Name", { ...opt, semantic: "name" }),
+      text("name", NAME_MAX, "Name", { ...opt, semantic: "name" }),
       text("email", 254, "E-mail", { ...opt, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
       text("phone", 32, "Phone", { ...opt, rules: { validation: { format: "phone" } } }),
       language("language"),
@@ -871,11 +872,11 @@ export const TABLES: Table[] = [
       id,
       int("number", "Number (running)", { ...opt, rules: { sequence: { start: 5001 } } }),
       text("code", 20, "Code", { ...opt, unique: true, rules: { format: { from: "number", prefix: "LPO-" } } }),
-      text("buyer_name", 120, "Buyer", { semantic: "name" }),
+      text("buyer_name", NAME_MAX, "Buyer", { semantic: "name" }),
       text("buyer_email", 254, "Buyer's e-mail", { semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
       fk("customer_id", "customers", "Customer", opt),
       // Who holds a pack: always the signed-in customer's own row, never what was typed above.
-      text("holder_name", 120, "Holder", { ...opt, semantic: "name", rules: { copy: { via: "customer_id", from: "name", mode: "always" } } }),
+      text("holder_name", NAME_MAX, "Holder", { ...opt, semantic: "name", rules: { copy: { via: "customer_id", from: "name", mode: "always" } } }),
       text("holder_email", 254, "Holder's e-mail", { ...opt, semantic: "email", rules: { copy: { via: "customer_id", from: "email", mode: "always" } } }),
       // Only the door a signed-in customer buys a pack through sets it.
       bool("customer_proved", "Made signed in or at the desk", false),
@@ -977,10 +978,10 @@ export const TABLES: Table[] = [
       fk("pack_service", "services", "Service", { ...opt, rules: frozen("pack_id", "service_id") }),
       fk("pack_category", "categories", "Category", { ...opt, rules: frozen("pack_id", "category_id") }),
       { ref: "tax_later", type: "bool", nullable: true, default: false, label: l("Tax when used") },
-      text("to_name", 120, "To", { ...opt, semantic: "name" }),
+      text("to_name", NAME_MAX, "To", { ...opt, semantic: "name" }),
       text("to_email", 254, "To (e-mail)", { ...opt, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
-      text("message", 300, "Message", opt),
-      text("sender", 120, "From", { ...opt, rules: frozen("purchase_id", "buyer_name") }),
+      text("message", GIFT_MESSAGE_MAX, "Message", opt),
+      text("sender", NAME_MAX, "From", { ...opt, rules: frozen("purchase_id", "buyer_name") }),
       { ...language("language"), rules: { ...language("language").rules, ...frozen("purchase_id", "language") } },
       date("send_on", "Send on", opt),
     ],

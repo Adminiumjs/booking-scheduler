@@ -2316,7 +2316,7 @@
           {
             "ref": "name",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "Name",
               "de-DE": "Name",
@@ -2550,7 +2550,7 @@
           {
             "ref": "name",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "Name",
               "de-DE": "Name",
@@ -3631,7 +3631,7 @@
           {
             "ref": "name",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "Name",
               "de-DE": "Name",
@@ -6156,7 +6156,7 @@
           {
             "ref": "buyer_name",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "Buyer",
               "de-DE": "Käufer",
@@ -6210,7 +6210,7 @@
           {
             "ref": "holder_name",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "Holder",
               "de-DE": "Inhaber",
@@ -7265,7 +7265,7 @@
           {
             "ref": "to_name",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "To",
               "de-DE": "Bis",
@@ -7305,7 +7305,7 @@
           {
             "ref": "message",
             "type": "text",
-            "maxLength": 300,
+            "maxLength": 200,
             "label": {
               "en-US": "Message",
               "de-DE": "Nachricht",
@@ -7321,7 +7321,7 @@
           {
             "ref": "sender",
             "type": "text",
-            "maxLength": 120,
+            "maxLength": 80,
             "label": {
               "en-US": "From",
               "de-DE": "Von",
@@ -14533,7 +14533,11 @@
           "max": 1,
           "plainText": [
             "to_name",
-            "message"
+            {
+              "column": "message",
+              "digits": 4,
+              "max": 200
+            }
           ]
         }
       }

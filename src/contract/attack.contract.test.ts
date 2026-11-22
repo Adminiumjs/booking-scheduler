@@ -143,6 +143,31 @@ describe.skipIf(why !== null)(`an attacker at Lumen${why === null ? "" : ` — s
         }
         expect(orders.filter((s) => s === 201).length).toBe(2);
       }, 240_000);
+
+      it("takes every length the forms offer, and no more", async () => {
+        await nextHour();
+        await paymentsOn();
+        const long = "Anne Marie ".repeat(8).slice(0, 80).replace(/ $/, "e");
+        const atStudio = await service((s) => s["online"] === "none" && s["active"] === true);
+        const at = (await freeTimes(atStudio["id"], "2026-10-14"))[0]!;
+        const booked = await stand.guest("studio").create(creates("bookings")[0]!, { values: { service_id: atStudio["id"], starts_at: pdt("2026-10-14", at), name: long, email: `long.${engine}@lumen-guests.dev`, language: "en-US", channel: "page", client_key: retryKey("len-b") } });
+        expect(booked.status, JSON.stringify(booked.body).slice(0, 300)).toBe(201);
+        expect(long.length).toBe(80);
+        const over = await stand.guest("studio").create(creates("bookings")[0]!, { values: { service_id: atStudio["id"], starts_at: pdt("2026-10-14", at), name: `${long}e`, email: `over.${engine}@lumen-guests.dev`, language: "en-US", channel: "page", client_key: retryKey("len-o") } });
+        expect(over.status).toBe(400);
+        const joined = await stand.guest("studio").create(creates("waitlist")[0]!, { values: { service_id: atStudio["id"], day: "2026-10-15", name: long, email: `longw.${engine}@lumen-guests.dev`, language: "en-US", client_key: retryKey("len-w") } });
+        expect(joined.status, JSON.stringify(joined.body).slice(0, 300)).toBe(201);
+        const amount = (await stand.rows("gift_amounts"))[0]!;
+        const message = `Happy 30th birthday, with love from all of us. ${"So glad you are here. ".repeat(8)}`.slice(0, 200).trim();
+        const card = (text: string, key: string) => ({
+          values: { buyer_name: long, buyer_email: `longb.${engine}@lumen-guests.dev`, language: "en-US", client_key: retryKey(key) },
+          children: { purchase_lines: [{ values: { gift_amount_id: amount["id"], to_name: long, to_email: `longt.${engine}@lumen-guests.dev`, message: text } }] },
+        });
+        const sold = await (await stand.rehearsing()).create(creates("purchases")[0]!, card(message, "len-c"));
+        expect(sold.status, JSON.stringify(sold.body).slice(0, 300)).toBe(201);
+        const tooLong = await (await stand.rehearsing()).create(creates("purchases")[0]!, card(`${message} and more words past the end`, "len-d"));
+        expect(tooLong.status).toBe(400);
+      }, 120_000);
     });
   });
 });

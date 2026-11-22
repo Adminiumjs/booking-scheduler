@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { A, useApp } from "../app.tsx";
 import { addDays, dayOf, fmtDay, fmtMoney } from "../format.ts";
 import { Err, Icon } from "../parts.tsx";
+import { GIFT_MESSAGE_MAX, NAME_MAX } from "../../limits.ts";
 import { looksLikeEmail, refusalOf } from "../rules.ts";
 
 const KEPT = "lumen.purchase";
@@ -192,7 +193,7 @@ export function GiftCards() {
   const field = (k: "to" | "toEmail" | "from" | "buyer", label: string, error: string, type = "text") => (
     <div className="lm-field">
       <label htmlFor={`lm-g-${k}`}>{label}</label>
-      <input id={`lm-g-${k}`} className="lm-input" type={type} {...(type === "email" ? { dir: "ltr" } : {})} maxLength={type === "email" ? 254 : 120} value={f[k]} aria-invalid={errs[k] === true} {...(errs[k] === true ? { "aria-describedby": `lm-g-${k}-err` } : {})} onChange={(e) => set(k, e.target.value)} />
+      <input id={`lm-g-${k}`} className="lm-input" type={type} {...(type === "email" ? { dir: "ltr" } : {})} maxLength={type === "email" ? 254 : NAME_MAX} value={f[k]} aria-invalid={errs[k] === true} {...(errs[k] === true ? { "aria-describedby": `lm-g-${k}-err` } : {})} onChange={(e) => set(k, e.target.value)} />
       {errs[k] === true ? <Err id={`lm-g-${k}-err`}>{error}</Err> : null}
     </div>
   );
@@ -229,7 +230,7 @@ export function GiftCards() {
           </div>
           <div className="lm-field">
             <label htmlFor="lm-g-msg">{t("gMsg")}</label>
-            <textarea id="lm-g-msg" className="lm-input" rows={3} maxLength={280} value={f.msg} onChange={(e) => set("msg", e.target.value)} />
+            <textarea id="lm-g-msg" className="lm-input" rows={3} maxLength={GIFT_MESSAGE_MAX} value={f.msg} onChange={(e) => set("msg", e.target.value)} />
           </div>
           <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
             <legend className="lm-label" style={{ marginBottom: 9 }}>

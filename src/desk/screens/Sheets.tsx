@@ -14,6 +14,7 @@ import { useFmt } from "../format.ts";
 import { offerText, useMailWords } from "../mailPreview.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { DESK_NAV } from "../nav.ts";
+import { NAME_MAX } from "../../limits.ts";
 import { closeSheet, go, toast, useDesk, type BookingDraft, type Overlay, type View } from "../store.ts";
 import { addDays, dayIn, instantOf, minuteOfDay } from "../time.ts";
 import { FieldError, Fig, Sheet, Switch } from "../ui.tsx";
@@ -364,7 +365,7 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
             <div className="lm-add">
               <label>
                 {t("book.name")}
-                <input value={add.name} aria-invalid={errors["name"] === true} aria-describedby={errors["name"] ? "lm-nb-name-err" : undefined} onChange={(e) => setAdd({ ...add, name: e.target.value })} />
+                <input maxLength={NAME_MAX} value={add.name} aria-invalid={errors["name"] === true} aria-describedby={errors["name"] ? "lm-nb-name-err" : undefined} onChange={(e) => setAdd({ ...add, name: e.target.value })} />
               </label>
               {errors["name"] && <FieldError id="lm-nb-name-err">{t("book.errName")}</FieldError>}
               <label>

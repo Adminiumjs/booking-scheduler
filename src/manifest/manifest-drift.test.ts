@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { buildManifest, manifestText, MIN_ADMINIUM, UPDATES_FROM, VERSION } from "./build.ts";
 import { untranslated } from "./labels.ts";
+import { GIFT_MESSAGE_MAX, NAME_MAX } from "../limits.ts";
 import { BOOKING_SELECT, MADE_SELECT, PUBLIC_ACCESS } from "./public.ts";
 import { BOOKING_CODE_READS, GIFT_CARD_READS, NOT_THE_SPECIALISTS, PAYMENT_READS, ROLES, SPECIALIST_BOOKING_READS, VOUCHER_READS } from "./roles.ts";
 import { HOLDS_TIME, TABLES } from "./tables.ts";
@@ -166,6 +167,16 @@ describe("what the desk reads of Offers", () => {
   it("is not the specialist's", () => {
     const specialist = ROLES.find((r) => r.key === "specialist") as { tables?: unknown };
     expect(specialist.tables).toBeUndefined();
+  });
+});
+
+describe("what a guest types", () => {
+  it("runs as long at the door as the form, the column and Offers allow", () => {
+    expect(NAME_MAX).toBe(80);
+    for (const [ref, name] of [["bookings", "name"], ["customers", "name"], ["waitlist", "name"], ["purchases", "buyer_name"], ["purchases", "holder_name"], ["purchase_lines", "to_name"], ["purchase_lines", "sender"]] as const) {
+      expect(column(ref, name)?.maxLength, `${ref}.${name}`).toBe(NAME_MAX);
+    }
+    expect(column("purchase_lines", "message")?.maxLength).toBe(GIFT_MESSAGE_MAX);
   });
 });
 
