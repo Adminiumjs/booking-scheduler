@@ -310,7 +310,7 @@ export function sampleBundle(): SampleBundle {
       { ref: "gift_amounts", rows: WORLD.giftAmounts.map((a, i) => ({ "@label": `gift:${String(a)}`, amount: a, position: i + 1, active: true })) },
       {
         ref: "pack_products",
-        rows: WORLD.packs.map((p, i) => ({ "@label": `pack:${p.id}`, name: p.name, price: p.price, uses: p.uses, service_id: ref(`service:${p.service}`), position: i + 1, active: true })),
+        rows: WORLD.packs.map((p, i) => ({ "@label": `pack:${p.id}`, name: p.name, price: p.price, uses: p.uses, service_id: ref(`service:${p.service}`), what: "item", position: i + 1, active: true })),
       },
       {
         ref: "purchases",
@@ -322,8 +322,8 @@ export function sampleBundle(): SampleBundle {
       {
         ref: "purchase_lines",
         rows: [
-          ...giftBuyers.map(({ g, label }) => ({ purchase_id: ref(label), kind: "card", gift_amount_id: ref(`gift:${String(g.amount)}`), amount: g.amount, to_name: g.to, message: g.message, sender: g.from, language: "en-US" })),
-          ...packBuyers.map(({ label, pack }) => ({ purchase_id: ref(label), kind: "pack", pack_id: ref(`pack:${pack.id}`), amount: pack.price, language: "en-US" })),
+          ...giftBuyers.map(({ g, label }) => ({ purchase_id: ref(label), kind: "card", gift_amount_id: ref(`gift:${String(g.amount)}`), to_name: g.to, message: g.message })),
+          ...packBuyers.map(({ label, pack }) => ({ purchase_id: ref(label), kind: "pack", pack_id: ref(`pack:${pack.id}`) })),
         ],
       },
       {

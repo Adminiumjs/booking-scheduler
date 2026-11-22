@@ -46,6 +46,12 @@ async function boot(): Promise<void> {
     await bootDesk(container as HTMLElement);
     return;
   }
+  // The customer side is its own app (plan 78): it reads the studio through the public API and shares no state with the demo's store.
+  if (SURFACE_SIDE === "customer" || import.meta.env.VITE_LUMEN_CUSTOMER === "1") {
+    const { bootCustomer } = await import("./customer/CustomerApp.tsx");
+    await bootCustomer(container as HTMLElement);
+    return;
+  }
   const client = clientFromEnv();
   if (client !== null) {
     const snap = await loadSnapshot(client);

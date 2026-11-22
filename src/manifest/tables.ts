@@ -632,6 +632,8 @@ export const TABLES: Table[] = [
       // The yes/no the review word and Offers read. Only Offers' step writes it, so without Offers it stays empty and a booking's
       // own link reviews nothing: signing in, or the review mail's own link (T06), still does. `proved_by` above is the desk's mark.
       { ref: "customer_proved", type: "bool", nullable: true, label: l("Made signed in or at the desk") },
+      // 1 when it was made signed in or at the desk. What Your visits sorts by, with or without Offers, and without showing whose id `proved_by` holds.
+      { ref: "made_proved", type: "int", nullable: true, label: l("Made signed in or at the desk"), rules: { formula: { if: [{ isNull: "proved_by" }, 0, 1] } } },
       // Empty once the person is erased; every door and the desk's form require it.
       text("name", 120, "Name", { ...opt, semantic: "name" }),
       text("email", 254, "E-mail", { ...opt, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
@@ -639,6 +641,8 @@ export const TABLES: Table[] = [
       language("language"),
       text("note", 500, "Note from the guest", { ...opt, rules: { personal: true } }),
       text("staff_note", 500, "Note for the studio", { ...opt, rules: { personal: true } }),
+      // The booking form's box: ticked, it records the person's "no" to review requests (cQ10). Its own column, by the engine's rule.
+      bool("no_review_request", "No review request", false),
       // A statistic only: nothing may branch on it (MOD-16).
       choice("channel", "Booked through", CHANNELS, { default: "desk" }),
       at("made_at", "Made", { ...opt, rules: stamp("now", "create") }),
@@ -710,6 +714,8 @@ export const TABLES: Table[] = [
       // What the payments hold, online or at the studio, up to what the visit comes to.
       money("paid", "Paid", { rollup: { from: "payments", via: "booking_id", sum: "kept", balance: { column: "balance", of: "net_price" }, cap: true } }),
       amount("balance", "Still owing"),
+      // Of what is paid, the part a gift card paid. A card's part goes back to the card, never to a bank (cQ31, MON-8).
+      money("card_paid", "Paid by gift card", { rollup: { from: "payments", via: "booking_id", sum: "card_part" } }),
       // What is still to pay online: it falls to nothing as money lands (MON-1).
       money("pay_due", "Still to pay online", { formula: { max: [0, { sub: ["asked", c0("paid")] }] } }),
       money("refunded", "Refunded", { rollup: { from: "payments", via: "booking_id", sum: "returned" } }),
@@ -790,6 +796,11 @@ export const TABLES: Table[] = [
       text("buyer_name", 120, "Buyer", { semantic: "name" }),
       text("buyer_email", 254, "Buyer's e-mail", { semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
       fk("customer_id", "customers", "Customer", opt),
+      // Who holds a pack: always the signed-in customer's own row, never what was typed above.
+      text("holder_name", 120, "Holder", { ...opt, semantic: "name", rules: { copy: { via: "customer_id", from: "name", mode: "always" } } }),
+      text("holder_email", 254, "Holder's e-mail", { ...opt, semantic: "email", rules: { copy: { via: "customer_id", from: "email", mode: "always" } } }),
+      // Only the door a signed-in customer buys a pack through sets it.
+      bool("customer_proved", "Made signed in or at the desk", false),
       language("language"),
       choice("state", "State", { paying: "Being paid", paid: "Paid", cancelled: "Cancelled", lapsed: "Let go" }, {
         default: "paying",
@@ -801,6 +812,8 @@ export const TABLES: Table[] = [
       money("refunded", "Refunded", { rollup: { from: "payments", via: "purchase_id", sum: "returned" } }),
       at("made_at", "Made", { ...opt, rules: stamp("now", "create") }),
       at("pay_until", "Pay by", { ...opt, rules: stamp({ addMinutes: { minutes: setting("hold_min") } }, "create") }),
+      at("paid_at", "Paid at", { ...opt, rules: stamp("now", onState("state", "paid")) }),
+      at("cancelled_at", "Cancelled at", { ...opt, rules: stamp("now", onState("state", "cancelled")) }),
       text("client_key", 64, "Retry key", { ...opt, unique: true }),
       text("staff_note", 500, "Note for the studio", { ...opt, rules: { personal: true } }),
       text("link_token", 16, "Link code", { ...opt, rules: { code: { length: 16, hiddenFromStaff: true } } }),
@@ -813,19 +826,84 @@ export const TABLES: Table[] = [
     keep: KEPT_FOR_TAX,
     label: l("Purchase line"),
     labelPlural: l("Purchase lines"),
+    // Offers makes the card or the pack when the purchase is paid, and takes it back with the owner's cancel: a sale's refund
+    // goes through that cancel, or a pack would stay usable (T10). `only` keeps each line to its own kind.
+    postings: [
+      {
+        id: "card-make",
+        into: { addOn: "offers", ledger: "value", action: "issue" },
+        needs: "offers",
+        via: "purchase_id",
+        only: { column: "kind", eq: "card" },
+        reserve: { on: { create: true } },
+        post: { on: { to: ["paid"] } },
+        reverse: { on: { to: ["cancelled", "lapsed"], from: ["paying"] } },
+        map: { amount: "load_amount", to_name: "to_name", to_email: "to_email", message: "message", sender: "sender", language: "language", send_on: "send_on" },
+      },
+      {
+        id: "card-recall",
+        into: { addOn: "offers", ledger: "value", action: "recall" },
+        needs: "offers",
+        via: "purchase_id",
+        only: { column: "kind", eq: "card" },
+        post: { on: { to: ["cancelled"], from: ["paid"] } },
+        map: { sale: { row: true } },
+      },
+      // Offers needs a link to what a pack covers, so a pack of one service and a pack of a category each post by their own link.
+      {
+        id: "pack-make",
+        into: { addOn: "offers", ledger: "value", action: "sell-pack" },
+        needs: "offers",
+        via: "purchase_id",
+        only: { column: "pack_what", eq: "item" },
+        reserve: { on: { create: true } },
+        post: { on: { to: ["paid"] } },
+        reverse: { on: { to: ["cancelled", "lapsed"], from: ["paying"] } },
+        map: { amount: "sale_amount", name: "pack_name", uses: "pack_uses", what: "pack_what", target: "pack_service", holder_email: { parent: "holder_email" }, holder_name: { parent: "holder_name" }, language: "language", proved: { parent: "customer_proved" }, tax_later: "tax_later" },
+      },
+      {
+        id: "pack-make-category",
+        into: { addOn: "offers", ledger: "value", action: "sell-pack" },
+        needs: "offers",
+        via: "purchase_id",
+        only: { column: "pack_what", eq: "category" },
+        reserve: { on: { create: true } },
+        post: { on: { to: ["paid"] } },
+        reverse: { on: { to: ["cancelled", "lapsed"], from: ["paying"] } },
+        map: { amount: "sale_amount", name: "pack_name", uses: "pack_uses", what: "pack_what", target: "pack_category", holder_email: { parent: "holder_email" }, holder_name: { parent: "holder_name" }, language: "language", proved: { parent: "customer_proved" }, tax_later: "tax_later" },
+      },
+      {
+        id: "pack-recall",
+        into: { addOn: "offers", ledger: "value", action: "recall-pack" },
+        needs: "offers",
+        via: "purchase_id",
+        only: { column: "kind", eq: "pack" },
+        post: { on: { to: ["cancelled"], from: ["paid"] } },
+        reverse: { on: { to: ["paid"] } },
+        map: { sale: { row: true } },
+      },
+    ],
     columns: [
       id,
       fk("purchase_id", "purchases", "Purchase", { index: true }),
       choice("kind", "Kind", { card: "Gift card", pack: "Pack" }),
-      fk("gift_amount_id", "gift_amounts", "Gift amount", opt),
-      fk("pack_id", "pack_products", "Pack", opt),
-      // What was sold, at what it cost then. The server decides it from the row chosen.
-      amount("amount", "Amount"),
+      fk("gift_amount_id", "gift_amounts", "Gift amount", { ...opt, rules: { linkable: { where: [{ column: "active", eq: true }] } } }),
+      fk("pack_id", "pack_products", "Pack", { ...opt, rules: { linkable: { where: [{ column: "active", eq: true }] } } }),
+      // What was sold, at what it cost then, copied from the studio's own row: a guest names the row and never a figure.
+      money("load_amount", "Loaded", frozen("gift_amount_id", "amount")),
+      money("sale_amount", "Sale price", frozen("pack_id", "price")),
+      money("amount", "Amount", { formula: { coalesce: ["load_amount", { coalesce: ["sale_amount", 0] }] } }),
+      text("pack_name", 80, "Pack", { ...opt, rules: frozen("pack_id", "name") }),
+      { ref: "pack_uses", type: "int", nullable: true, label: l("Visits"), rules: frozen("pack_id", "uses") },
+      { ref: "pack_what", type: "enum", enum: ["item", "category"], nullable: true, label: l("Covers"), rules: frozen("pack_id", "what") },
+      fk("pack_service", "services", "Service", { ...opt, rules: frozen("pack_id", "service_id") }),
+      fk("pack_category", "categories", "Category", { ...opt, rules: frozen("pack_id", "category_id") }),
+      { ref: "tax_later", type: "bool", nullable: true, default: false, label: l("Tax when used") },
       text("to_name", 120, "To", { ...opt, semantic: "name" }),
       text("to_email", 254, "To (e-mail)", { ...opt, semantic: "email", rules: { normalize: "email", validation: { format: "email" } } }),
       text("message", 300, "Message", opt),
-      text("sender", 120, "From", opt),
-      language("language"),
+      text("sender", 120, "From", { ...opt, rules: frozen("purchase_id", "buyer_name") }),
+      { ...language("language"), rules: { ...language("language").rules, ...frozen("purchase_id", "language") } },
       date("send_on", "Send on", opt),
     ],
   },
@@ -846,8 +924,10 @@ export const TABLES: Table[] = [
       text("name", 80, "Name", { semantic: "name" }),
       price("price", "Price", { rules: { validation: { min: 1 } } }),
       int("uses", "Visits", { default: 5, rules: { validation: { min: 1, max: 100 } } }),
-      fk("service_id", "services", "Covers this service", opt),
-      fk("category_id", "categories", "Or this category", opt),
+      fk("service_id", "services", "Covers this service", { ...opt, rules: { requiredWhen: { column: "what", in: ["item"] } } }),
+      fk("category_id", "categories", "Or this category", { ...opt, rules: { requiredWhen: { column: "what", in: ["category"] } } }),
+      // What Offers is told it covers: this service, or this category. The link it names must be filled.
+      choice("what", "Covers", { item: "This service", category: "This category" }, { default: "item" }),
       int("valid_days", "Lasts (days)", { default: 365, rules: { validation: { min: 1, max: 1830 } } }),
       int("position", "Position", { default: 0 }),
       bool("active", "On sale", true),
@@ -859,23 +939,63 @@ export const TABLES: Table[] = [
     keep: KEPT_FOR_TAX,
     label: l("Payment"),
     labelPlural: l("Payments"),
+    // A gift card paying a deposit (R2): it pays what is due when the row is made. A late cancel or a no-show keeps it (cQ31).
+    postings: [
+      {
+        id: "card",
+        into: { addOn: "offers", ledger: "value", action: "spend" },
+        needs: "offers",
+        via: "booking_id",
+        only: { column: "card_code", set: true },
+        post: { on: { create: true } },
+        reverse: { on: { column: "gives_back", in: [1] } },
+        map: { card: "card_id", due: { parent: "pay_due" }, amount: "amount", balance_after: "card_balance_after" },
+      },
+    ],
     columns: [
       id,
       fk("booking_id", "bookings", "Booking", { ...opt, index: true }),
       fk("purchase_id", "purchases", "Purchase", { ...opt, index: true }),
       choice("kind", "Kind", { taken: "Taken", given_back: "Given back" }, { default: "taken" }),
-      price("amount", "Amount", { rules: { validation: { min: 0.01 } } }),
+      // Empty only until Offers says what a gift card paid, inside the same save.
+      { ref: "amount", type: "decimal", scale: "currency", nullable: true, label: l("Amount"), rules: { validation: { min: 0.01 }, requiredWhen: { column: "method", in: ["online", "cash", "card"] } } },
       choice("method", "Method", { online: "Online", gift_card: "Gift card", cash: "Cash", card: "Card" }, { default: "online" }),
       at("paid_at", "Paid at", { default: "now" }),
       text("payment_ref", 64, "Payment reference", { ...opt, unique: true }),
       text("provider", 40, "Paid through", opt),
       text("currency", 3, "Currency", opt),
+      // The whole code as typed or `held:<id>`: read by no page and no role.
+      text("card_code", 64, "Card code", { ...opt, rules: { requiredWhen: { column: "method", in: ["gift_card"] } } }),
+      { ref: "card_id", type: "int", nullable: true, label: l("Gift card"), rules: { addOnLink: { addOn: "offers", table: "gift_cards" }, lookup: { from: "card_code", table: { addOn: "offers", table: "gift_cards" }, column: "code", where: [{ column: "status", eq: "active" }], held: "recipient_email" } } },
+      amount("card_balance_after", "Left on the card"),
       // What went back of it, a running total Adminium writes.
       price("refunded", "Refunded", { default: 0 }),
+      // What went back of a sale's payment, through the owner's cancel (`purchase_refunds`).
+      money("refund_rows", "Refunded with its sale", { rollup: { from: "purchase_refunds", via: "payment_id", sum: "counted" } }),
+      money("card_part", "Paid by gift card", { formula: { if: [{ eq: ["method", "gift_card"] }, c0("amount"), 0] } }),
       // What the row holds: a row of money given back counts against the booking, whatever way it went.
-      money("kept", "Kept", { formula: { if: [{ eq: ["kind", "given_back"] }, { sub: [0, "amount"] }, { sub: ["amount", c0("refunded")] }] } }),
-      money("returned", "Given back", { formula: { if: [{ eq: ["kind", "given_back"] }, "amount", c0("refunded")] } }),
+      money("kept", "Kept", { formula: { if: [{ eq: ["kind", "given_back"] }, { sub: [0, c0("amount")] }, { sub: [c0("amount"), { add: [c0("refunded"), c0("refund_rows")] }] }] } }),
+      money("returned", "Given back", { formula: { if: [{ eq: ["kind", "given_back"] }, c0("amount"), { add: [c0("refunded"), c0("refund_rows")] }] } }),
       text("client_key", 64, "Retry key", { ...opt, unique: true }),
+    ],
+  },
+  {
+    // Money given back of a sale. Adminium writes these when the owner cancels a sale, and only then: a pack's refund must go
+    // through its cancel, or the pack would stay usable.
+    ref: "purchase_refunds",
+    keep: KEPT_FOR_TAX,
+    label: l("Refund of a sale"),
+    labelPlural: l("Refunds of sales"),
+    columns: [
+      id,
+      fk("payment_id", "payments", "Payment", { index: true }),
+      choice("method", "Method", { online: "Online", gift_card: "Gift card", cash: "Cash", card: "Card" }, { rules: frozen("payment_id", "method") }),
+      { ref: "amount", type: "decimal", scale: "currency", label: l("Amount"), rules: { validation: { min: 0.01 } } },
+      bool("automatic", "Refunded automatically", false),
+      choice("refund_state", "Refund", { asked: "Asked", pending: "On its way", done: "Refunded", "not-sent": "Not sent" }, opt),
+      text("provider_ref", 255, "Refund reference", opt),
+      money("counted", "Counted", { formula: { if: [{ eq: ["refund_state", "not-sent"] }, 0, "amount"] } }),
+      at("made_at", "Made", { ...opt, rules: stamp("now", "create") }),
     ],
   },
   {

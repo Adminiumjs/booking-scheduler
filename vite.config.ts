@@ -24,6 +24,8 @@ const FLAGS = [
   "VITE_ADMINIUM_SURFACE_SIDE",
   "VITE_ADMINIUM_API_BASE_URL",
   "VITE_ADMINIUM_PUBLISHABLE_KEY",
+  "VITE_ADMINIUM_LINK_KEY",
+  "VITE_LUMEN_CUSTOMER",
 ] as const;
 
 const define = Object.fromEntries(

@@ -91,9 +91,33 @@
         "help": "/help",
         "policy": "/policy",
         "privacy": "/privacy",
-        "terms": "/terms"
+        "terms": "/terms",
+        "review": "/review"
       },
-      "instances": true
+      "instances": true,
+      "embed": {
+        "paths": [
+          "/",
+          {
+            "path": "/book",
+            "label": "Book a service",
+            "choose": {
+              "query": "service",
+              "table": "services",
+              "value": "id",
+              "label": "name",
+              "title": "A particular service",
+              "any": "Any service"
+            }
+          },
+          "/reviews"
+        ],
+        "modes": [
+          "inline",
+          "button",
+          "floating"
+        ]
+      }
     }
   ],
   "addOns": {
@@ -3558,6 +3582,32 @@
             }
           },
           {
+            "ref": "made_proved",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Made signed in or at the desk",
+              "de-DE": "Angemeldet oder am Empfang erstellt",
+              "fr-FR": "Créée connecté ou à l'accueil",
+              "da-DK": "Oprettet som logget ind eller i receptionen",
+              "cs-CZ": "Vytvořeno po přihlášení nebo na recepci",
+              "ar-EG": "تم إنشاؤه بعد تسجيل الدخول أو في الاستقبال",
+              "zh-CN": "登录后或在前台创建",
+              "zh-TW": "登入後或在櫃檯建立"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "isNull": "proved_by"
+                  },
+                  0,
+                  1
+                ]
+              }
+            }
+          },
+          {
             "ref": "name",
             "type": "text",
             "maxLength": 120,
@@ -3708,6 +3758,21 @@
             "nullable": true,
             "rules": {
               "personal": true
+            }
+          },
+          {
+            "ref": "no_review_request",
+            "type": "bool",
+            "default": false,
+            "label": {
+              "en-US": "No review request",
+              "de-DE": "Keine Bewertungsanfrage",
+              "fr-FR": "Pas de demande d'avis",
+              "da-DK": "Ingen anmodning om anmeldelse",
+              "cs-CZ": "Bez žádosti o recenzi",
+              "ar-EG": "بدون طلب تقييم",
+              "zh-CN": "不发送评价请求",
+              "zh-TW": "不傳送評價邀請"
             }
           },
           {
@@ -4505,6 +4570,29 @@
               "ar-EG": "المبلغ المتبقي",
               "zh-CN": "尚欠金额",
               "zh-TW": "尚欠金額"
+            }
+          },
+          {
+            "ref": "card_paid",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Paid by gift card",
+              "de-DE": "Mit Geschenkkarte bezahlt",
+              "fr-FR": "Payé par carte cadeau",
+              "da-DK": "Betalt med gavekort",
+              "cs-CZ": "Zaplaceno dárkovou kartou",
+              "ar-EG": "مدفوع ببطاقة هدية",
+              "zh-CN": "礼品卡支付",
+              "zh-TW": "禮物卡支付"
+            },
+            "rules": {
+              "rollup": {
+                "from": "payments",
+                "via": "booking_id",
+                "sum": "card_part"
+              }
             }
           },
           {
@@ -5536,6 +5624,69 @@
             "nullable": true
           },
           {
+            "ref": "holder_name",
+            "type": "text",
+            "maxLength": 120,
+            "label": {
+              "en-US": "Holder",
+              "de-DE": "Inhaber",
+              "fr-FR": "Titulaire",
+              "da-DK": "Indehaver",
+              "cs-CZ": "Držitel",
+              "ar-EG": "صاحب الباقة",
+              "zh-CN": "持有人",
+              "zh-TW": "持有人"
+            },
+            "nullable": true,
+            "semantic": "name",
+            "rules": {
+              "copy": {
+                "via": "customer_id",
+                "from": "name",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "holder_email",
+            "type": "text",
+            "maxLength": 254,
+            "label": {
+              "en-US": "Holder's e-mail",
+              "de-DE": "E-Mail des Inhabers",
+              "fr-FR": "E-mail du titulaire",
+              "da-DK": "Indehaverens e-mail",
+              "cs-CZ": "E-mail držitele",
+              "ar-EG": "بريد صاحب الباقة",
+              "zh-CN": "持有人邮箱",
+              "zh-TW": "持有人電子郵件"
+            },
+            "nullable": true,
+            "semantic": "email",
+            "rules": {
+              "copy": {
+                "via": "customer_id",
+                "from": "email",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "customer_proved",
+            "type": "bool",
+            "default": false,
+            "label": {
+              "en-US": "Made signed in or at the desk",
+              "de-DE": "Angemeldet oder am Empfang erstellt",
+              "fr-FR": "Créée connecté ou à l'accueil",
+              "da-DK": "Oprettet som logget ind eller i receptionen",
+              "cs-CZ": "Vytvořeno po přihlášení nebo na recepci",
+              "ar-EG": "تم إنشاؤه بعد تسجيل الدخول أو في الاستقبال",
+              "zh-CN": "登录后或在前台创建",
+              "zh-TW": "登入後或在櫃檯建立"
+            }
+          },
+          {
             "ref": "language",
             "type": "text",
             "maxLength": 16,
@@ -5802,6 +5953,58 @@
             }
           },
           {
+            "ref": "paid_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Paid at",
+              "de-DE": "Bezahlt am",
+              "fr-FR": "Payé le",
+              "da-DK": "Betalt den",
+              "cs-CZ": "Zaplaceno dne",
+              "ar-EG": "وقت الدفع",
+              "zh-CN": "付款时间",
+              "zh-TW": "付款時間"
+            },
+            "nullable": true,
+            "rules": {
+              "stamp": {
+                "set": "now",
+                "on": {
+                  "column": "state",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "ref": "cancelled_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Cancelled at",
+              "de-DE": "Abgesagt am",
+              "fr-FR": "Annulé le",
+              "da-DK": "Aflyst den",
+              "cs-CZ": "Čas zrušení",
+              "ar-EG": "وقت الإلغاء",
+              "zh-CN": "取消时间",
+              "zh-TW": "取消時間"
+            },
+            "nullable": true,
+            "rules": {
+              "stamp": {
+                "set": "now",
+                "on": {
+                  "column": "state",
+                  "values": [
+                    "cancelled"
+                  ]
+                }
+              }
+            }
+          },
+          {
             "ref": "client_key",
             "type": "text",
             "maxLength": 64,
@@ -5926,6 +6129,229 @@
           "zh-CN": "购买明细",
           "zh-TW": "購買明細"
         },
+        "postings": [
+          {
+            "id": "card-make",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "issue"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "card"
+            },
+            "reserve": {
+              "on": {
+                "create": true
+              }
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "cancelled",
+                  "lapsed"
+                ],
+                "from": [
+                  "paying"
+                ]
+              }
+            },
+            "map": {
+              "amount": "load_amount",
+              "to_name": "to_name",
+              "to_email": "to_email",
+              "message": "message",
+              "sender": "sender",
+              "language": "language",
+              "send_on": "send_on"
+            }
+          },
+          {
+            "id": "card-recall",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "recall"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "card"
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "cancelled"
+                ],
+                "from": [
+                  "paid"
+                ]
+              }
+            },
+            "map": {
+              "sale": {
+                "row": true
+              }
+            }
+          },
+          {
+            "id": "pack-make",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "sell-pack"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "pack_what",
+              "eq": "item"
+            },
+            "reserve": {
+              "on": {
+                "create": true
+              }
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "cancelled",
+                  "lapsed"
+                ],
+                "from": [
+                  "paying"
+                ]
+              }
+            },
+            "map": {
+              "amount": "sale_amount",
+              "name": "pack_name",
+              "uses": "pack_uses",
+              "what": "pack_what",
+              "target": "pack_service",
+              "holder_email": {
+                "parent": "holder_email"
+              },
+              "holder_name": {
+                "parent": "holder_name"
+              },
+              "language": "language",
+              "proved": {
+                "parent": "customer_proved"
+              },
+              "tax_later": "tax_later"
+            }
+          },
+          {
+            "id": "pack-make-category",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "sell-pack"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "pack_what",
+              "eq": "category"
+            },
+            "reserve": {
+              "on": {
+                "create": true
+              }
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "cancelled",
+                  "lapsed"
+                ],
+                "from": [
+                  "paying"
+                ]
+              }
+            },
+            "map": {
+              "amount": "sale_amount",
+              "name": "pack_name",
+              "uses": "pack_uses",
+              "what": "pack_what",
+              "target": "pack_category",
+              "holder_email": {
+                "parent": "holder_email"
+              },
+              "holder_name": {
+                "parent": "holder_name"
+              },
+              "language": "language",
+              "proved": {
+                "parent": "customer_proved"
+              },
+              "tax_later": "tax_later"
+            }
+          },
+          {
+            "id": "pack-recall",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "recall-pack"
+            },
+            "needs": "offers",
+            "via": "purchase_id",
+            "only": {
+              "column": "kind",
+              "eq": "pack"
+            },
+            "post": {
+              "on": {
+                "to": [
+                  "cancelled"
+                ],
+                "from": [
+                  "paid"
+                ]
+              }
+            },
+            "reverse": {
+              "on": {
+                "to": [
+                  "paid"
+                ]
+              }
+            },
+            "map": {
+              "sale": {
+                "row": true
+              }
+            }
+          }
+        ],
         "columns": [
           {
             "ref": "id",
@@ -6006,7 +6432,17 @@
               "zh-CN": "礼品金额",
               "zh-TW": "禮品金額"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "linkable": {
+                "where": [
+                  {
+                    "column": "active",
+                    "eq": true
+                  }
+                ]
+              }
+            }
           },
           {
             "ref": "pack_id",
@@ -6022,7 +6458,63 @@
               "zh-CN": "套餐",
               "zh-TW": "套票"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "linkable": {
+                "where": [
+                  {
+                    "column": "active",
+                    "eq": true
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "ref": "load_amount",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Loaded",
+              "de-DE": "Aufgeladen",
+              "fr-FR": "Chargé",
+              "da-DK": "Indsat",
+              "cs-CZ": "Nabito",
+              "ar-EG": "المبلغ المشحون",
+              "zh-CN": "充值金额",
+              "zh-TW": "儲值金額"
+            },
+            "rules": {
+              "copy": {
+                "via": "gift_amount_id",
+                "from": "amount",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "sale_amount",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Sale price",
+              "de-DE": "Verkaufspreis",
+              "fr-FR": "Prix de vente",
+              "da-DK": "Salgspris",
+              "cs-CZ": "Prodejní cena",
+              "ar-EG": "سعر البيع",
+              "zh-CN": "售价",
+              "zh-TW": "售價"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "price",
+                "mode": "always"
+              }
+            }
           },
           {
             "ref": "amount",
@@ -6038,6 +6530,152 @@
               "ar-EG": "المبلغ",
               "zh-CN": "金额",
               "zh-TW": "金額"
+            },
+            "rules": {
+              "formula": {
+                "coalesce": [
+                  "load_amount",
+                  {
+                    "coalesce": [
+                      "sale_amount",
+                      0
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "ref": "pack_name",
+            "type": "text",
+            "maxLength": 80,
+            "label": {
+              "en-US": "Pack",
+              "de-DE": "Paket",
+              "fr-FR": "Forfait",
+              "da-DK": "Klippekort",
+              "cs-CZ": "Balíček",
+              "ar-EG": "باقة",
+              "zh-CN": "套餐",
+              "zh-TW": "套票"
+            },
+            "nullable": true,
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "name",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_uses",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Visits",
+              "de-DE": "Besuche",
+              "fr-FR": "Consultations",
+              "da-DK": "Besøg",
+              "cs-CZ": "Návštěvy",
+              "ar-EG": "الزيارات",
+              "zh-CN": "就诊",
+              "zh-TW": "看診"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "uses",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_what",
+            "type": "enum",
+            "enum": [
+              "item",
+              "category"
+            ],
+            "nullable": true,
+            "label": {
+              "en-US": "Covers",
+              "de-DE": "Gilt für",
+              "fr-FR": "Couvre",
+              "da-DK": "Dækker",
+              "cs-CZ": "Pokrývá",
+              "ar-EG": "يشمل",
+              "zh-CN": "适用于",
+              "zh-TW": "適用於"
+            },
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "what",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_service",
+            "type": "fk",
+            "references": "services",
+            "label": {
+              "en-US": "Service",
+              "de-DE": "Versandart",
+              "fr-FR": "Mode d’envoi",
+              "da-DK": "Forsendelsesmåde",
+              "cs-CZ": "Služba",
+              "ar-EG": "الخدمة",
+              "zh-CN": "寄送方式",
+              "zh-TW": "寄送方式"
+            },
+            "nullable": true,
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "service_id",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "pack_category",
+            "type": "fk",
+            "references": "categories",
+            "label": {
+              "en-US": "Category",
+              "de-DE": "Kategorie",
+              "fr-FR": "Catégorie",
+              "da-DK": "Kategori",
+              "cs-CZ": "Kategorie",
+              "ar-EG": "الفئة",
+              "zh-CN": "分类",
+              "zh-TW": "分類"
+            },
+            "nullable": true,
+            "rules": {
+              "copy": {
+                "via": "pack_id",
+                "from": "category_id",
+                "mode": "always"
+              }
+            }
+          },
+          {
+            "ref": "tax_later",
+            "type": "bool",
+            "nullable": true,
+            "default": false,
+            "label": {
+              "en-US": "Tax when used",
+              "de-DE": "Steuer bei Einlösung",
+              "fr-FR": "Taxe à l'utilisation",
+              "da-DK": "Moms ved brug",
+              "cs-CZ": "Daň při použití",
+              "ar-EG": "الضريبة عند الاستخدام",
+              "zh-CN": "使用时计税",
+              "zh-TW": "使用時計稅"
             }
           },
           {
@@ -6110,7 +6748,14 @@
               "zh-CN": "从",
               "zh-TW": "從"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "copy": {
+                "via": "purchase_id",
+                "from": "buyer_name",
+                "mode": "always"
+              }
+            }
           },
           {
             "ref": "language",
@@ -6163,6 +6808,11 @@
                     "label": "繁體中文"
                   }
                 ]
+              },
+              "copy": {
+                "via": "purchase_id",
+                "from": "language",
+                "mode": "always"
               }
             }
           },
@@ -6365,7 +7015,15 @@
               "zh-CN": "适用此服务",
               "zh-TW": "適用此服務"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "requiredWhen": {
+                "column": "what",
+                "in": [
+                  "item"
+                ]
+              }
+            }
           },
           {
             "ref": "category_id",
@@ -6381,7 +7039,60 @@
               "zh-CN": "或此分类",
               "zh-TW": "或此分類"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "requiredWhen": {
+                "column": "what",
+                "in": [
+                  "category"
+                ]
+              }
+            }
+          },
+          {
+            "ref": "what",
+            "type": "enum",
+            "enum": [
+              "item",
+              "category"
+            ],
+            "label": {
+              "en-US": "Covers",
+              "de-DE": "Gilt für",
+              "fr-FR": "Couvre",
+              "da-DK": "Dækker",
+              "cs-CZ": "Pokrývá",
+              "ar-EG": "يشمل",
+              "zh-CN": "适用于",
+              "zh-TW": "適用於"
+            },
+            "default": "item",
+            "rules": {
+              "enumLabels": {
+                "labels": {
+                  "item": {
+                    "en-US": "This service",
+                    "de-DE": "Diese Leistung",
+                    "fr-FR": "Ce service",
+                    "da-DK": "Denne behandling",
+                    "cs-CZ": "Tato služba",
+                    "ar-EG": "هذه الخدمة",
+                    "zh-CN": "此服务",
+                    "zh-TW": "此服務"
+                  },
+                  "category": {
+                    "en-US": "This category",
+                    "de-DE": "Diese Kategorie",
+                    "fr-FR": "Cette catégorie",
+                    "da-DK": "Denne kategori",
+                    "cs-CZ": "Tato kategorie",
+                    "ar-EG": "هذه الفئة",
+                    "zh-CN": "此类别",
+                    "zh-TW": "此類別"
+                  }
+                }
+              }
+            }
           },
           {
             "ref": "valid_days",
@@ -6461,6 +7172,43 @@
           "zh-CN": "付款记录",
           "zh-TW": "付款紀錄"
         },
+        "postings": [
+          {
+            "id": "card",
+            "into": {
+              "addOn": "offers",
+              "ledger": "value",
+              "action": "spend"
+            },
+            "needs": "offers",
+            "via": "booking_id",
+            "only": {
+              "column": "card_code",
+              "set": true
+            },
+            "post": {
+              "on": {
+                "create": true
+              }
+            },
+            "reverse": {
+              "on": {
+                "column": "gives_back",
+                "in": [
+                  1
+                ]
+              }
+            },
+            "map": {
+              "card": "card_id",
+              "due": {
+                "parent": "pay_due"
+              },
+              "amount": "amount",
+              "balance_after": "card_balance_after"
+            }
+          }
+        ],
         "columns": [
           {
             "ref": "id",
@@ -6550,6 +7298,7 @@
             "ref": "amount",
             "type": "decimal",
             "scale": "currency",
+            "nullable": true,
             "label": {
               "en-US": "Amount",
               "de-DE": "Betrag",
@@ -6563,6 +7312,14 @@
             "rules": {
               "validation": {
                 "min": 0.01
+              },
+              "requiredWhen": {
+                "column": "method",
+                "in": [
+                  "online",
+                  "cash",
+                  "card"
+                ]
               }
             }
           },
@@ -6698,6 +7455,82 @@
             "nullable": true
           },
           {
+            "ref": "card_code",
+            "type": "text",
+            "maxLength": 64,
+            "label": {
+              "en-US": "Card code",
+              "de-DE": "Kartencode",
+              "fr-FR": "Code de la carte",
+              "da-DK": "Kortkode",
+              "cs-CZ": "Kód karty",
+              "ar-EG": "رمز البطاقة",
+              "zh-CN": "卡号",
+              "zh-TW": "卡號"
+            },
+            "nullable": true,
+            "rules": {
+              "requiredWhen": {
+                "column": "method",
+                "in": [
+                  "gift_card"
+                ]
+              }
+            }
+          },
+          {
+            "ref": "card_id",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Gift card",
+              "de-DE": "Geschenkkarte",
+              "fr-FR": "Carte cadeau",
+              "da-DK": "Gavekort",
+              "cs-CZ": "Dárková karta",
+              "ar-EG": "بطاقة هدية",
+              "zh-CN": "礼品卡",
+              "zh-TW": "禮品卡"
+            },
+            "rules": {
+              "addOnLink": {
+                "addOn": "offers",
+                "table": "gift_cards"
+              },
+              "lookup": {
+                "from": "card_code",
+                "table": {
+                  "addOn": "offers",
+                  "table": "gift_cards"
+                },
+                "column": "code",
+                "where": [
+                  {
+                    "column": "status",
+                    "eq": "active"
+                  }
+                ],
+                "held": "recipient_email"
+              }
+            }
+          },
+          {
+            "ref": "card_balance_after",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Left on the card",
+              "de-DE": "Restguthaben",
+              "fr-FR": "Reste sur la carte",
+              "da-DK": "Tilbage på kortet",
+              "cs-CZ": "Zůstatek na kartě",
+              "ar-EG": "المتبقي على البطاقة",
+              "zh-CN": "卡内余额",
+              "zh-TW": "卡內餘額"
+            }
+          },
+          {
             "ref": "refunded",
             "type": "decimal",
             "scale": "currency",
@@ -6712,6 +7545,64 @@
               "zh-TW": "已退款"
             },
             "default": 0
+          },
+          {
+            "ref": "refund_rows",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Refunded with its sale",
+              "de-DE": "Mit dem Verkauf erstattet",
+              "fr-FR": "Remboursé avec la vente",
+              "da-DK": "Refunderet med salget",
+              "cs-CZ": "Vráceno s prodejem",
+              "ar-EG": "مسترد مع البيع",
+              "zh-CN": "随销售退款",
+              "zh-TW": "隨銷售退款"
+            },
+            "rules": {
+              "rollup": {
+                "from": "purchase_refunds",
+                "via": "payment_id",
+                "sum": "counted"
+              }
+            }
+          },
+          {
+            "ref": "card_part",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Paid by gift card",
+              "de-DE": "Mit Geschenkkarte bezahlt",
+              "fr-FR": "Payé par carte cadeau",
+              "da-DK": "Betalt med gavekort",
+              "cs-CZ": "Zaplaceno dárkovou kartou",
+              "ar-EG": "مدفوع ببطاقة هدية",
+              "zh-CN": "礼品卡支付",
+              "zh-TW": "禮物卡支付"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "eq": [
+                      "method",
+                      "gift_card"
+                    ]
+                  },
+                  {
+                    "coalesce": [
+                      "amount",
+                      0
+                    ]
+                  },
+                  0
+                ]
+              }
+            }
           },
           {
             "ref": "kept",
@@ -6740,16 +7631,36 @@
                   {
                     "sub": [
                       0,
-                      "amount"
+                      {
+                        "coalesce": [
+                          "amount",
+                          0
+                        ]
+                      }
                     ]
                   },
                   {
                     "sub": [
-                      "amount",
                       {
                         "coalesce": [
-                          "refunded",
+                          "amount",
                           0
+                        ]
+                      },
+                      {
+                        "add": [
+                          {
+                            "coalesce": [
+                              "refunded",
+                              0
+                            ]
+                          },
+                          {
+                            "coalesce": [
+                              "refund_rows",
+                              0
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -6782,11 +7693,26 @@
                       "given_back"
                     ]
                   },
-                  "amount",
                   {
                     "coalesce": [
-                      "refunded",
+                      "amount",
                       0
+                    ]
+                  },
+                  {
+                    "add": [
+                      {
+                        "coalesce": [
+                          "refunded",
+                          0
+                        ]
+                      },
+                      {
+                        "coalesce": [
+                          "refund_rows",
+                          0
+                        ]
+                      }
                     ]
                   }
                 ]
@@ -6809,6 +7735,295 @@
             },
             "nullable": true,
             "unique": true
+          }
+        ]
+      },
+      {
+        "ref": "purchase_refunds",
+        "keep": {
+          "law": "tax"
+        },
+        "label": {
+          "en-US": "Refund of a sale",
+          "de-DE": "Erstattung eines Verkaufs",
+          "fr-FR": "Remboursement d'une vente",
+          "da-DK": "Refusion af et salg",
+          "cs-CZ": "Vrácení prodeje",
+          "ar-EG": "استرداد عملية بيع",
+          "zh-CN": "销售退款",
+          "zh-TW": "銷售退款"
+        },
+        "labelPlural": {
+          "en-US": "Refunds of sales",
+          "de-DE": "Erstattungen von Verkäufen",
+          "fr-FR": "Remboursements de ventes",
+          "da-DK": "Refusioner af salg",
+          "cs-CZ": "Vrácení prodejů",
+          "ar-EG": "استردادات المبيعات",
+          "zh-CN": "销售退款",
+          "zh-TW": "銷售退款"
+        },
+        "columns": [
+          {
+            "ref": "id",
+            "type": "int",
+            "role": "pk"
+          },
+          {
+            "ref": "payment_id",
+            "type": "fk",
+            "references": "payments",
+            "label": {
+              "en-US": "Payment",
+              "de-DE": "Zahlung",
+              "fr-FR": "Paiement",
+              "da-DK": "Betaling",
+              "cs-CZ": "Platba",
+              "ar-EG": "الدفعة",
+              "zh-CN": "付款",
+              "zh-TW": "付款"
+            },
+            "index": true
+          },
+          {
+            "ref": "method",
+            "type": "enum",
+            "enum": [
+              "online",
+              "gift_card",
+              "cash",
+              "card"
+            ],
+            "label": {
+              "en-US": "Method",
+              "de-DE": "Zahlungsart",
+              "fr-FR": "Moyen de paiement",
+              "da-DK": "Betalingsmåde",
+              "cs-CZ": "Způsob platby",
+              "ar-EG": "طريقة الدفع",
+              "zh-CN": "支付方式",
+              "zh-TW": "付款方式"
+            },
+            "rules": {
+              "copy": {
+                "via": "payment_id",
+                "from": "method",
+                "mode": "always"
+              },
+              "enumLabels": {
+                "labels": {
+                  "online": {
+                    "en-US": "Online",
+                    "de-DE": "Online",
+                    "fr-FR": "En ligne",
+                    "da-DK": "Online",
+                    "cs-CZ": "Online",
+                    "ar-EG": "عبر الإنترنت",
+                    "zh-CN": "在线",
+                    "zh-TW": "線上"
+                  },
+                  "gift_card": {
+                    "en-US": "Gift card",
+                    "de-DE": "Geschenkkarte",
+                    "fr-FR": "Carte cadeau",
+                    "da-DK": "Gavekort",
+                    "cs-CZ": "Dárková karta",
+                    "ar-EG": "بطاقة هدية",
+                    "zh-CN": "礼品卡",
+                    "zh-TW": "禮品卡"
+                  },
+                  "cash": {
+                    "en-US": "Cash",
+                    "de-DE": "Bar",
+                    "fr-FR": "Espèces",
+                    "da-DK": "Kontant",
+                    "cs-CZ": "Hotově",
+                    "ar-EG": "نقدًا",
+                    "zh-CN": "现金",
+                    "zh-TW": "現金"
+                  },
+                  "card": {
+                    "en-US": "Card",
+                    "de-DE": "Karte",
+                    "fr-FR": "Carte",
+                    "da-DK": "Kort",
+                    "cs-CZ": "Kartou",
+                    "ar-EG": "بطاقة",
+                    "zh-CN": "银行卡",
+                    "zh-TW": "信用卡"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "ref": "amount",
+            "type": "decimal",
+            "scale": "currency",
+            "label": {
+              "en-US": "Amount",
+              "de-DE": "Betrag",
+              "fr-FR": "Montant",
+              "da-DK": "Beløb",
+              "cs-CZ": "Částka",
+              "ar-EG": "المبلغ",
+              "zh-CN": "金额",
+              "zh-TW": "金額"
+            },
+            "rules": {
+              "validation": {
+                "min": 0.01
+              }
+            }
+          },
+          {
+            "ref": "automatic",
+            "type": "bool",
+            "default": false,
+            "label": {
+              "en-US": "Refunded automatically",
+              "de-DE": "Automatisch erstattet",
+              "fr-FR": "Remboursé automatiquement",
+              "da-DK": "Refunderet automatisk",
+              "cs-CZ": "Vráceno automaticky",
+              "ar-EG": "مسترد تلقائيًا",
+              "zh-CN": "自动退款",
+              "zh-TW": "自動退款"
+            }
+          },
+          {
+            "ref": "refund_state",
+            "type": "enum",
+            "enum": [
+              "asked",
+              "pending",
+              "done",
+              "not-sent"
+            ],
+            "label": {
+              "en-US": "Refund",
+              "de-DE": "Erstattung",
+              "fr-FR": "Remboursement",
+              "da-DK": "Refusion",
+              "cs-CZ": "Vrácení",
+              "ar-EG": "استرداد",
+              "zh-CN": "退款",
+              "zh-TW": "退款"
+            },
+            "nullable": true,
+            "rules": {
+              "enumLabels": {
+                "labels": {
+                  "asked": {
+                    "en-US": "Asked",
+                    "de-DE": "Angefragt",
+                    "fr-FR": "Demandé",
+                    "da-DK": "Anmodet",
+                    "cs-CZ": "Vyžádáno",
+                    "ar-EG": "مطلوب",
+                    "zh-CN": "已申请",
+                    "zh-TW": "已申請"
+                  },
+                  "pending": {
+                    "en-US": "On its way",
+                    "de-DE": "Unterwegs",
+                    "fr-FR": "En cours",
+                    "da-DK": "På vej",
+                    "cs-CZ": "Na cestě",
+                    "ar-EG": "في الطريق",
+                    "zh-CN": "处理中",
+                    "zh-TW": "處理中"
+                  },
+                  "done": {
+                    "en-US": "Refunded",
+                    "de-DE": "Erstattet",
+                    "fr-FR": "Remboursé",
+                    "da-DK": "Refunderet",
+                    "cs-CZ": "Vráceno",
+                    "ar-EG": "المُسترد",
+                    "zh-CN": "已退款",
+                    "zh-TW": "已退款"
+                  },
+                  "not-sent": {
+                    "en-US": "Not sent",
+                    "de-DE": "Nicht gesendet",
+                    "fr-FR": "Non envoyé",
+                    "da-DK": "Ikke sendt",
+                    "cs-CZ": "Neodesláno",
+                    "ar-EG": "لم يُرسل",
+                    "zh-CN": "未发送",
+                    "zh-TW": "未寄送"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "ref": "provider_ref",
+            "type": "text",
+            "maxLength": 255,
+            "label": {
+              "en-US": "Refund reference",
+              "de-DE": "Erstattungsreferenz",
+              "fr-FR": "Référence du remboursement",
+              "da-DK": "Refusionsreference",
+              "cs-CZ": "Reference vrácení",
+              "ar-EG": "مرجع الاسترداد",
+              "zh-CN": "退款参考号",
+              "zh-TW": "退款參考編號"
+            },
+            "nullable": true
+          },
+          {
+            "ref": "counted",
+            "type": "decimal",
+            "scale": "currency",
+            "nullable": true,
+            "label": {
+              "en-US": "Counted",
+              "de-DE": "Gezählt",
+              "fr-FR": "Compté",
+              "da-DK": "Medregnet",
+              "cs-CZ": "Započteno",
+              "ar-EG": "محسوب",
+              "zh-CN": "已计入",
+              "zh-TW": "已計入"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "eq": [
+                      "refund_state",
+                      "not-sent"
+                    ]
+                  },
+                  0,
+                  "amount"
+                ]
+              }
+            }
+          },
+          {
+            "ref": "made_at",
+            "type": "timestamptz",
+            "label": {
+              "en-US": "Made",
+              "de-DE": "Erstellt",
+              "fr-FR": "Effectué",
+              "da-DK": "Foretaget",
+              "cs-CZ": "Provedeno",
+              "ar-EG": "تمّ في",
+              "zh-CN": "办理时间",
+              "zh-TW": "辦理時間"
+            },
+            "nullable": true,
+            "rules": {
+              "stamp": {
+                "set": "now",
+                "on": "create"
+              }
+            }
           }
         ]
       },
@@ -10310,6 +11525,9 @@
                   "control": "stepper"
                 },
                 {
+                  "column": "what"
+                },
+                {
                   "column": "service_id",
                   "control": "reference"
                 },
@@ -10410,6 +11628,7 @@
         "table:@payments:read",
         "table:@payments:create",
         "table:@payments:update",
+        "table:@purchase_refunds:read",
         "table:@messages:read",
         "table:@messages:create",
         "table:@messages:update",
@@ -11037,7 +12256,8 @@
     }
   ],
   "publicKeys": {
-    "link": {}
+    "link": {},
+    "sale": {}
   },
   "publicAccess": [
     {
@@ -11073,7 +12293,8 @@
           "review_requests"
         ],
         "stamp": "forgotten_at",
-        "links": true
+        "links": true,
+        "copies": true
       }
     },
     {
@@ -11091,6 +12312,7 @@
         "code",
         "service_id",
         "team_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -11107,6 +12329,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11119,7 +12342,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "filters": [
         {
@@ -11143,6 +12367,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -11159,6 +12384,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11171,7 +12397,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "filters": [
         {
@@ -11195,6 +12422,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -11211,6 +12439,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11223,7 +12452,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -11256,6 +12486,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -11272,6 +12503,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11284,7 +12516,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "starts_at",
@@ -11311,6 +12544,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -11327,6 +12561,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11339,7 +12574,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "pay_started",
@@ -11373,6 +12609,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -11389,6 +12626,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11401,7 +12639,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "google_pressed"
@@ -11435,6 +12674,226 @@
         "day",
         "state"
       ]
+    },
+    {
+      "table": "waitlist",
+      "methods": [
+        "PATCH"
+      ],
+      "level": "verified",
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "select": [
+        "id",
+        "state"
+      ],
+      "writable": [
+        "state"
+      ],
+      "writableValues": {
+        "state": [
+          "closed"
+        ]
+      },
+      "writableWhen": {
+        "state": [
+          "waiting"
+        ]
+      }
+    },
+    {
+      "table": "bookings",
+      "level": "verified",
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "methods": [
+        "PATCH"
+      ],
+      "select": [
+        "id",
+        "code",
+        "service_id",
+        "picked_by_anyone",
+        "name",
+        "email",
+        "phone",
+        "language",
+        "note",
+        "channel",
+        "starts_at",
+        "minutes",
+        "free_until",
+        "state",
+        "price",
+        "pay_mode",
+        "deposit",
+        "discount",
+        "asked",
+        "paid",
+        "card_paid",
+        "pay_due",
+        "refunded",
+        "deposit_link",
+        "link_until",
+        "pay_until",
+        "offer_until",
+        "late_cancel",
+        "cancelled_by",
+        "cancel_reason",
+        "lapsed_by",
+        "link_expires",
+        "reviewed_at",
+        "customer_proved",
+        "made_proved"
+      ],
+      "writable": [
+        "state",
+        "lapsed_by"
+      ],
+      "writableValues": {
+        "state": [
+          "lapsed"
+        ],
+        "lapsed_by": [
+          "guest"
+        ]
+      },
+      "writableWhen": {
+        "state": [
+          "offered"
+        ]
+      }
+    },
+    {
+      "table": "bookings",
+      "level": "verified",
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "methods": [
+        "PATCH"
+      ],
+      "select": [
+        "id",
+        "code",
+        "service_id",
+        "picked_by_anyone",
+        "name",
+        "email",
+        "phone",
+        "language",
+        "note",
+        "channel",
+        "starts_at",
+        "minutes",
+        "free_until",
+        "state",
+        "price",
+        "pay_mode",
+        "deposit",
+        "discount",
+        "asked",
+        "paid",
+        "card_paid",
+        "pay_due",
+        "refunded",
+        "deposit_link",
+        "link_until",
+        "pay_until",
+        "offer_until",
+        "late_cancel",
+        "cancelled_by",
+        "cancel_reason",
+        "lapsed_by",
+        "link_expires",
+        "reviewed_at",
+        "customer_proved",
+        "made_proved"
+      ],
+      "writable": [
+        "state"
+      ],
+      "writableValues": {
+        "state": [
+          "booked"
+        ]
+      },
+      "writableWhen": {
+        "state": [
+          "offered"
+        ],
+        "offer_until": "from-now"
+      }
+    },
+    {
+      "table": "bookings",
+      "level": "verified",
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "methods": [
+        "PATCH"
+      ],
+      "select": [
+        "id",
+        "code",
+        "service_id",
+        "picked_by_anyone",
+        "name",
+        "email",
+        "phone",
+        "language",
+        "note",
+        "channel",
+        "starts_at",
+        "minutes",
+        "free_until",
+        "state",
+        "price",
+        "pay_mode",
+        "deposit",
+        "discount",
+        "asked",
+        "paid",
+        "card_paid",
+        "pay_due",
+        "refunded",
+        "deposit_link",
+        "link_until",
+        "pay_until",
+        "offer_until",
+        "late_cancel",
+        "cancelled_by",
+        "cancel_reason",
+        "lapsed_by",
+        "link_expires",
+        "reviewed_at",
+        "customer_proved",
+        "made_proved"
+      ],
+      "writable": [
+        "state"
+      ],
+      "writableValues": {
+        "state": [
+          "paying"
+        ]
+      },
+      "defaults": {
+        "pay_started": true
+      },
+      "writableWhen": {
+        "state": [
+          "offered"
+        ],
+        "offer_until": "from-now"
+      }
     },
     {
       "table": "settings",
@@ -11654,6 +13113,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "language",
         "channel",
         "starts_at",
@@ -11666,6 +13126,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11677,7 +13138,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "service_id",
@@ -11689,7 +13151,8 @@
         "language",
         "note",
         "channel",
-        "client_key"
+        "client_key",
+        "no_review_request"
       ],
       "writableValues": {
         "channel": [
@@ -11723,6 +13186,24 @@
       "level": "verified",
       "clientKey": "client_key",
       "dryRun": true,
+      "consent": {
+        "column": "no_review_request",
+        "purpose": "surveys",
+        "means": "no",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Don't send me a review request after my visit",
+            "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+            "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+            "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+            "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+            "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+            "zh-CN": "到访后请勿向我发送评价请求",
+            "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
       "maxOpen": {
         "column": "state",
         "values": [
@@ -11740,6 +13221,18 @@
       ],
       "defaults": {
         "door": "at_studio"
+      },
+      "children": {
+        "booking_codes": {
+          "via": "booking_id",
+          "writable": [
+            "typed"
+          ],
+          "select": [
+            "id"
+          ],
+          "max": 2
+        }
       },
       "anonymous": {
         "perValue": {
@@ -11765,6 +13258,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "language",
         "channel",
         "starts_at",
@@ -11777,6 +13271,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11788,7 +13283,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "service_id",
@@ -11800,7 +13296,8 @@
         "language",
         "note",
         "channel",
-        "client_key"
+        "client_key",
+        "no_review_request"
       ],
       "writableValues": {
         "channel": [
@@ -11834,6 +13331,24 @@
       "level": "verified",
       "clientKey": "client_key",
       "dryRun": true,
+      "consent": {
+        "column": "no_review_request",
+        "purpose": "surveys",
+        "means": "no",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Don't send me a review request after my visit",
+            "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+            "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+            "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+            "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+            "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+            "zh-CN": "到访后请勿向我发送评价请求",
+            "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
       "maxOpen": {
         "column": "state",
         "values": [
@@ -11864,6 +13379,32 @@
         "ask_online": true,
         "pay_started": true
       },
+      "children": {
+        "booking_codes": {
+          "via": "booking_id",
+          "writable": [
+            "typed"
+          ],
+          "select": [
+            "id"
+          ],
+          "max": 2
+        },
+        "payments": {
+          "via": "booking_id",
+          "writable": [
+            "card_code"
+          ],
+          "defaults": {
+            "method": "gift_card"
+          },
+          "select": [
+            "id",
+            "amount"
+          ],
+          "max": 1
+        }
+      },
       "anonymous": {
         "perValue": {
           "columns": [
@@ -11888,6 +13429,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "language",
         "channel",
         "starts_at",
@@ -11900,6 +13442,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -11911,7 +13454,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "service_id",
@@ -11923,7 +13467,8 @@
         "language",
         "note",
         "channel",
-        "client_key"
+        "client_key",
+        "no_review_request"
       ],
       "writableValues": {
         "channel": [
@@ -11957,6 +13502,24 @@
       "level": "verified",
       "clientKey": "client_key",
       "dryRun": true,
+      "consent": {
+        "column": "no_review_request",
+        "purpose": "surveys",
+        "means": "no",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Don't send me a review request after my visit",
+            "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+            "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+            "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+            "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+            "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+            "zh-CN": "到访后请勿向我发送评价请求",
+            "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
       "maxOpen": {
         "column": "state",
         "values": [
@@ -11981,6 +13544,18 @@
       ],
       "defaults": {
         "door": "deposits_off"
+      },
+      "children": {
+        "booking_codes": {
+          "via": "booking_id",
+          "writable": [
+            "typed"
+          ],
+          "select": [
+            "id"
+          ],
+          "max": 2
+        }
       },
       "anonymous": {
         "perValue": {
@@ -12062,6 +13637,174 @@
       }
     },
     {
+      "table": "purchases",
+      "methods": [
+        "POST"
+      ],
+      "select": [
+        "id",
+        "code",
+        "state",
+        "total",
+        "due",
+        "pay_until"
+      ],
+      "requireSetting": [
+        {
+          "table": "settings",
+          "column": "online_booking"
+        },
+        {
+          "table": "settings",
+          "column": "online_payments",
+          "in": [
+            "on"
+          ]
+        }
+      ],
+      "requirePayments": "on",
+      "pay": true,
+      "humanCheck": true,
+      "level": "verified",
+      "clientKey": "client_key",
+      "shareLink": "link_token",
+      "writable": [
+        "buyer_name",
+        "buyer_email",
+        "language",
+        "client_key"
+      ],
+      "requires": [
+        "buyer_name",
+        "buyer_email"
+      ],
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id",
+        "optional": true
+      },
+      "anonymous": {
+        "perValue": {
+          "columns": [
+            "buyer_email"
+          ],
+          "n": 3
+        },
+        "perIpHour": 3,
+        "perKeyHour": 30,
+        "plainText": [
+          "buyer_name"
+        ]
+      },
+      "children": {
+        "purchase_lines": {
+          "via": "purchase_id",
+          "writable": [
+            "gift_amount_id",
+            "to_name",
+            "to_email",
+            "message",
+            "send_on"
+          ],
+          "defaults": {
+            "kind": "card"
+          },
+          "requires": [
+            "gift_amount_id",
+            "to_name",
+            "to_email"
+          ],
+          "select": [
+            "id",
+            "amount"
+          ],
+          "min": 1,
+          "max": 1,
+          "plainText": [
+            "to_name",
+            "message"
+          ]
+        }
+      }
+    },
+    {
+      "table": "purchases",
+      "methods": [
+        "POST"
+      ],
+      "select": [
+        "id",
+        "code",
+        "state",
+        "total",
+        "due",
+        "pay_until"
+      ],
+      "requireSetting": [
+        {
+          "table": "settings",
+          "column": "online_booking"
+        },
+        {
+          "table": "settings",
+          "column": "online_payments",
+          "in": [
+            "on"
+          ]
+        }
+      ],
+      "requirePayments": "on",
+      "pay": true,
+      "humanCheck": true,
+      "level": "verified",
+      "clientKey": "client_key",
+      "shareLink": "link_token",
+      "writable": [
+        "buyer_name",
+        "buyer_email",
+        "language",
+        "client_key"
+      ],
+      "requires": [
+        "buyer_name",
+        "buyer_email"
+      ],
+      "claimedBy": {
+        "table": "customers",
+        "column": "customer_id"
+      },
+      "defaults": {
+        "customer_proved": true
+      },
+      "maxOpen": {
+        "column": "state",
+        "values": [
+          "paying"
+        ],
+        "n": 2
+      },
+      "children": {
+        "purchase_lines": {
+          "via": "purchase_id",
+          "writable": [
+            "pack_id"
+          ],
+          "defaults": {
+            "kind": "pack"
+          },
+          "requires": [
+            "pack_id"
+          ],
+          "select": [
+            "id",
+            "amount"
+          ],
+          "min": 1,
+          "max": 1
+        }
+      }
+    },
+    {
       "table": "bookings",
       "methods": [
         "GET"
@@ -12080,6 +13823,7 @@
         "code",
         "service_id",
         "team_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12096,6 +13840,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12108,7 +13853,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "withhold": {
         "columns": [
@@ -12127,6 +13873,14 @@
     {
       "table": "bookings",
       "key": "link",
+      "kind": "availability",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "table": "bookings",
+      "key": "link",
       "level": "verified",
       "claimedBy": {
         "table": "bookings",
@@ -12139,6 +13893,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12155,6 +13910,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12167,7 +13923,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -12201,6 +13958,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12217,6 +13975,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12229,7 +13988,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "starts_at",
@@ -12257,6 +14017,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12273,6 +14034,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12285,7 +14047,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "pay_started",
@@ -12320,6 +14083,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12336,6 +14100,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12348,7 +14113,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "google_pressed"
@@ -12366,6 +14132,29 @@
       }
     },
     {
+      "table": "purchases",
+      "methods": [
+        "GET"
+      ],
+      "key": "sale",
+      "claim": {
+        "by": "token",
+        "column": "link_token",
+        "expires": "link_expires",
+        "stopped": "link_stopped",
+        "own": true,
+        "address": "buyer_email"
+      },
+      "select": [
+        "id",
+        "code",
+        "state",
+        "total",
+        "due",
+        "pay_until"
+      ]
+    },
+    {
       "table": "bookings",
       "key": "link",
       "level": "verified",
@@ -12380,6 +14169,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12396,6 +14186,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12408,7 +14199,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -12440,6 +14232,7 @@
         "id",
         "code",
         "service_id",
+        "picked_by_anyone",
         "name",
         "email",
         "phone",
@@ -12456,6 +14249,7 @@
         "discount",
         "asked",
         "paid",
+        "card_paid",
         "pay_due",
         "refunded",
         "deposit_link",
@@ -12468,7 +14262,8 @@
         "lapsed_by",
         "link_expires",
         "reviewed_at",
-        "customer_proved"
+        "customer_proved",
+        "made_proved"
       ],
       "writable": [
         "state"
@@ -12553,6 +14348,18 @@
         {
           "table": "purchases",
           "column": "buyer_email",
+          "holds": "email",
+          "via": "customer_id"
+        },
+        {
+          "table": "purchases",
+          "column": "holder_name",
+          "holds": "name",
+          "via": "customer_id"
+        },
+        {
+          "table": "purchases",
+          "column": "holder_email",
           "holds": "email",
           "via": "customer_id"
         },
@@ -12688,7 +14495,36 @@
         "receipt": "engine",
         "instantOnly": true,
         "refunds": {
-          "model": "column"
+          "model": "rows",
+          "table": "purchase_refunds",
+          "payment": "payment_id",
+          "amount": "amount",
+          "when": [
+            {
+              "column": "method",
+              "eq": "online"
+            }
+          ],
+          "providerRef": "provider_ref",
+          "state": "refund_state",
+          "auto": {
+            "values": {
+              "automatic": true
+            }
+          }
+        },
+        "refundOn": {
+          "moves": [
+            {
+              "from": [
+                "paid"
+              ],
+              "to": "cancelled",
+              "by": [
+                "staff"
+              ]
+            }
+          ]
         }
       }
     ]

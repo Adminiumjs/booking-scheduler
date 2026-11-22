@@ -28,7 +28,9 @@
 import { setting } from "./tables.ts";
 
 export const LINK_KEY = "link";
-export const PUBLIC_KEYS = { [LINK_KEY]: {} };
+/** One sale of a gift card or a pack, for the way back from the pay page: a key opens one kind of row by its link. */
+export const SALE_KEY = "sale";
+export const PUBLIC_KEYS = { [LINK_KEY]: {}, [SALE_KEY]: {} };
 
 /** What a guest sees of a booking: never the staff note, the retry key or the link's code. */
 export const BOOKING_SELECT = [
@@ -36,6 +38,7 @@ export const BOOKING_SELECT = [
   "code",
   "service_id",
   "team_id",
+  "picked_by_anyone",
   "name",
   "email",
   "phone",
@@ -52,6 +55,7 @@ export const BOOKING_SELECT = [
   "discount",
   "asked",
   "paid",
+  "card_paid",
   "pay_due",
   "refunded",
   "deposit_link",
@@ -65,6 +69,7 @@ export const BOOKING_SELECT = [
   "link_expires",
   "reviewed_at",
   "customer_proved",
+  "made_proved",
 ];
 
 /** What making a booking answers: an endpoint anyone may call selects nothing personal. */
@@ -137,7 +142,32 @@ const PUBLIC_FACE = [
 ];
 
 /** What every door takes from the guest. `channel` is their word, a statistic only (MOD-16). */
-const TYPED = ["service_id", "team_id", "starts_at", "name", "email", "phone", "language", "note", "channel", "client_key"];
+const TYPED = ["service_id", "team_id", "starts_at", "name", "email", "phone", "language", "note", "channel", "client_key", "no_review_request"];
+
+/** The box on the booking form: ticked, the person's standing "no" to review requests, with the sentence they saw (cQ10). */
+const NO_REVIEWS = {
+  column: "no_review_request",
+  purpose: "surveys",
+  means: "no",
+  wording: {
+    version: 1,
+    text: {
+      "en-US": "Don't send me a review request after my visit",
+      "de-DE": "Senden Sie mir nach meinem Besuch keine Bewertungsanfrage",
+      "fr-FR": "Ne m'envoyez pas de demande d'avis après ma visite",
+      "da-DK": "Send mig ikke en anmodning om anmeldelse efter mit besøg",
+      "cs-CZ": "Neposílejte mi po návštěvě žádost o recenzi",
+      "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
+      "zh-CN": "到访后请勿向我发送评价请求",
+      "zh-TW": "到訪後請勿傳送評價邀請給我",
+    },
+  },
+};
+
+/** A pack or a code the guest holds, sent as `held:<id>`, spent inside the save (CR-OFF-1, MON-3). */
+const CODES = { via: "booking_id", writable: ["typed"], select: ["id"], max: 2 };
+/** A gift card paying what is due online (R2). Never a figure: the card and the booking say what it pays. */
+const CARD = { via: "booking_id", writable: ["card_code"], defaults: { method: "gift_card" }, select: ["id", "amount"], max: 1 };
 
 /** A guest met for the first time is made from this booking; one already known is found, and never changed. */
 const WHO = {
@@ -148,6 +178,7 @@ const WHO = {
   level: "verified",
   clientKey: "client_key",
   dryRun: true,
+  consent: NO_REVIEWS,
   // Signed in: at most three visits ahead (cQ4).
   maxOpen: { column: "state", values: ["booked", "paying"], n: 3, upcoming: "starts_at" },
 };
@@ -171,6 +202,7 @@ const door = (more: Record<string, unknown>) => ({
 const DOOR_AT_STUDIO = door({
   requireSetting: [setting("online_booking")],
   defaults: { door: "at_studio" },
+  children: { booking_codes: CODES },
   anonymous: { perValue: { columns: ["email", "phone"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
 });
 
@@ -180,6 +212,7 @@ const DOOR_WITH_MONEY = door({
   requirePayments: "on",
   pay: true,
   defaults: { door: "with_money", state: "paying", ask_online: true, pay_started: true },
+  children: { booking_codes: CODES, payments: CARD },
   anonymous: { perValue: { columns: ["email", "phone"], n: 3 }, perIpHour: 3, perKeyHour: 40, plainText: ["name"] },
 });
 
@@ -187,6 +220,7 @@ const DOOR_WITH_MONEY = door({
 const DOOR_DEPOSITS_OFF = door({
   requireSetting: [setting("online_booking"), { ...setting("online_payments"), in: ["off"] }],
   defaults: { door: "deposits_off" },
+  children: { booking_codes: CODES },
   anonymous: { perValue: { columns: ["email", "phone"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
 });
 
@@ -206,6 +240,43 @@ const JOIN_WAITLIST = {
   anonymous: { perValue: { columns: ["email"], n: 3 }, perIpHour: 4, perKeyHour: 60, plainText: ["name"] },
 };
 
+const SALE_SELECT = ["id", "code", "state", "total", "due", "pay_until"];
+const SALE_DOOR = {
+  table: "purchases",
+  methods: ["POST"],
+  select: SALE_SELECT,
+  requireSetting: [setting("online_booking"), { ...setting("online_payments"), in: ["on"] }],
+  requirePayments: "on",
+  pay: true,
+  humanCheck: true,
+  level: "verified",
+  clientKey: "client_key",
+  // The way back from the pay page reads the sale through its own link: a guest has no other session.
+  shareLink: "link_token",
+};
+/** A gift card, by anyone (G12). The amount is the studio's own row; the page names which. */
+const BUY_CARD = {
+  ...SALE_DOOR,
+  writable: ["buyer_name", "buyer_email", "language", "client_key"],
+  requires: ["buyer_name", "buyer_email"],
+  claimedBy: { table: "customers", column: "customer_id", optional: true },
+  anonymous: { perValue: { columns: ["buyer_email"], n: 3 }, perIpHour: 3, perKeyHour: 30, plainText: ["buyer_name"] },
+  children: {
+    purchase_lines: { via: "purchase_id", writable: ["gift_amount_id", "to_name", "to_email", "message", "send_on"], defaults: { kind: "card" }, requires: ["gift_amount_id", "to_name", "to_email"], select: ["id", "amount"], min: 1, max: 1, plainText: ["to_name", "message"] },
+  },
+};
+/** A pack, by a signed-in customer only: it needs a holder who proved their address (G13). */
+const BUY_PACK = {
+  ...SALE_DOOR,
+  // Who the receipt goes to. Who holds the pack is the signed-in customer's own row (`holder_*`), whatever is typed here.
+  writable: ["buyer_name", "buyer_email", "language", "client_key"],
+  requires: ["buyer_name", "buyer_email"],
+  claimedBy: { table: "customers", column: "customer_id" },
+  defaults: { customer_proved: true },
+  maxOpen: { column: "state", values: ["paying"], n: 2 },
+  children: { purchase_lines: { via: "purchase_id", writable: ["pack_id"], defaults: { kind: "pack" }, requires: ["pack_id"], select: ["id", "amount"], min: 1, max: 1 } },
+};
+
 /** Cancelling a booked visit: the table's rule says whether it is late. */
 const OWN_CANCEL = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["cancelled"] }, defaults: { cancelled_by: "customer" }, writableWhen: { state: ["booked"] } };
 /** Moving it: while it is booked and outside the cancel window (BOOK-7). The guard judges the new time as a guest's. */
@@ -219,6 +290,13 @@ const OWN_MOVE = {
 const OWN_PAY = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["pay_started", "state"], writableValues: { pay_started: [true], state: ["booked"] }, writableWhen: { state: ["paying"] } };
 /** Pressed "Review us on Google". */
 const OWN_GOOGLE = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["google_pressed"], writableValues: { google_pressed: [true] }, writableWhen: { state: ["arrived", "done"] } };
+
+/** Turning an offer down, so its waiting-list row can close (cQ29). */
+const LET_OFFER_GO = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state", "lapsed_by"], writableValues: { state: ["lapsed"], lapsed_by: ["guest"] }, writableWhen: { state: ["offered"] } };
+
+/** Taking an offer while it is open: as it is, or through paying when the service asks for money (MOD-8). */
+const TAKE_OFFER = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["booked"] }, writableWhen: { state: ["offered"], offer_until: "from-now" } };
+const TAKE_OFFER_PAYING = { methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["paying"] }, defaults: { pay_started: true }, writableWhen: { state: ["offered"], offer_until: "from-now" } };
 
 const SIGNED_IN = { level: "verified", claimedBy: { table: "customers", column: "customer_id" } };
 /** The one entry that opens the link's row. */
@@ -238,8 +316,9 @@ export const PUBLIC_ACCESS = [
     writable: ["name", "phone", "language", "review_requests"],
     claim: { verify: "email-link", email: "email" },
     humanCheck: true,
-    // "Delete my details" also stops every link of their bookings. T13's rule cancels the visits ahead (cQ29).
-    forget: { columns: ["email", "name", "phone", "review_requests"], stamp: "forgotten_at", links: true },
+    // "Delete my details" also stops every link of their bookings and blanks what those rows copied of them. The page cancels
+    // the visits ahead first, and says so (cQ29).
+    forget: { columns: ["email", "name", "phone", "review_requests"], stamp: "forgotten_at", links: true, copies: true },
   },
   { table: "bookings", methods: ["GET"], ...SIGNED_IN, select: BOOKING_SELECT, filters: [{ column: "who_hidden", op: "eq", value: 0 }] },
   { table: "bookings", methods: ["GET"], ...SIGNED_IN, select: CHANGED_SELECT, filters: [{ column: "who_hidden", op: "eq", value: 1 }] },
@@ -248,6 +327,11 @@ export const PUBLIC_ACCESS = [
   { table: "bookings", ...SIGNED_IN, ...OWN_PAY },
   { table: "bookings", ...SIGNED_IN, ...OWN_GOOGLE },
   { table: "waitlist", methods: ["GET"], ...SIGNED_IN, select: ["id", "service_id", "team_id", "day", "state"] },
+  // "Take me off the list" (G8). An open offer is let go first, which puts its row back to waiting.
+  { table: "waitlist", methods: ["PATCH"], ...SIGNED_IN, select: ["id", "state"], writable: ["state"], writableValues: { state: ["closed"] }, writableWhen: { state: ["waiting"] } },
+  { table: "bookings", ...SIGNED_IN, ...LET_OFFER_GO },
+  { table: "bookings", ...SIGNED_IN, ...TAKE_OFFER },
+  { table: "bookings", ...SIGNED_IN, ...TAKE_OFFER_PAYING },
 
   // ── the studio's public face ─────────────────────────────────────────────────
   ...PUBLIC_FACE,
@@ -257,15 +341,21 @@ export const PUBLIC_ACCESS = [
   DOOR_WITH_MONEY,
   DOOR_DEPOSITS_OFF,
   JOIN_WAITLIST,
+  BUY_CARD,
+  BUY_PACK,
 
   // ── one booking, by its own link ─────────────────────────────────────────────
   { table: "bookings", methods: ["GET"], ...OWN_LINK_CLAIM, select: BOOKING_SELECT, ...NOT_YET_WHO },
+  // Free or full, for moving this booking: its own time is not counted against it (L1a-F5).
+  { table: "bookings", key: LINK_KEY, kind: "availability", methods: ["GET"] },
   { table: "bookings", ...OWN_LINK, ...OWN_CANCEL },
   { table: "bookings", ...OWN_LINK, ...OWN_MOVE },
   { table: "bookings", ...OWN_LINK, ...OWN_PAY },
   { table: "bookings", ...OWN_LINK, ...OWN_GOOGLE },
+  // A sale, by its own link: only whether it was paid, for the way back from the pay page.
+  { table: "purchases", methods: ["GET"], key: SALE_KEY, claim: { by: "token", column: "link_token", expires: "link_expires", stopped: "link_stopped", own: true, address: "buyer_email" }, select: SALE_SELECT },
   // An offer from the waiting list, while it is open: taken as it is, or through paying when the service asks for money,
   // which starts the usual minutes (MOD-8, ACC-4). The table's moves say which fits.
-  { table: "bookings", ...OWN_LINK, methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["booked"] }, writableWhen: { state: ["offered"], offer_until: "from-now" } },
-  { table: "bookings", ...OWN_LINK, methods: ["PATCH"], select: CHANGED_SELECT, writable: ["state"], writableValues: { state: ["paying"] }, defaults: { pay_started: true }, writableWhen: { state: ["offered"], offer_until: "from-now" } },
+  { table: "bookings", ...OWN_LINK, ...TAKE_OFFER },
+  { table: "bookings", ...OWN_LINK, ...TAKE_OFFER_PAYING },
 ];

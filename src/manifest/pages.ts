@@ -235,7 +235,7 @@ const SPECS: PageSpec[] = [
     icon: "package",
     order: 5,
     table: "pack_products",
-    config: form([title("name"), money("price"), f("uses", { control: "stepper" }), ref("service_id"), ref("category_id"), f("valid_days", { control: "stepper" }), toggle("active"), f("position", { control: "stepper" })]),
+    config: form([title("name"), money("price"), f("uses", { control: "stepper" }), f("what"), ref("service_id"), ref("category_id"), f("valid_days", { control: "stepper" }), toggle("active"), f("position", { control: "stepper" })]),
   },
 ];
 
