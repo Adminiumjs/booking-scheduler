@@ -29,6 +29,12 @@ import {
   type DemoLabels,
 } from './src/demo-types.ts';
 
+/**
+ * `demo.json` with the card's optional `note`. Typed here, as the website types
+ * it, because `demo-types.ts` must stay byte-identical across the fleet.
+ */
+export type DemoDocument = DemoJson & { note?: { labels: DemoLabels } };
+
 interface Labelled {
   id: string;
   labelKey: string;
@@ -53,12 +59,14 @@ export interface DemoEmitOptions {
   /** `reset: { labelKey }` names the reset the app's way; `true` leaves it to the card. */
   clock?: { advance: Labelled[]; reset: boolean | { labelKey: string } };
   addOns?: { key: string; labelKey: string }[];
+  /** One line the card prints under its header, in all eight languages. */
+  note?: { labelKey: string };
   /** `{ 'en-US': { key: string, … }, … }` — the app's flattened bundles, all eight. */
   messages: Record<string, Record<string, string>>;
 }
 
 /** The document, as a pure function so a test can assert it without a build. */
-export function buildDemoJson(opts: DemoEmitOptions): DemoJson {
+export function buildDemoJson(opts: DemoEmitOptions): DemoDocument {
   for (const locale of DEMO_LOCALES) {
     if (opts.messages[locale] === undefined) {
       throw new Error(`demo.json: the app ships no ${locale} messages, and the card speaks all eight languages.`);
@@ -107,6 +115,7 @@ export function buildDemoJson(opts: DemoEmitOptions): DemoJson {
           },
         }),
     ...(opts.addOns === undefined ? {} : { addOns: opts.addOns.map((a) => ({ key: a.key, labels: labels(a.labelKey) })) }),
+    ...(opts.note === undefined ? {} : { note: { labels: labels(opts.note.labelKey) } }),
   };
 }
 

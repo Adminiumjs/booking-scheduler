@@ -53,6 +53,12 @@ describe("demo.json", () => {
     expect(doc.clock?.reset).toEqual({ labels: expect.objectContaining({ "en-US": "Back to Tuesday morning" }) });
   });
 
+  it("carries the card's note line in all eight languages", () => {
+    expect(Object.keys(doc.note!.labels).sort()).toEqual([...DEMO_LOCALES].sort());
+    for (const locale of DEMO_LOCALES) expect(doc.note!.labels[locale]).toBe(CARD_MESSAGES[locale]["note.line"]);
+    expect(doc.note!.labels["en-US"]).toBe("Demo: no money moves, no e-mail is sent, no calendar is touched");
+  });
+
   it("names each figure as the sample has it", () => {
     const w = new LumenWorld();
     expect(figureRow("Free times, Gel Manicure, Thu 17 Sep, anyone")[1]).toContain("10 AM");

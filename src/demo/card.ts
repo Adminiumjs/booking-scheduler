@@ -304,6 +304,7 @@ export const DEMO_CARD: Omit<DemoEmitOptions, "messages"> = {
     ],
     reset: { labelKey: "clock.reset" },
   },
+  note: { labelKey: "note.line" },
 };
 
 export const ANCHOR = ANCHOR_DAY;
