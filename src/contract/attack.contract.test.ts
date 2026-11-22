@@ -221,6 +221,19 @@ describe.skipIf(why !== null)(`an attacker at Lumen${why === null ? "" : ` — s
         }
         expect(JSON.stringify([await stand.row("bookings", theirs["id"]), await stand.row("customers", victim["id"])])).toBe(before);
       }, 420_000);
+
+      it("the front desk, with no grant on a sale's personal data, reads none of it", async () => {
+        const lines = ok(await desk.get<{ data: Row[] }>(`${stand.data("purchase_lines")}?limit=200`)).data;
+        const seen = await stand.rows("purchase_lines");
+        expect(seen.some((l) => typeof l["message"] === "string" && typeof l["to_name"] === "string"), "a gift with a message").toBe(true);
+        for (const line of lines) for (const column of ["to_name", "to_email", "message", "sender"]) expect(line[column] ?? null, column).toBeNull();
+        const sales = ok(await desk.get<{ data: Row[] }>(`${stand.data("purchases")}?limit=200`)).data;
+        expect(sales.length).toBeGreaterThan(0);
+        for (const sale of sales) for (const column of ["buyer_name", "buyer_email", "holder_name", "holder_email"]) expect(sale[column] ?? null, column).toBeNull();
+        // The owner holds the grant, and still reads them.
+        const owned = ok(await owner.get<{ data: Row[] }>(`${stand.data("purchase_lines")}?limit=200`)).data;
+        expect(owned.some((l) => typeof l["message"] === "string" && typeof l["to_name"] === "string")).toBe(true);
+      }, 60_000);
     });
   });
 });

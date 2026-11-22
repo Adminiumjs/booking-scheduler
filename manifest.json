@@ -6167,7 +6167,10 @@
               "zh-CN": "购票人",
               "zh-TW": "購票人"
             },
-            "semantic": "name"
+            "semantic": "name",
+            "rules": {
+              "personal": true
+            }
           },
           {
             "ref": "buyer_email",
@@ -6224,6 +6227,7 @@
             "nullable": true,
             "semantic": "name",
             "rules": {
+              "personal": true,
               "copy": {
                 "via": "customer_id",
                 "from": "name",
@@ -7277,7 +7281,10 @@
               "zh-TW": "至"
             },
             "nullable": true,
-            "semantic": "name"
+            "semantic": "name",
+            "rules": {
+              "personal": true
+            }
           },
           {
             "ref": "to_email",
@@ -7316,7 +7323,10 @@
               "zh-CN": "消息",
               "zh-TW": "訊息"
             },
-            "nullable": true
+            "nullable": true,
+            "rules": {
+              "personal": true
+            }
           },
           {
             "ref": "sender",
@@ -7334,6 +7344,7 @@
             },
             "nullable": true,
             "rules": {
+              "personal": true,
               "copy": {
                 "via": "purchase_id",
                 "from": "buyer_name",
