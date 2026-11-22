@@ -153,7 +153,10 @@ export function BookingPanel({ id }: { id: Id }) {
         const word = t(method === "cash" ? "pay.cash" : method === "card" ? "pay.card" : method === "gift_card" ? "pay.giftCard" : "pay.online");
         const provider = method === "online" ? text(taken?.["provider"]) : null;
         const how = provider === null ? word : `${word} · ${provider}`;
-        return t(booking["pay_mode"] === "deposit" ? "pay.paidDeposit" : "pay.paidFull", { amt: fmt.money(line.amount), how });
+        const paidWords = t(booking["pay_mode"] === "deposit" ? "pay.paidDeposit" : "pay.paidFull", { amt: fmt.money(line.amount), how });
+        // Part of it went back: what is held now, and what was returned.
+        const back = num(booking["refunded"]) ?? 0;
+        return back > 0 ? `${paidWords} · ${t("pay.refunded", { amt: fmt.money(back) })}` : paidWords;
       }
       case "kept":
         return t(booking["pay_mode"] === "deposit" ? "pay.kept" : "pay.keptFull", { amt: fmt.money(line.amount) });

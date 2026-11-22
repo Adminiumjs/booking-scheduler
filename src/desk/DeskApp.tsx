@@ -157,7 +157,7 @@ function Shell() {
             </span>
             <span className="lm-brand-text">
               <strong>{studio}</strong>
-              {line !== null && <small>{line}</small>}
+              {line !== null && <small dir="auto">{line}</small>}
             </span>
           </div>
           <div className="lm-nav">
@@ -187,7 +187,7 @@ function Shell() {
         <header className="lm-top">
           <div className="lm-top-title">
             <strong>{t(DESK_NAV.find((n) => n.view === shown)!.labelKey)}</strong>
-            <small>{line === null ? studio : `${studio} · ${line}`}</small>
+            <small dir="auto">{line === null ? studio : `${studio} · ${line}`}</small>
           </div>
           <SearchBox />
           {who.can("bookings", "create") && (
