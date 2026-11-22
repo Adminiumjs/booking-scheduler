@@ -15,11 +15,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { LumenDoor, type Row, type Served } from "../customer/door.ts";
 import { refusalOf, usesLeft } from "../customer/rules.ts";
 import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, until, type Engine } from "./harness.ts";
-import { ADD_ONS, dbName, inbox, num, retryKey, standUp, yes, type Stand } from "./stand.ts";
+import { ADD_ONS, dbName, inbox, isCodeMail, num, retryKey, standUp, yes, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the customer contract must run here, and cannot: ${why}`);
-const PORT_BASE = Number(process.env["CONTRACT_PORT_BASE"] ?? 5310) + 40;
+const PORT_BASE = Number(process.env["CONTRACT_PORT_BASE"] ?? 5310) + 100;
 
 const pdt = (day: string, time: string) => new Date(`${day}T${time}:00-07:00`).toISOString();
 
@@ -93,8 +93,8 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
       const signIn = async (door: LumenDoor, email: string) => {
         const before = (await inbox(stand.server)).length;
         await door.requestSignIn(email, "en-US");
-        const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(email) && /\b\d{6}\b/.test(m.subject)), `the code for ${email}`, 90_000);
-        const code = /\b(\d{6})\b/.exec(mail.subject)?.[1];
+        const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(email) && isCodeMail(m)), `the code for ${email}`, 90_000);
+        const code = /\b(\d{6})\b/.exec(mail.text)?.[1];
         expect(code).toBeTruthy();
         const verified = await door.verifySignIn(email, code!);
         expect(verified.ok).toBe(true);

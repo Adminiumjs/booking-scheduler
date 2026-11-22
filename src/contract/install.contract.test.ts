@@ -14,7 +14,7 @@ import { TABLE_REFS, TABLES } from "../manifest/tables.ts";
 
 const why = missing();
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the install contract must run here, and cannot: ${why}`);
-const PORT_BASE = Number(process.env["CONTRACT_PORT_BASE"] ?? 5310) + 40;
+const PORT_BASE = Number(process.env["CONTRACT_PORT_BASE"] ?? 5310) + 120;
 const pdt = (day: string, time: string) => new Date(`${day}T${time}:00-07:00`).toISOString();
 
 describe.skipIf(why !== null)(`a new studio${why === null ? "" : ` — skipped: ${why}`}`, () => {
