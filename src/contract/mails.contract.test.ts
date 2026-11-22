@@ -18,7 +18,7 @@ import { LumenDoor, type Row, type Served } from "../customer/door.ts";
 import { emailWords } from "../manifest/emails.ts";
 import { LOCALES } from "../manifest/labels.ts";
 import { Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, until, type Engine } from "./harness.ts";
-import { ADD_ONS, inbox, retryKey, standUp, type Mail, type Stand } from "./stand.ts";
+import { ADD_ONS, ADMIN, inbox, retryKey, standUp, type Mail, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the mail contract must run here, and cannot: ${why}`);
@@ -310,6 +310,7 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         clean(request);
         expect(request.text).toContain("We publish good and bad reviews alike.");
         expect(request.text).toContain("&star=5");
+        expect(request.text).not.toContain(EN.reviewStop);
         const token = linkIn(request.text, "/review");
         expect(token).toBeTruthy();
         const reader = tab();
@@ -324,6 +325,30 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         expect((await to(address("rita"))).filter((m) => /One last question/.test(m.subject))).toEqual([]);
       });
 
+      it("with a public https address the review mail also carries its stop link, and without one it says nothing of it", async () => {
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        const first = await free("Gel Manicure", "2026-10-06", "Ivy", "10:00");
+        const day = new Date(Date.parse(first) - 7 * 3_600_000).toISOString().slice(0, 10);
+        const next = new Date(Date.parse(`${day}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+        await stand.server.setClock(at(day, "07:30"));
+        const made = (await tab().book("studio", values("Gel Manicure", await free("Gel Manicure", day, "Ivy", "10:00"), "stella", { team_id: team["Ivy"]!["id"] }), retryKey("s1"))).row;
+        await mailTo(address("stella"), /Booked/);
+        await stand.server.setClock(at(day, "19:00"));
+        await deskAgain();
+        await desk.moveBooking(made as never, "arrived");
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: "https://studio.lumen-guests.dev" }));
+        try {
+          await stand.server.setClock(at(next, "10:05"));
+          const mail = await mailTo(address("stella"), /How was your/);
+          clean(mail);
+          expect(mail.text).toMatch(/Stop review requests: https:\/\/studio\.lumen-guests\.dev\/m\//);
+          expect(mail.text).toContain(EN.reviewStopNote);
+        } finally {
+          await stand.staff.signIn(ADMIN.email, ADMIN.password);
+          ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: stand.server.base }));
+        }
+      });
     });
   });
 });
