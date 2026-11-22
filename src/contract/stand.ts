@@ -142,8 +142,8 @@ export interface Mail {
   text: string;
   html: string;
 }
-/** The engine's sign-in mail ("… is your Lumen Studio code"), among the mails a booking sends to the same address. */
-export const isCodeMail = (mail: Mail) => /\bcode\b/i.test(mail.subject) && /\b\d{6}\b/.test(mail.text);
+/** The engine's sign-in mail ("Your sign-in link for Lumen Studio", with its code), among the mails a booking sends to the same address. */
+export const isCodeMail = (mail: Mail) => /\bsign-in\b/i.test(mail.subject) && /\b\d{6}\b/.test(mail.text);
 export const inbox = async (server: Server): Promise<Mail[]> => (await (await fetch(`${server.sink}/messages`)).json()) as Mail[];
 
 export interface Stand {
