@@ -6,7 +6,7 @@
  * A booking somebody made by typing this address proves nothing (ACC-6): it is
  * listed apart, with a way to cancel it.
  */
-import { PublicApiError } from "@adminiumjs/public-client";
+import { PublicApiError, type ForgetMeResult } from "@adminiumjs/public-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { A, useApp, yes } from "../app.tsx";
@@ -83,6 +83,8 @@ export default function Account() {
   const [problem, setProblem] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [stepUp, setStepUp] = useState(false);
+  // What a delete could not reach. It stays on the page, because a toast would be gone before it is read.
+  const [left, setLeft] = useState<ForgetMeResult | null>(null);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -115,6 +117,19 @@ export default function Account() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookings]);
 
+  if (left !== null) {
+    return (
+      <Blank icon="circle-alert" title={t("deletedExcept")}>
+        <div role="status" className="lm-col" style={{ gap: 10, textAlign: "start", fontSize: 14.5, lineHeight: 1.55 }}>
+          {left.keptBalances > 0 ? <p>{t("deletedKept", { n: left.keptBalances })}</p> : null}
+          {left.giftsNotLinked ? <p>{t("deletedGifts")}</p> : null}
+        </div>
+        <A to="/" className="lm-btn primary">
+          {t("backHome", { studio: studio.name })}
+        </A>
+      </Blank>
+    );
+  }
   if (failed) {
     return (
       <Blank icon="cloud-off" title={t("somethingWrong")}>
@@ -162,9 +177,13 @@ export default function Account() {
       onGo: async () => {
         setProblem(null);
         try {
-          await door.forgetMe(ahead);
+          const result = await door.forgetMe(ahead);
           forgetBooking();
           setMe(null);
+          if (result.keptBalances > 0 || result.giftsNotLinked) {
+            setLeft(result);
+            return;
+          }
           toast(t("deleted"));
           go("/", { replace: true });
         } catch (error) {

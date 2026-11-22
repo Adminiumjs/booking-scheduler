@@ -306,6 +306,9 @@ export const WORDS: Words = {
   delKeep: "Ponechat je",
   delStepUp: "Z bezpečnostních důvodů se znovu přihlaste novým kódem a poté údaje smažte.",
   deleted: "Vaše údaje byly smazány.",
+  deletedExcept: "Vaše údaje byly smazány, s výjimkou toho, co je uvedeno níže.",
+  deletedKept: "{n} položka (balíček, dárková karta nebo kredit) má stále zůstatek. Zůstává na ní vaše jméno a e-mail, aby ji šlo dál používat, dokud se nevyčerpá nebo nevyprší.|{n} položky (balíčky, dárkové karty nebo kredit) mají stále zůstatek. Zůstává na nich vaše jméno a e-mail, aby je šlo dál používat, dokud se nevyčerpají nebo nevyprší.|{n} položek (balíčky, dárkové karty nebo kredit) má stále zůstatek. Zůstává na nich vaše jméno a e-mail, aby je šlo dál používat, dokud se nevyčerpají nebo nevyprší.",
+  deletedGifts: "Pokud vám dárkovou kartu koupil někdo jiný, není propojená s vaším účtem, takže ji toto smazání nezasáhlo. Zůstává na ní jméno a e-mail zadané při nákupu a připomenutí konce platnosti vás stále může zastihnout. O odstranění těchto údajů požádejte studio.",
   reviewsOff: "O recenze vás už žádat nebudeme.",
   reviewsOn: "Po návštěvě vás požádáme o recenzi.",
 

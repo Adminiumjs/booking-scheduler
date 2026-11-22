@@ -309,6 +309,9 @@ export const EN = {
   delKeep: "Keep them",
   delStepUp: "For safety, sign in again with a new code, then delete your details.",
   deleted: "Your details are deleted.",
+  deletedExcept: "Your details are deleted, except as noted below.",
+  deletedKept: "{n} pack, gift card or store credit still has a balance. It keeps your name and e-mail so you can still use it, until it is used up or expires.|{n} packs, gift cards or store credits still have a balance. They keep your name and e-mail so you can still use them, until they are used up or expire.",
+  deletedGifts: "If someone else bought you a gift card, it isn't linked to your account, so this could not remove it. It keeps the name and e-mail the buyer typed, and its expiry reminder can still reach you. Ask the studio to remove those details.",
   reviewsOff: "We won't ask you for reviews again.",
   reviewsOn: "We'll ask you for reviews after a visit.",
 

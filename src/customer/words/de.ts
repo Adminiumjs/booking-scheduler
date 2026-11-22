@@ -306,6 +306,9 @@ export const WORDS: Words = {
   delKeep: "Behalten",
   delStepUp: "Zur Sicherheit melden Sie sich bitte mit einem neuen Code erneut an und löschen dann Ihre Daten.",
   deleted: "Ihre Daten wurden gelöscht.",
+  deletedExcept: "Ihre Daten wurden gelöscht, bis auf das, was unten steht.",
+  deletedKept: "{n} Paket, Geschenkkarte oder Guthaben hat noch einen Restwert. Dort bleiben Ihr Name und Ihre E-Mail-Adresse, damit Sie es weiter nutzen können, bis es aufgebraucht oder abgelaufen ist.|{n} Pakete, Geschenkkarten oder Guthaben haben noch einen Restwert. Dort bleiben Ihr Name und Ihre E-Mail-Adresse, damit Sie sie weiter nutzen können, bis sie aufgebraucht oder abgelaufen sind.",
+  deletedGifts: "Falls jemand anderes Ihnen eine Geschenkkarte gekauft hat, ist sie nicht mit Ihrem Konto verknüpft und wurde hier nicht entfernt. Sie behält den Namen und die E-Mail-Adresse, die beim Kauf eingegeben wurden, und ihre Ablauferinnerung kann Sie weiterhin erreichen. Bitten Sie das Studio, diese Angaben zu entfernen.",
   reviewsOff: "Wir bitten Sie nicht mehr um Bewertungen.",
   reviewsOn: "Wir bitten Sie nach einem Besuch um eine Bewertung.",
 
