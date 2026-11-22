@@ -19156,6 +19156,8 @@
         "booking.link_token",
         "booking.minutes",
         "booking.net_price.money",
+        "booking.rest_at_studio.money",
+        "booking.shown_paid.money",
         "booking.starts_at.date",
         "booking.starts_at.time",
         "booking.time_range",
@@ -19221,10 +19223,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Price · Pay at the studio",
+                    "label": "Price",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Paid online",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "To pay at the studio",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19317,10 +19349,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Preis · Zahlung im Studio",
+                    "label": "Preis",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Online bezahlt",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Im Studio zu zahlen",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19413,10 +19475,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Prix · Paiement au studio",
+                    "label": "Prix",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Payé en ligne",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "À payer au studio",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19509,10 +19601,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Pris · Betal i studiet",
+                    "label": "Pris",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Betalt online",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Betales i studiet",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19605,10 +19727,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Cena · Platba ve studiu",
+                    "label": "Cena",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Zaplaceno online",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "K zaplacení ve studiu",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19701,10 +19853,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "السعر · الدفع في الاستوديو",
+                    "label": "السعر",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "مدفوع عبر الإنترنت",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "المتبقي للدفع في الاستوديو",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19797,10 +19979,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "价格 · 到店支付",
+                    "label": "价格",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "已在线支付",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "到店支付",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19893,10 +20105,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "價格 · 到店付款",
+                    "label": "價格",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "已線上付款",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "到店付款",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -19964,6 +20206,8 @@
         "booking.link_token",
         "booking.minutes",
         "booking.net_price.money",
+        "booking.rest_at_studio.money",
+        "booking.shown_paid.money",
         "booking.starts_at.date",
         "booking.starts_at.time",
         "booking.time_range",
@@ -20028,10 +20272,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Price · Pay at the studio",
+                    "label": "Price",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Paid online",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "To pay at the studio",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20141,10 +20415,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Preis · Zahlung im Studio",
+                    "label": "Preis",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Online bezahlt",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Im Studio zu zahlen",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20254,10 +20558,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Prix · Paiement au studio",
+                    "label": "Prix",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Payé en ligne",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "À payer au studio",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20367,10 +20701,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Pris · Betal i studiet",
+                    "label": "Pris",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Betalt online",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Betales i studiet",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20480,10 +20844,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "Cena · Platba ve studiu",
+                    "label": "Cena",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "Zaplaceno online",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "K zaplacení ve studiu",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20593,10 +20987,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "السعر · الدفع في الاستوديو",
+                    "label": "السعر",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "مدفوع عبر الإنترنت",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "المتبقي للدفع في الاستوديو",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20706,10 +21130,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "价格 · 到店支付",
+                    "label": "价格",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "已在线支付",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "到店支付",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {
@@ -20819,10 +21273,40 @@
               "data": {
                 "lines": [
                   {
-                    "label": "價格 · 到店付款",
+                    "label": "價格",
                     "amount": "{{booking.net_price.money}}"
                   }
                 ]
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "paid",
+              "data": {
+                "lines": [
+                  {
+                    "label": "已線上付款",
+                    "amount": "{{booking.shown_paid.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.shown_paid"
+              }
+            },
+            {
+              "block": "email.tax-breakdown",
+              "id": "rest",
+              "data": {
+                "lines": [
+                  {
+                    "label": "到店付款",
+                    "amount": "{{booking.rest_at_studio.money}}"
+                  }
+                ]
+              },
+              "showWhen": {
+                "var": "booking.rest_at_studio"
               }
             },
             {

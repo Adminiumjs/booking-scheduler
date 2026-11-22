@@ -61,6 +61,12 @@ const facts = (w: Words) =>
     { label: w.code, amount: "{{booking.code}}" },
   );
 const priceAtStudio = (w: Words) => lines("price", { label: `${w.price} · ${w.atStudio}`, amount: "{{booking.net_price.money}}" });
+/** What is owed on a visit already booked: what it costs, what came in online, what is left to pay at the studio. */
+const owed = (w: Words): Block[] => [
+  lines("price", { label: w.price, amount: "{{booking.net_price.money}}" }),
+  when("booking.shown_paid", lines("paid", { label: w.paidOnline, amount: "{PAID}" })),
+  when("booking.rest_at_studio", lines("rest", { label: w.toPayStudio, amount: "{REST}" })),
+];
 const addToCalendar = (w: Words) =>
   when("calendarGoogle", links("calendar", { label: `${w.addToCalendar}: Google Calendar`, url: "{{calendarGoogle}}" }, { label: "Outlook", url: "{{calendarOutlook}}" }));
 const manage = (w: Words) => links("manage", { label: w.manage, url: OWN_LINK });
@@ -87,9 +93,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
           para("thanks", w.paidThanks),
           facts(w),
           anyoneLine,
-          lines("price", { label: w.price, amount: "{{booking.net_price.money}}" }),
-          when("booking.shown_paid", lines("paid", { label: w.paidOnline, amount: "{PAID}" })),
-          when("booking.rest_at_studio", lines("rest", { label: w.toPayStudio, amount: "{REST}" })),
+          ...owed(w),
           addToCalendar(w),
           para("file", w.fileAttached),
           policy(w, true),
@@ -126,7 +130,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
           heading(w.remHeading),
           para("intro", w.remIntro),
           facts(w),
-          priceAtStudio(w),
+          ...owed(w),
           when("service.bring", para("bring", w.remBring)),
           when("booking.free_at_reminder", para("policy", w.remFree), w.remLate),
           manage(w),
@@ -136,7 +140,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
       return {
         subject: w.movedSubject,
         preheader: w.movedPre,
-        blocks: [heading(w.movedHeading), para("intro", w.movedIntro), facts(w), priceAtStudio(w), addToCalendar(w), para("file", w.movedFile, w.movedOld), policy(w, false), manage(w)],
+        blocks: [heading(w.movedHeading), para("intro", w.movedIntro), facts(w), ...owed(w), addToCalendar(w), para("file", w.movedFile, w.movedOld), policy(w, false), manage(w)],
       };
     case "cancelled":
       return {
