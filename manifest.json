@@ -193,6 +193,20 @@
           "zh-CN": "连接每个人的 Outlook 日历：预约同步出去，忙碌时间同步进来。",
           "zh-TW": "連接每個人的 Outlook 行事曆：預約同步出去，忙碌時間同步進來。"
         }
+      },
+      {
+        "key": "google-reviews",
+        "range": "^1.0.34",
+        "reason": {
+          "en-US": "Show your Google reviews on the booking page when a visitor asks.",
+          "de-DE": "Google-Bewertungen auf der Buchungsseite zeigen, wenn ein Gast sie aufruft.",
+          "fr-FR": "Afficher vos avis Google sur la page de réservation quand un visiteur le demande.",
+          "da-DK": "Vis Google-anmeldelser på bookingsiden, når en gæst beder om dem.",
+          "cs-CZ": "Zobrazit recenze Google na rezervační stránce, když si je návštěvník vyžádá.",
+          "ar-EG": "عرض تقييمات Google في صفحة الحجز عند الطلب.",
+          "zh-CN": "访客需要时，在预约页面显示 Google 评价。",
+          "zh-TW": "訪客需要時，在預約頁面顯示 Google 評論。"
+        }
       }
     ],
     "features": [
