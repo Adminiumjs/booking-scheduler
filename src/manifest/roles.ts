@@ -202,7 +202,8 @@ export const ROLES = [
         creatableValues: { state: ["booked", "paying", "offered"], channel: ["desk"], lapsed_by: ["desk"], cancelled_by: ["studio"] },
         writableValues: { lapsed_by: ["desk"], cancelled_by: ["studio"] },
       },
-      customers: { writable: ["name", "email", "phone", "language", "review_requests", "staff_note"], creatable: ["name", "email", "phone", "language", "staff_note"] },
+      // Never `email` on a customer who exists: it is what they sign in with, so changing it would hand over their account.
+      customers: { writable: ["name", "phone", "language", "review_requests", "staff_note"], creatable: ["name", "email", "phone", "language", "staff_note"] },
       waitlist: { writable: ["state"], writableValues: { state: ["closed"] } },
       team: { readable: allBut("team", "email") },
       payments: { readable: PAYMENT_READS },

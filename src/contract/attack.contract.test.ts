@@ -95,6 +95,23 @@ describe.skipIf(why !== null)(`an attacker at Lumen${why === null ? "" : ` — s
           expect(JSON.stringify(row)).not.toContain(code!);
         }
       }, 180_000);
+
+      it("the front desk cannot point a customer's sign-in at a mailbox of its own", async () => {
+        const target = (await stand.rows("customers")).find((c) => String(c["name"]).startsWith("Priya"))!;
+        const taken = `desk-owned.${engine}@lumen-guests.dev`;
+        const reply = await desk.patch(`${stand.data("customers")}/${String(target["id"])}`, { values: { email: taken } });
+        expect(reply.status, JSON.stringify(reply.body).slice(0, 200)).toBeGreaterThanOrEqual(400);
+        expect((await stand.row("customers", target["id"]))["email"]).toBe(target["email"]);
+        const before = (await inbox(stand.server)).length;
+        const tab = stand.guest("studio");
+        await tab.proved("claim", "/api/v1/public/claim/link", { email: taken });
+        await new Promise((resolve) => setTimeout(resolve, 1_500));
+        expect((await inbox(stand.server)).slice(before).filter((m) => m.to.includes(taken))).toEqual([]);
+        // The owner may still correct an address.
+        const corrected = await owner.patch(`${stand.data("customers")}/${String(target["id"])}`, { values: { email: `priya.new.${engine}@lumen-guests.dev` } });
+        expect(corrected.status).toBe(200);
+        ok(await owner.patch(`${stand.data("customers")}/${String(target["id"])}`, { values: { email: target["email"] } }));
+      }, 120_000);
     });
   });
 });

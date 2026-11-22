@@ -12707,7 +12707,6 @@
         "customers": {
           "writable": [
             "name",
-            "email",
             "phone",
             "language",
             "review_requests",
