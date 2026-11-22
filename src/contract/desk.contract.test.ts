@@ -22,8 +22,8 @@ import { dayIn } from "../desk/time.ts";
 import { createSessionTransport } from "../desk/transport/sessionSource.ts";
 import { loadStaffConfig } from "../desk/transport/staffConnection.ts";
 import type { Row } from "../desk/wire.ts";
-import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, until, type Engine } from "./harness.ts";
-import { ADD_ONS, CLOCK, inbox, standUp, type Stand } from "./stand.ts";
+import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, type Engine } from "./harness.ts";
+import { ADD_ONS, CLOCK, standUp, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the desk contract must run here, and cannot: ${why}`);
@@ -362,15 +362,15 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         await refused(() => doors.noor.syncNow(other.id));
       });
 
-      it("a front desk that may not read addresses sends the link, and is not told where it went", async () => {
-        const address = `noor.desk.${engine}@lumen-staff.dev`;
-        const before = (await inbox(stand.server)).length;
-        // A connect link needs a public address to come back to.
+      it("a front desk reaches the connect link's door, which answers plainly while no calendar add-on is set up", async () => {
+        // The address it would be told (`sentTo: null` for a role that may not read it) needs a set-up provider: T16's real-account walk.
         ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: "https://studio.lumen-staff.dev" }));
         try {
-          expect(await doors.desk.sendConnectLink(noorTeam["id"] as string)).toBeNull();
-          const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(address)), "the connect link's mail", 60_000);
-          expect(mail.text).toMatch(/https:\/\/studio\.lumen-staff\.dev/);
+          const error = await doors.desk.sendConnectLink(noorTeam["id"] as string).then(
+            () => null,
+            (e: unknown) => e as { status?: number; message?: string },
+          );
+          expect(error?.message).toMatch(/No connected-account add-on is set up/);
         } finally {
           ok(await stand.staff.put("/api/v1/settings/email", { publicOrigin: stand.server.base }));
         }

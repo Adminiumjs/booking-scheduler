@@ -508,7 +508,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "Rappel",
   "requests.reminderSub": "Un seul rappel, tant que la demande reste sans réponse.",
   "requests.days": "jours après",
-  "requests.note": "Les clients qui ont coché « Ne pas m’envoyer de demande d’avis après ma visite » ne sont jamais sollicités. Chaque demande contient un lien pour les arrêter.",
+  "requests.note": "Les clients qui ont coché « Ne pas m’envoyer de demande d’avis après ma visite » ne sont jamais sollicités. Si ce serveur a une adresse https publique, chaque demande contient un lien pour les arrêter.",
 
   "website.yours": "Vos sites web",
   "website.manage": "Gérer dans Adminium",

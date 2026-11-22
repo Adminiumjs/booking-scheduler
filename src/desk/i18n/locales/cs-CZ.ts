@@ -508,7 +508,7 @@ export const cs: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "Připomínka",
   "requests.reminderSub": "Jedna připomínka, jen dokud žádost zůstává bez odpovědi.",
   "requests.days": "dnů po",
-  "requests.note": "Hosté, kteří zaškrtli „Po návštěvě mi neposílejte žádost o recenzi“, nejsou nikdy osloveni. Každá žádost obsahuje odkaz, kterým je lze zastavit.",
+  "requests.note": "Hosté, kteří zaškrtli „Po návštěvě mi neposílejte žádost o recenzi“, nejsou nikdy osloveni. Pokud má tento server veřejnou adresu https, každá žádost obsahuje odkaz k jejich zastavení.",
 
   "website.yours": "Vaše weby",
   "website.manage": "Spravovat v Adminiu",

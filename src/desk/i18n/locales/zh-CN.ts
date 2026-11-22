@@ -508,7 +508,7 @@ export const zhCN: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "提醒",
   "requests.reminderSub": "仅提醒一次，且仅在邀请未得到回应时。",
   "requests.days": "天后",
-  "requests.note": "勾选了“到访后不要向我发送评价邀请”的客人永远不会收到邀请。每封邀请都附有停止接收的链接。",
+  "requests.note": "勾选了“到访后不要向我发送评价邀请”的客人永远不会收到邀请。当此服务器有公开的 https 地址时，每封邀请都带有停止接收的链接。",
 
   "website.yours": "您的网站",
   "website.manage": "在 Adminium 中管理",

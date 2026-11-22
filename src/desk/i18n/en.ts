@@ -509,7 +509,7 @@ export const en = {
   "requests.reminder": "Reminder",
   "requests.reminderSub": "One reminder, only while the request is unanswered.",
   "requests.days": "days after",
-  "requests.note": "Guests who ticked \"Don't send me a review request after my visit\" are never asked. Every request has a link to stop them.",
+  "requests.note": "Guests who ticked \"Don't send me a review request after my visit\" are never asked. When this server has a public https address, every request has a link to stop them.",
 
   "website.yours": "Your websites",
   "website.manage": "Manage in Adminium",

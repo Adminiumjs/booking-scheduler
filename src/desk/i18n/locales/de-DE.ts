@@ -508,7 +508,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "Erinnerung",
   "requests.reminderSub": "Eine Erinnerung, nur solange die Anfrage unbeantwortet ist.",
   "requests.days": "Tage danach",
-  "requests.note": "Gäste, die „Nach meinem Besuch keine Bewertungsanfrage senden“ angekreuzt haben, werden nie gefragt. Jede Anfrage enthält einen Link, um sie zu stoppen.",
+  "requests.note": "Gäste, die „Nach meinem Besuch keine Bewertungsanfrage senden“ angekreuzt haben, werden nie gefragt. Hat dieser Server eine öffentliche https-Adresse, enthält jede Anfrage einen Link, um sie zu beenden.",
 
   "website.yours": "Deine Websites",
   "website.manage": "In Adminium verwalten",

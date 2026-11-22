@@ -508,7 +508,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "Påmindelse",
   "requests.reminderSub": "Én påmindelse, kun så længe anmodningen er ubesvaret.",
   "requests.days": "dage efter",
-  "requests.note": "Gæster, der har sat flueben ved “Send mig ikke en anmodning om anmeldelse efter mit besøg”, bliver aldrig spurgt. Hver anmodning har et link til at stoppe dem.",
+  "requests.note": "Gæster, der har sat flueben ved “Send mig ikke en anmodning om anmeldelse efter mit besøg”, bliver aldrig spurgt. Når serveren har en offentlig https-adresse, har hver anmodning et link til at stoppe dem.",
 
   "website.yours": "Dine hjemmesider",
   "website.manage": "Administrér i Adminium",

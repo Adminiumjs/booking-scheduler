@@ -508,7 +508,7 @@ export const ar: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "تذكير",
   "requests.reminderSub": "تذكير واحد، فقط ما دام الطلب بلا رد.",
   "requests.days": "أيام بعد",
-  "requests.note": "الضيوف الذين حددوا «لا ترسلوا لي طلب تقييم بعد زيارتي» لا يُطلب منهم التقييم أبدًا. يتضمن كل طلب رابطًا لإيقافه.",
+  "requests.note": "الضيوف الذين حددوا «لا ترسلوا لي طلب تقييم بعد زيارتي» لا يُطلب منهم التقييم أبدًا. عندما يكون لهذا الخادم عنوان https عام، يتضمن كل طلب رابطًا لإيقافها.",
 
   "website.yours": "مواقعك",
   "website.manage": "الإدارة في Adminium",

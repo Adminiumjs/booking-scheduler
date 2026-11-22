@@ -508,7 +508,7 @@ export const zhTW: Partial<Record<keyof typeof en, string>> = {
   "requests.reminder": "提醒",
   "requests.reminderSub": "只提醒一次，且僅在邀請未獲回應時。",
   "requests.days": "天後",
-  "requests.note": "勾選了「到訪後不要寄評價邀請給我」的客人永遠不會收到邀請。每封邀請都附有停止接收的連結。",
+  "requests.note": "勾選了「到訪後不要寄評價邀請給我」的客人永遠不會收到邀請。當此伺服器有公開的 https 位址時，每封邀請都附有停止接收的連結。",
 
   "website.yours": "您的網站",
   "website.manage": "在 Adminium 中管理",
