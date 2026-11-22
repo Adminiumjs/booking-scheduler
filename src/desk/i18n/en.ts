@@ -22,6 +22,7 @@ export const en = {
   "shell.frontDesk": "Front desk",
   "shell.specialist": "Specialist",
   "shell.failed": "The desk could not read the studio's data: {why}",
+  "shell.slowDown": "The server asked the desk to slow down. It will try again by itself in a few seconds.",
   "shell.retry": "Try again",
 
   "common.all": "All",

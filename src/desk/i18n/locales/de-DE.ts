@@ -20,6 +20,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "shell.frontDesk": "Empfang",
   "shell.specialist": "Fachkraft",
   "shell.failed": "Der Empfang konnte die Daten des Studios nicht lesen: {why}",
+  "shell.slowDown": "Der Server hat den Empfang gebeten, langsamer zu machen. Er versucht es in ein paar Sekunden von selbst erneut.",
   "shell.retry": "Erneut versuchen",
 
   "common.all": "Alle",

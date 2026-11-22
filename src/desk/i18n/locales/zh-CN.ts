@@ -20,6 +20,7 @@ export const zhCN: Partial<Record<keyof typeof en, string>> = {
   "shell.frontDesk": "前台",
   "shell.specialist": "技师",
   "shell.failed": "前台无法读取工作室的数据：{why}",
+  "shell.slowDown": "服务器要求前台放慢请求。几秒后会自动重试。",
   "shell.retry": "重试",
 
   "common.all": "全部",

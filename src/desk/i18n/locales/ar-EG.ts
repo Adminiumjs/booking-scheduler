@@ -20,6 +20,7 @@ export const ar: Partial<Record<keyof typeof en, string>> = {
   "shell.frontDesk": "الاستقبال",
   "shell.specialist": "أخصائي",
   "shell.failed": "تعذّرت قراءة بيانات الاستوديو: {why}",
+  "shell.slowDown": "طلب الخادم إبطاء الطلبات. ستتم إعادة المحاولة تلقائيًا بعد بضع ثوانٍ.",
   "shell.retry": "حاول مرة أخرى",
 
   "common.all": "الكل",

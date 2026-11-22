@@ -63,6 +63,8 @@ export interface DeskState {
   data: DeskData | null;
   fits: Record<string, WaitFit[]>;
   failure: string | null;
+  /** The server asked the desk to slow down; it tries again by itself. */
+  slowedDown: boolean;
   theme: "light" | "dark" | null;
 }
 
@@ -83,6 +85,7 @@ export const useDesk = create<DeskState>(() => ({
   data: null,
   fits: {},
   failure: null,
+  slowedDown: false,
   theme: null,
 }));
 

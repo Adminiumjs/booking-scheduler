@@ -20,6 +20,7 @@ export const zhTW: Partial<Record<keyof typeof en, string>> = {
   "shell.frontDesk": "櫃台",
   "shell.specialist": "專業人員",
   "shell.failed": "櫃台無法讀取工作室的資料：{why}",
+  "shell.slowDown": "伺服器要求櫃台放慢請求。幾秒後會自動重試。",
   "shell.retry": "再試一次",
 
   "common.all": "全部",

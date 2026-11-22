@@ -20,6 +20,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "shell.frontDesk": "Reception",
   "shell.specialist": "Specialist",
   "shell.failed": "Skrivebordet kunne ikke læse studiets data: {why}",
+  "shell.slowDown": "Serveren har bedt skrivebordet om at sætte farten ned. Det prøver selv igen om et par sekunder.",
   "shell.retry": "Prøv igen",
 
   "common.all": "Alle",

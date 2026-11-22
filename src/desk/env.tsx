@@ -87,20 +87,55 @@ async function loadFits(door: DeskDoor, data: DeskData): Promise<Record<string, 
   return out;
 }
 
+/** How long the desk waits, when the server asked it to slow down before anything was drawn, to try again by itself. */
+export const SLOW_DOWN_MS = 20_000;
+
 /** The newest read asked for: an older one that answers late is dropped, so a row never flips back after a write. */
 let latestRead = 0;
+/** The read on its way. The rows are read one at a time: a clock tick during a slow read must not pile another on top. */
+let reading: Promise<void> | null = null;
+let tryAgain: ReturnType<typeof setTimeout> | null = null;
 
-/** Read every row again, and keep them. */
-export async function reload(door: DeskDoor): Promise<void> {
-  latestRead += 1;
-  const mine = latestRead;
+async function readOnce(door: DeskDoor, mine: number): Promise<void> {
   try {
     const data = await door.load();
     const fits = await loadFits(door, data);
-    if (mine === latestRead) useDesk.setState({ data, fits, failure: null });
+    if (mine === latestRead) useDesk.setState({ data, fits, failure: null, slowedDown: false });
   } catch (error) {
-    if (mine === latestRead) useDesk.setState({ failure: error instanceof Error ? error.message : String(error) });
+    if (mine !== latestRead) return;
+    const slowedDown = isApiError(error) && error.status === 429;
+    useDesk.setState({ failure: error instanceof Error ? error.message : String(error), slowedDown });
+    // With nothing on the screen there is no minute's tick to count on being seen: come back by itself.
+    if (slowedDown && useDesk.getState().data === null) {
+      tryAgain = setTimeout(() => {
+        tryAgain = null;
+        void reload(door);
+      }, SLOW_DOWN_MS);
+    }
   }
+}
+
+async function readUntilCurrent(door: DeskDoor): Promise<void> {
+  try {
+    let mine: number;
+    do {
+      mine = latestRead;
+      await readOnce(door, mine);
+    } while (mine !== latestRead);
+  } finally {
+    reading = null;
+  }
+}
+
+/** Read every row again, and keep them. A read asked for during another runs when that one ends. */
+export function reload(door: DeskDoor): Promise<void> {
+  latestRead += 1;
+  if (tryAgain !== null) {
+    clearTimeout(tryAgain);
+    tryAgain = null;
+  }
+  reading ??= readUntilCurrent(door);
+  return reading;
 }
 
 /** A refusal, in the reader's words: by its code, never its message, except as the last resort. */

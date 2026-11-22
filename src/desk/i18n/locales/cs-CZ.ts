@@ -20,6 +20,7 @@ export const cs: Partial<Record<keyof typeof en, string>> = {
   "shell.frontDesk": "Recepce",
   "shell.specialist": "Specialista",
   "shell.failed": "Recepce nemohla načíst data studia: {why}",
+  "shell.slowDown": "Server požádal recepci o zpomalení. Za několik sekund to zkusí znovu sama.",
   "shell.retry": "Zkusit znovu",
 
   "common.all": "Vše",

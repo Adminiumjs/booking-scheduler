@@ -240,6 +240,7 @@ export function DeskApp() {
   const t = useDeskT();
   const data = useDesk((s) => s.data);
   const failure = useDesk((s) => s.failure);
+  const slowedDown = useDesk((s) => s.slowedDown);
   const theme = useDesk((s) => s.theme);
   const { door } = useEnv();
   const [, tick] = useState(0);
@@ -261,7 +262,11 @@ export function DeskApp() {
     return (
       <div className="lm-app">
         <main className="lm-main" id="main">
-          {failure === null ? (
+          {slowedDown ? (
+            <div role="status" aria-busy="true" className="lm-loading">
+              {t("shell.slowDown")}
+            </div>
+          ) : failure === null ? (
             <div role="status" aria-busy="true" className="lm-loading">
               {t("common.loading")}
             </div>
