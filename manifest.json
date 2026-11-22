@@ -12478,6 +12478,27 @@
           }
         },
         "payments": {
+          "readable": [
+            "id",
+            "booking_id",
+            "purchase_id",
+            "kind",
+            "amount",
+            "method",
+            "paid_at",
+            "payment_ref",
+            "provider",
+            "currency",
+            "card_id",
+            "card_balance_after",
+            "refunded",
+            "refund_rows",
+            "card_part",
+            "online_part",
+            "kept",
+            "returned",
+            "client_key"
+          ],
           "creatable": [
             "booking_id",
             "purchase_id",
@@ -12493,6 +12514,15 @@
               "card"
             ]
           }
+        },
+        "booking_codes": {
+          "readable": [
+            "id",
+            "booking_id",
+            "code_id",
+            "voucher_id",
+            "removed_at"
+          ]
         }
       },
       "tables": [
@@ -12711,6 +12741,38 @@
             "bookable_online",
             "position",
             "user_id"
+          ]
+        },
+        "payments": {
+          "readable": [
+            "id",
+            "booking_id",
+            "purchase_id",
+            "kind",
+            "amount",
+            "method",
+            "paid_at",
+            "payment_ref",
+            "provider",
+            "currency",
+            "card_id",
+            "card_balance_after",
+            "refunded",
+            "refund_rows",
+            "card_part",
+            "online_part",
+            "kept",
+            "returned",
+            "client_key"
+          ]
+        },
+        "booking_codes": {
+          "readable": [
+            "id",
+            "booking_id",
+            "code_id",
+            "voucher_id",
+            "removed_at"
           ]
         }
       },

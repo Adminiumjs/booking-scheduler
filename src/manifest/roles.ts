@@ -122,6 +122,13 @@ const OFFERS_READ = [
   { addOn: "offers", table: "gift_cards", actions: ["read"], limit: { readable: GIFT_CARD_READS } },
 ];
 
+/**
+ * A gift card's whole code is the card: whoever reads it can spend it. A guest's typed code stays in the row that paid with it,
+ * and no role reads that column, the owner's included. A code typed on a booking is the same (`typed`).
+ */
+export const PAYMENT_READS = allBut("payments", "card_code");
+export const BOOKING_CODE_READS = allBut("booking_codes", "typed");
+
 /** What the desk writes when it makes a booking. The state's moves are held to the table's own. */
 const DESK_BOOKING_MAKES = typed("bookings", ...NOT_TYPED_ON_A_BOOKING);
 /**
@@ -164,9 +171,11 @@ export const ROLES = [
       },
       // Money is recorded by the payment itself, or by hand as cash or a card at the studio.
       payments: {
+        readable: PAYMENT_READS,
         creatable: ["booking_id", "purchase_id", "kind", "amount", "method", "paid_at", "client_key"],
         creatableValues: { method: ["cash", "card"] },
       },
+      booking_codes: { readable: BOOKING_CODE_READS },
     },
     tables: [...REVIEWS_MODERATE, ...OFFERS_READ],
   },
@@ -196,6 +205,8 @@ export const ROLES = [
       customers: { writable: ["name", "email", "phone", "language", "review_requests", "staff_note"], creatable: ["name", "email", "phone", "language", "staff_note"] },
       waitlist: { writable: ["state"], writableValues: { state: ["closed"] } },
       team: { readable: allBut("team", "email") },
+      payments: { readable: PAYMENT_READS },
+      booking_codes: { readable: BOOKING_CODE_READS },
     },
     tables: [...REVIEWS_READ, ...OFFERS_READ],
   },

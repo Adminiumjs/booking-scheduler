@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { buildManifest, manifestText, MIN_ADMINIUM, UPDATES_FROM, VERSION } from "./build.ts";
 import { untranslated } from "./labels.ts";
 import { BOOKING_SELECT, MADE_SELECT, PUBLIC_ACCESS } from "./public.ts";
-import { GIFT_CARD_READS, NOT_THE_SPECIALISTS, ROLES, SPECIALIST_BOOKING_READS, VOUCHER_READS } from "./roles.ts";
+import { BOOKING_CODE_READS, GIFT_CARD_READS, NOT_THE_SPECIALISTS, PAYMENT_READS, ROLES, SPECIALIST_BOOKING_READS, VOUCHER_READS } from "./roles.ts";
 import { HOLDS_TIME, TABLES } from "./tables.ts";
 
 const table = (ref: string) => TABLES.find((t) => t.ref === ref)!;
@@ -151,6 +151,15 @@ describe("what the desk reads of Offers", () => {
     for (const name of ["code", "link_token"]) {
       expect(VOUCHER_READS).not.toContain(name);
       expect(GIFT_CARD_READS).not.toContain(name);
+    }
+  });
+
+  it("keeps a whole code out of every role's reads of the money", () => {
+    expect(PAYMENT_READS).not.toContain("card_code");
+    expect(BOOKING_CODE_READS).not.toContain("typed");
+    for (const role of ROLES as unknown as { key: string; permissions: string[]; limits?: Record<string, { readable?: string[] }> }[]) {
+      if (role.permissions.includes("table:@payments:read")) expect(role.limits?.["payments"]?.readable, role.key).toEqual(PAYMENT_READS);
+      if (role.permissions.includes("table:@booking_codes:read")) expect(role.limits?.["booking_codes"]?.readable, role.key).toEqual(BOOKING_CODE_READS);
     }
   });
 
