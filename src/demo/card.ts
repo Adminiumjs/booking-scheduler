@@ -300,7 +300,7 @@ export const DEMO_CARD: Omit<DemoEmitOptions, "messages"> = {
   clock: {
     advance: [
       { id: "hour", labelKey: "clock.hour" },
-      { id: "morning", labelKey: "clock.morning" },
+      { id: "morning", icon: "sunrise", labelKey: "clock.morning" },
     ],
     reset: { labelKey: "clock.reset" },
   },

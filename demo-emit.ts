@@ -57,7 +57,7 @@ export interface DemoEmitOptions {
   modes?: { id: string; options: Labelled[] }[];
   toggles?: 'online'[];
   /** `reset: { labelKey }` names the reset the app's way; `true` leaves it to the card. */
-  clock?: { advance: Labelled[]; reset: boolean | { labelKey: string } };
+  clock?: { advance: (Labelled & { icon?: string })[]; reset: boolean | { labelKey: string } };
   addOns?: { key: string; labelKey: string }[];
   /** One line the card prints under its header, in all eight languages. */
   note?: { labelKey: string };
@@ -110,7 +110,7 @@ export function buildDemoJson(opts: DemoEmitOptions): DemoDocument {
       ? {}
       : {
           clock: {
-            advance: opts.clock.advance.map(choice),
+            advance: opts.clock.advance.map((step) => ({ ...choice(step), ...(step.icon === undefined ? {} : { icon: step.icon }) })),
             reset: typeof opts.clock.reset === 'boolean' ? opts.clock.reset : { labels: labels(opts.clock.reset.labelKey) },
           },
         }),

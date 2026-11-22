@@ -51,6 +51,7 @@ describe("demo.json", () => {
       ["morning", "Next morning"],
     ]);
     expect(doc.clock?.reset).toEqual({ labels: expect.objectContaining({ "en-US": "Back to Tuesday morning" }) });
+    expect(doc.clock?.advance.map((a) => (a as { icon?: string }).icon)).toEqual([undefined, "sunrise"]);
   });
 
   it("carries the card's note line in all eight languages", () => {
