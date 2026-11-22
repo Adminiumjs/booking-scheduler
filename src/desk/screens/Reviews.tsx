@@ -85,7 +85,7 @@ function ReviewCard({ review, moderates }: { review: Row; moderates: boolean }) 
       {replying && (
         <div className="lm-field">
           <label htmlFor={`lm-reply-${String(review.id)}`}>{t("reviews.yourReply")}</label>
-          <textarea id={`lm-reply-${String(review.id)}`} rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <textarea id={`lm-reply-${String(review.id)}`} dir="auto" rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} />
           <div className="lm-row-gap">
             <button type="button" className="lm-btn lm-btn--primary" disabled={busy || draft.trim() === ""} onClick={send}>
               {t("reviews.postReply")}

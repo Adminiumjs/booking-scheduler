@@ -743,7 +743,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                         >
                           <div className="lm-field">
                             <label htmlFor="lm-wl-name">{t("fName")}</label>
-                            <input id="lm-wl-name" className="lm-input" autoComplete="name" maxLength={NAME_MAX} value={wlForm.name} aria-invalid={wlErrs.name === true} onChange={(e) => setWlForm({ ...wlForm, name: e.target.value })} />
+                            <input id="lm-wl-name" className="lm-input" dir="auto" autoComplete="name" maxLength={NAME_MAX} value={wlForm.name} aria-invalid={wlErrs.name === true} onChange={(e) => setWlForm({ ...wlForm, name: e.target.value })} />
                             {wlErrs.name === true ? <Err>{t("errName")}</Err> : null}
                           </div>
                           <div className="lm-field">
@@ -823,7 +823,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                 <>
                   <div className="lm-field">
                     <label htmlFor="lm-name">{t("fName")}</label>
-                    <input id="lm-name" className="lm-input" autoComplete="name" maxLength={NAME_MAX} value={form.name} aria-invalid={errs.name === true} {...(errs.name === true ? { "aria-describedby": "lm-name-err" } : {})} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                    <input id="lm-name" className="lm-input" dir="auto" autoComplete="name" maxLength={NAME_MAX} value={form.name} aria-invalid={errs.name === true} {...(errs.name === true ? { "aria-describedby": "lm-name-err" } : {})} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                     {errs.name === true ? <Err id="lm-name-err">{t("errName")}</Err> : null}
                   </div>
                   <div className="lm-field">
@@ -843,7 +843,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
                       <label htmlFor="lm-note">{t("fNote")}</label>
                       <span aria-hidden="true" className="lm-mono" style={{ fontSize: 11.5, color: "var(--fg-subtle)" }}>{`${String(form.note.length)} / 280`}</span>
                     </div>
-                    <textarea id="lm-note" className="lm-input" rows={3} maxLength={280} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+                    <textarea id="lm-note" className="lm-input" dir="auto" rows={3} maxLength={280} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
                   </div>
                   <label className="lm-check">
                     <input type="checkbox" checked={form.noReview} onChange={(e) => setForm({ ...form, noReview: e.target.checked })} />

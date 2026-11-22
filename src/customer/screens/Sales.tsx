@@ -194,7 +194,7 @@ export function GiftCards() {
   const field = (k: "to" | "toEmail" | "from" | "buyer", label: string, error: string, type = "text") => (
     <div className="lm-field">
       <label htmlFor={`lm-g-${k}`}>{label}</label>
-      <input id={`lm-g-${k}`} className="lm-input" type={type} {...(type === "email" ? { dir: "ltr" } : {})} maxLength={type === "email" ? 254 : NAME_MAX} value={f[k]} aria-invalid={errs[k] === true} {...(errs[k] === true ? { "aria-describedby": `lm-g-${k}-err` } : {})} onChange={(e) => set(k, e.target.value)} />
+      <input id={`lm-g-${k}`} className="lm-input" type={type} dir={type === "email" ? "ltr" : "auto"} maxLength={type === "email" ? 254 : NAME_MAX} value={f[k]} aria-invalid={errs[k] === true} {...(errs[k] === true ? { "aria-describedby": `lm-g-${k}-err` } : {})} onChange={(e) => set(k, e.target.value)} />
       {errs[k] === true ? <Err id={`lm-g-${k}-err`}>{error}</Err> : null}
     </div>
   );
@@ -231,7 +231,7 @@ export function GiftCards() {
           </div>
           <div className="lm-field">
             <label htmlFor="lm-g-msg">{t("gMsg")}</label>
-            <textarea id="lm-g-msg" className="lm-input" rows={3} maxLength={GIFT_MESSAGE_MAX} value={f.msg} onChange={(e) => set("msg", e.target.value)} />
+            <textarea id="lm-g-msg" className="lm-input" dir="auto" rows={3} maxLength={GIFT_MESSAGE_MAX} value={f.msg} onChange={(e) => set("msg", e.target.value)} />
           </div>
           <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
             <legend className="lm-label" style={{ marginBottom: 9 }}>
@@ -348,7 +348,7 @@ export function Packs() {
                     {fmtMoney(clock, p["price"])}
                   </span>
                 </div>
-                <div style={{ fontSize: 13.5, lineHeight: 1.5 }}>{t("packCovers", { n: Number(p["uses"] ?? 0), what: service?.name ?? category?.name ?? "" })}</div>
+                <div style={{ fontSize: 13.5, lineHeight: 1.5 }}><bdi>{t("packCovers", { n: Number(p["uses"] ?? 0), what: service?.name ?? category?.name ?? "" })}</bdi></div>
                 <div className="lm-muted" style={{ fontSize: 12.5 }}>
                   {days % 365 === 0 || Math.abs(days / 30.4 - months) < 0.2 ? t("packValidMonths", { n: months }) : t("packValidFor", { n: days })}
                 </div>

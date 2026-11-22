@@ -89,7 +89,7 @@ function Form({ what, shownAs, onSend, onStop, chosen = 0 }: { what: string; sho
         </fieldset>
         <div className="lm-field">
           <label htmlFor="lm-rate-text">{t("fewWords")}</label>
-          <textarea id="lm-rate-text" className="lm-input" style={{ minHeight: 110 }} rows={4} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} />
+          <textarea id="lm-rate-text" className="lm-input" dir="auto" style={{ minHeight: 110 }} rows={4} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} />
           {err === "address" ? <Err>{t("reviewNoAddress")}</Err> : null}
         </div>
         {shownAs === "" ? null : (

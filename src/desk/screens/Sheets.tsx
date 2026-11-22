@@ -365,17 +365,17 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
             <div className="lm-add">
               <label>
                 {t("book.name")}
-                <input maxLength={NAME_MAX} value={add.name} aria-invalid={errors["name"] === true} aria-describedby={errors["name"] ? "lm-nb-name-err" : undefined} onChange={(e) => setAdd({ ...add, name: e.target.value })} />
+                <input dir="auto" maxLength={NAME_MAX} value={add.name} aria-invalid={errors["name"] === true} aria-describedby={errors["name"] ? "lm-nb-name-err" : undefined} onChange={(e) => setAdd({ ...add, name: e.target.value })} />
               </label>
               {errors["name"] && <FieldError id="lm-nb-name-err">{t("book.errName")}</FieldError>}
               <label>
                 {t("book.email")}
-                <input type="email" value={add.email} aria-invalid={errors["email"] === true} aria-describedby={errors["email"] ? "lm-nb-email-err" : undefined} onChange={(e) => setAdd({ ...add, email: e.target.value })} />
+                <input type="email" dir="ltr" value={add.email} aria-invalid={errors["email"] === true} aria-describedby={errors["email"] ? "lm-nb-email-err" : undefined} onChange={(e) => setAdd({ ...add, email: e.target.value })} />
               </label>
               {errors["email"] && <FieldError id="lm-nb-email-err">{t("book.errEmail")}</FieldError>}
               <label>
                 {t("book.phone")}
-                <input type="tel" value={add.phone} aria-describedby="lm-nb-phone-hint" onChange={(e) => setAdd({ ...add, phone: e.target.value })} />
+                <input type="tel" dir="ltr" value={add.phone} aria-describedby="lm-nb-phone-hint" onChange={(e) => setAdd({ ...add, phone: e.target.value })} />
               </label>
               <span id="lm-nb-phone-hint" className="lm-hint">
                 {t("book.phoneHint")}
@@ -386,7 +386,7 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
             </div>
           ) : (
             <>
-              <input id="lm-nb-client" value={query} placeholder={t("book.find")} aria-invalid={errors["customer"] === true} aria-describedby={errors["customer"] ? "lm-nb-client-err" : undefined} onChange={(e) => setQuery(e.target.value)} />
+              <input id="lm-nb-client" dir="auto" value={query} placeholder={t("book.find")} aria-invalid={errors["customer"] === true} aria-describedby={errors["customer"] ? "lm-nb-client-err" : undefined} onChange={(e) => setQuery(e.target.value)} />
               {errors["customer"] && <FieldError id="lm-nb-client-err">{t("book.errClient")}</FieldError>}
               {matches.map((c) => (
                 <button
@@ -473,7 +473,7 @@ function CancelSheet({ bookingId }: { bookingId: Id }) {
       <p>{t("cancel.lead", { name, service: text(byId(data.services, booking["service_id"])?.["name"]) ?? "", day: fmt.day(booking["starts_at"]), time: fmt.time(booking["starts_at"]), who: firstName(byId(data.team, booking["team_id"])?.["name"]) })}</p>
       <div className="lm-field">
         <label htmlFor="lm-cancel-why">{t("cancel.reason")}</label>
-        <textarea id="lm-cancel-why" rows={3} maxLength={200} value={why} aria-invalid={err} aria-describedby="lm-cancel-hint" onChange={(e) => { setWhy(e.target.value); setErr(false); }} />
+        <textarea id="lm-cancel-why" dir="auto" rows={3} maxLength={200} value={why} aria-invalid={err} aria-describedby="lm-cancel-hint" onChange={(e) => { setWhy(e.target.value); setErr(false); }} />
         <span id="lm-cancel-hint" className={err ? "lm-err" : "lm-hint"}>{err ? t("cancel.errReason", { name }) : t("cancel.hint", { name })}</span>
       </div>
       {online > 0 && (
@@ -952,7 +952,7 @@ function TimeOffSheet({ teamId }: { teamId: Id }) {
       {err && <FieldError id="lm-off-err">{t("timeOff.err")}</FieldError>}
       <div className="lm-field">
         <label htmlFor="lm-off-why">{t("timeOff.why")}</label>
-        <input id="lm-off-why" maxLength={120} value={why} onChange={(e) => setWhy(e.target.value)} />
+        <input id="lm-off-why" dir="auto" maxLength={120} value={why} onChange={(e) => setWhy(e.target.value)} />
       </div>
     </Frame>
   );
@@ -1039,7 +1039,7 @@ function ServiceSheet({ serviceId }: { serviceId: Id | null }) {
       <div className="lm-row-gap">
         <div className="lm-field lm-grow">
           <label htmlFor="lm-se-name">{t("service.name")}</label>
-          <input id="lm-se-name" maxLength={80} value={form.name} aria-invalid={errs["name"] === true} aria-describedby={errs["name"] ? "lm-se-name-err" : undefined} onChange={(e) => set({ name: e.target.value })} />
+          <input id="lm-se-name" dir="auto" maxLength={80} value={form.name} aria-invalid={errs["name"] === true} aria-describedby={errs["name"] ? "lm-se-name-err" : undefined} onChange={(e) => set({ name: e.target.value })} />
           {errs["name"] && <FieldError id="lm-se-name-err">{t("service.errName")}</FieldError>}
         </div>
         <div className="lm-field lm-grow">
@@ -1075,7 +1075,7 @@ function ServiceSheet({ serviceId }: { serviceId: Id | null }) {
       </div>
       <div className="lm-field">
         <label htmlFor="lm-se-bring">{t("service.bring")}</label>
-        <input id="lm-se-bring" maxLength={200} value={form.bring} onChange={(e) => set({ bring: e.target.value })} />
+        <input id="lm-se-bring" dir="auto" maxLength={200} value={form.bring} onChange={(e) => set({ bring: e.target.value })} />
       </div>
       <fieldset className="lm-fieldset">
         <legend>{t("service.who")}</legend>
@@ -1208,7 +1208,7 @@ function ClosureSheet() {
     >
       <div className="lm-field">
         <label htmlFor="lm-cl-name">{t("closure.name")}</label>
-        <input id="lm-cl-name" maxLength={80} value={name} aria-invalid={err} aria-describedby={err ? "lm-cl-err" : undefined} onChange={(e) => { setName(e.target.value); setErr(false); }} />
+        <input id="lm-cl-name" dir="auto" maxLength={80} value={name} aria-invalid={err} aria-describedby={err ? "lm-cl-err" : undefined} onChange={(e) => { setName(e.target.value); setErr(false); }} />
       </div>
       <div className="lm-row-gap">
         <div className="lm-field lm-grow">

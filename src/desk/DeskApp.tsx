@@ -92,7 +92,7 @@ function SearchBox() {
   return (
     <div className="lm-search">
       <Search size={16} aria-hidden="true" />
-      <input type="search" value={query} placeholder={t("shell.search")} aria-label={t("shell.search")} onChange={(e) => useDesk.setState({ query: e.target.value })} onKeyDown={(e) => e.key === "Escape" && useDesk.setState({ query: "" })} />
+      <input type="search" dir="auto" value={query} placeholder={t("shell.search")} aria-label={t("shell.search")} onChange={(e) => useDesk.setState({ query: e.target.value })} onKeyDown={(e) => e.key === "Escape" && useDesk.setState({ query: "" })} />
       {open && (
         <div className="lm-search-list">
           {hits.bookings.map((b) => (

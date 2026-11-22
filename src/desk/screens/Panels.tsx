@@ -104,7 +104,7 @@ function NoteField({ id, value, onSave, label, hint }: { id: string; value: stri
   return (
     <section className="lm-field">
       <label htmlFor={id}>{label}</label>
-      <textarea id={id} rows={3} maxLength={500} value={draft} aria-describedby={`${id}-hint`} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft !== value && onSave(draft)} />
+      <textarea id={id} dir="auto" rows={3} maxLength={500} value={draft} aria-describedby={`${id}-hint`} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft !== value && onSave(draft)} />
       <span id={`${id}-hint`} className="lm-hint">
         <Lock size={12} aria-hidden="true" />
         {hint}

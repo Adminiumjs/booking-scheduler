@@ -63,11 +63,12 @@ function SaveBar({ dirty, busy, onSave, onReset }: { dirty: boolean; busy: boole
   );
 }
 
-function Text({ id, label, value, onChange, error, type = "text" }: { id: string; label: string; value: string; onChange: (v: string) => void; error?: string | null; type?: string }) {
+/** A studio's own words run in their own direction; an address of the web always left to right. */
+function Text({ id, label, value, onChange, error, type = "text", dir = "auto" }: { id: string; label: string; value: string; onChange: (v: string) => void; error?: string | null; type?: string; dir?: "auto" | "ltr" }) {
   return (
     <div className="lm-field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} type={type} value={value} aria-invalid={error !== null && error !== undefined} aria-describedby={error ? `${id}-err` : undefined} onChange={(e) => onChange(e.target.value)} />
+      <input id={id} type={type} dir={dir} value={value} aria-invalid={error !== null && error !== undefined} aria-describedby={error ? `${id}-err` : undefined} onChange={(e) => onChange(e.target.value)} />
       {error && <FieldError id={`${id}-err`}>{error}</FieldError>}
     </div>
   );
@@ -109,8 +110,8 @@ function StudioTab({ settings }: { settings: Row }) {
           <div className="lm-grow"><Text id="lm-set-region" label={t("settings.region")} value={form["region"] ?? ""} onChange={(v) => set("region", v)} /></div>
           <div className="lm-grow"><Text id="lm-set-zip" label={t("settings.zip")} value={form["zip"] ?? ""} onChange={(v) => set("zip", v)} /></div>
         </div>
-        <Text id="lm-set-email" type="email" label={t("settings.email")} value={form["email"] ?? ""} onChange={(v) => set("email", v)} error={errs["email"] ? t("settings.errEmail") : null} />
-        <Text id="lm-set-web" label={t("settings.web")} value={form["website"] ?? ""} onChange={(v) => set("website", v)} error={errs["website"] ? t("settings.errWeb") : null} />
+        <Text id="lm-set-email" type="email" dir="ltr" label={t("settings.email")} value={form["email"] ?? ""} onChange={(v) => set("email", v)} error={errs["email"] ? t("settings.errEmail") : null} />
+        <Text id="lm-set-web" dir="ltr" label={t("settings.web")} value={form["website"] ?? ""} onChange={(v) => set("website", v)} error={errs["website"] ? t("settings.errWeb") : null} />
         <div className="lm-field">
           <span className="lm-label">{t("settings.zone")}</span>
           <span className="lm-with">
