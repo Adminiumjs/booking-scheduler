@@ -7,6 +7,7 @@ import type { Kind } from "./outbox.ts";
 
 export interface Words {
   names: Record<Kind | "staff", string>;
+  minutes: string;
   when: string;
   with: string;
   code: string;
@@ -114,6 +115,7 @@ export const EMAIL_EN: Words = {
     review_reminder: "Review reminder",
     staff: "New booking, to the specialist",
   },
+  minutes: "min",
   when: "When",
   with: "With",
   code: "Booking code",

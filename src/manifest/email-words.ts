@@ -10,6 +10,7 @@ import type { Words } from "./email-en.ts";
 
 export const EMAIL_DE: Words = {
   names: { booked: "Gebucht", deposit_receipt: "Gebucht, Anzahlung bezahlt", deposit_link: "Anzahlung bezahlen", let_go: "Wir haben Ihren Termin freigegeben", reminder: "Erinnerung am Vortag", moved: "Ihre Buchung wurde verschoben", cancelled: "Von Ihnen storniert, rechtzeitig", cancelled_late: "Von Ihnen storniert, zu spät", cancelled_studio: "Vom Studio storniert", offer: "Ein Termin ist frei geworden", review_request: "Bitte um Bewertung", review_reminder: "Erinnerung an die Bewertung", staff: "Neue Buchung, an die Fachkraft" },
+  minutes: "Min.",
   when: "Wann", with: "Bei", code: "Buchungscode", price: "Preis", atStudio: "Zahlung im Studio", paidOnline: "Online bezahlt", toPayStudio: "Im Studio zu zahlen", toPayOnline: "Jetzt online zu zahlen", addToCalendar: "Zum Kalender hinzufügen",
   fileAttached: "Ihre Kalenderdatei ist dieser E-Mail beigefügt.", fileRemoves: "Die beigefügte Kalenderdatei entfernt den Termin aus Ihrem Kalender.",
   freeUntil: "Kostenlos stornieren oder verschieben bis {FREE}. Danach ist ein Verschieben online nicht mehr möglich.",
@@ -33,6 +34,7 @@ export const EMAIL_DE: Words = {
 
 export const EMAIL_FR: Words = {
   names: { booked: "Réservé", deposit_receipt: "Réservé, acompte payé", deposit_link: "Payer votre acompte", let_go: "Nous avons libéré votre créneau", reminder: "Rappel, la veille", moved: "Votre réservation a été déplacée", cancelled: "Annulé par vous, à temps", cancelled_late: "Annulé par vous, tardivement", cancelled_studio: "Annulé par le studio", offer: "Un créneau s'est libéré", review_request: "Demande d'avis", review_reminder: "Rappel d'avis", staff: "Nouvelle réservation, au spécialiste" },
+  minutes: "min",
   when: "Quand", with: "Avec", code: "Code de réservation", price: "Prix", atStudio: "Paiement au studio", paidOnline: "Payé en ligne", toPayStudio: "À payer au studio", toPayOnline: "À payer en ligne maintenant", addToCalendar: "Ajouter au calendrier",
   fileAttached: "Votre fichier de calendrier est joint à cet e-mail.", fileRemoves: "Le fichier de calendrier joint le retire de votre calendrier.",
   freeUntil: "Annulation ou déplacement gratuits jusqu'au {FREE}. Ensuite, le déplacement n'est plus possible en ligne.",
@@ -56,6 +58,7 @@ export const EMAIL_FR: Words = {
 
 export const EMAIL_DA: Words = {
   names: { booked: "Booket", deposit_receipt: "Booket, depositum betalt", deposit_link: "Betal dit depositum", let_go: "Vi har frigivet din tid", reminder: "Påmindelse dagen før", moved: "Din booking er flyttet", cancelled: "Aflyst af dig, i tide", cancelled_late: "Aflyst af dig, for sent", cancelled_studio: "Aflyst af studiet", offer: "En tid er blevet ledig", review_request: "Anmodning om anmeldelse", review_reminder: "Påmindelse om anmeldelse", staff: "Ny booking, til specialisten" },
+  minutes: "min",
   when: "Hvornår", with: "Hos", code: "Bookingkode", price: "Pris", atStudio: "Betal i studiet", paidOnline: "Betalt online", toPayStudio: "Betales i studiet", toPayOnline: "Betales online nu", addToCalendar: "Føj til kalender",
   fileAttached: "Din kalenderfil er vedhæftet denne e-mail.", fileRemoves: "Den vedhæftede kalenderfil fjerner den fra din kalender.",
   freeUntil: "Gratis at aflyse eller flytte indtil {FREE}. Derefter kan den ikke flyttes online.",
@@ -79,6 +82,7 @@ export const EMAIL_DA: Words = {
 
 export const EMAIL_CS: Words = {
   names: { booked: "Rezervováno", deposit_receipt: "Rezervováno, záloha zaplacena", deposit_link: "Zaplaťte zálohu", let_go: "Váš termín jsme uvolnili", reminder: "Připomenutí den předem", moved: "Vaše rezervace byla přesunuta", cancelled: "Zrušeno vámi, včas", cancelled_late: "Zrušeno vámi, pozdě", cancelled_studio: "Zrušeno studiem", offer: "Uvolnil se termín", review_request: "Žádost o recenzi", review_reminder: "Připomenutí recenze", staff: "Nová rezervace, pro specialistu" },
+  minutes: "min",
   when: "Kdy", with: "U", code: "Kód rezervace", price: "Cena", atStudio: "Platba ve studiu", paidOnline: "Zaplaceno online", toPayStudio: "K zaplacení ve studiu", toPayOnline: "K zaplacení online nyní", addToCalendar: "Přidat do kalendáře",
   fileAttached: "Soubor kalendáře je přiložen k tomuto e-mailu.", fileRemoves: "Přiložený soubor kalendáře termín z kalendáře odstraní.",
   freeUntil: "Zrušení nebo přesun zdarma do {FREE}. Poté už přesun online není možný.",
@@ -102,6 +106,7 @@ export const EMAIL_CS: Words = {
 
 export const EMAIL_AR: Words = {
   names: { booked: "تم الحجز", deposit_receipt: "تم الحجز ودُفع العربون", deposit_link: "ادفع العربون", let_go: "أتحنا موعدك لغيرك", reminder: "تذكير قبل يوم", moved: "تم نقل حجزك", cancelled: "أُلغي منك في الوقت المناسب", cancelled_late: "أُلغي منك متأخرًا", cancelled_studio: "ألغاه الاستوديو", offer: "توفر موعد", review_request: "طلب تقييم", review_reminder: "تذكير بالتقييم", staff: "حجز جديد، إلى المختص" },
+  minutes: "دقيقة",
   when: "الموعد", with: "مع", code: "رمز الحجز", price: "السعر", atStudio: "الدفع في الاستوديو", paidOnline: "مدفوع عبر الإنترنت", toPayStudio: "المتبقي للدفع في الاستوديو", toPayOnline: "للدفع عبر الإنترنت الآن", addToCalendar: "أضف إلى التقويم",
   fileAttached: "ملف التقويم مرفق بهذه الرسالة.", fileRemoves: "ملف التقويم المرفق يزيل الموعد من تقويمك.",
   freeUntil: "يمكنك الإلغاء أو تغيير الموعد مجانًا حتى {FREE}. بعد ذلك لا يمكن تغيير الموعد عبر الإنترنت.",
@@ -125,6 +130,7 @@ export const EMAIL_AR: Words = {
 
 export const EMAIL_ZH_CN: Words = {
   names: { booked: "已预约", deposit_receipt: "已预约，定金已付", deposit_link: "支付定金", let_go: "您的时段已释放", reminder: "前一天提醒", moved: "您的预约已改期", cancelled: "您已按时取消", cancelled_late: "您逾期取消", cancelled_studio: "工作室取消", offer: "有空档了", review_request: "评价邀请", review_reminder: "评价提醒", staff: "新预约，发给专员" },
+  minutes: "分钟",
   when: "时间", with: "服务人员", code: "预约码", price: "价格", atStudio: "到店支付", paidOnline: "已在线支付", toPayStudio: "到店支付", toPayOnline: "现在在线支付", addToCalendar: "添加到日历",
   fileAttached: "日历文件已附在此邮件中。", fileRemoves: "附带的日历文件会将其从您的日历中移除。",
   freeUntil: "在 {FREE} 前可免费取消或改期。此后无法在线改期。",
@@ -148,6 +154,7 @@ export const EMAIL_ZH_CN: Words = {
 
 export const EMAIL_ZH_TW: Words = {
   names: { booked: "已預約", deposit_receipt: "已預約，訂金已付", deposit_link: "支付訂金", let_go: "您的時段已釋出", reminder: "前一天提醒", moved: "您的預約已改期", cancelled: "您已按時取消", cancelled_late: "您逾期取消", cancelled_studio: "工作室取消", offer: "有空檔了", review_request: "評價邀請", review_reminder: "評價提醒", staff: "新預約，發給專員" },
+  minutes: "分鐘",
   when: "時間", with: "服務人員", code: "預約碼", price: "價格", atStudio: "到店付款", paidOnline: "已線上付款", toPayStudio: "到店付款", toPayOnline: "現在線上付款", addToCalendar: "加入行事曆",
   fileAttached: "行事曆檔案已附在此郵件中。", fileRemoves: "附帶的行事曆檔案會將其從您的行事曆中移除。",
   freeUntil: "在 {FREE} 前可免費取消或改期。此後無法線上改期。",

@@ -55,7 +55,7 @@ const OWN_LINK = "{{manage_url}}#{{booking.link_token}}";
 const facts = (w: Words) =>
   lines(
     "booking",
-    { label: "{S}", amount: "{{booking.minutes}} min" },
+    { label: "{S}", amount: `{{booking.minutes}} ${w.minutes}` },
     { label: w.when, amount: "{D} · {{booking.time_range}}" },
     { label: w.with, amount: "{P}" },
     { label: w.code, amount: "{{booking.code}}" },
@@ -67,8 +67,11 @@ const owed = (w: Words): Block[] => [
   when("booking.shown_paid", lines("paid", { label: w.paidOnline, amount: "{PAID}" })),
   when("booking.rest_at_studio", lines("rest", { label: w.toPayStudio, amount: "{REST}" })),
 ];
-const addToCalendar = (w: Words) =>
-  when("calendarGoogle", links("calendar", { label: `${w.addToCalendar}: Google Calendar`, url: "{{calendarGoogle}}" }, { label: "Outlook", url: "{{calendarOutlook}}" }));
+/** "Add to calendar" and its two links, left out of a mail whose visit no longer holds a time. */
+const addToCalendar = (w: Words): Block[] => [
+  when("calendarGoogle", para("calendar-title", w.addToCalendar)),
+  when("calendarGoogle", links("calendar", { label: "Google Calendar", url: "{{calendarGoogle}}" }, { label: "Outlook", url: "{{calendarOutlook}}" })),
+];
 const manage = (w: Words) => links("manage", { label: w.manage, url: OWN_LINK });
 const bookAnother = (w: Words) => button("again", w.bookAnother, "{{booking_url}}");
 
@@ -82,7 +85,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
       return {
         subject: w.bookedSubject,
         preheader: `${w.bookedPre} ${w.atStudio}.`,
-        blocks: [heading(w.bookedHeading), para("thanks", w.bookedThanks), facts(w), anyoneLine, priceAtStudio(w), addToCalendar(w), para("file", w.fileAttached), policy(w, false), manage(w)],
+        blocks: [heading(w.bookedHeading), para("thanks", w.bookedThanks), facts(w), anyoneLine, priceAtStudio(w), ...addToCalendar(w), para("file", w.fileAttached), policy(w, false), manage(w)],
       };
     case "deposit_receipt":
       return {
@@ -94,7 +97,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
           facts(w),
           anyoneLine,
           ...owed(w),
-          addToCalendar(w),
+          ...addToCalendar(w),
           para("file", w.fileAttached),
           policy(w, true),
           manage(w),
@@ -140,7 +143,7 @@ function blocks(kind: Kind, w: Words): { subject: string; preheader: string; blo
       return {
         subject: w.movedSubject,
         preheader: w.movedPre,
-        blocks: [heading(w.movedHeading), para("intro", w.movedIntro), facts(w), ...owed(w), addToCalendar(w), para("file", w.movedFile, w.movedOld), policy(w, false), manage(w)],
+        blocks: [heading(w.movedHeading), para("intro", w.movedIntro), facts(w), ...owed(w), ...addToCalendar(w), para("file", w.movedFile, w.movedOld), policy(w, false), manage(w)],
       };
     case "cancelled":
       return {
@@ -238,7 +241,7 @@ function staffLayout(w: Words) {
         id: "booking",
         data: {
           lines: [
-            { label: "{{service_name}}", amount: "{{record.minutes}} min" },
+            { label: "{{service_name}}", amount: `{{record.minutes}} ${w.minutes}` },
             { label: w.when, amount: "{{record.starts_at}}" },
             { label: w.code, amount: "{{record.code}}" },
           ],
@@ -273,12 +276,19 @@ function varsOf(content: unknown): string[] {
   return [...found].filter((name) => /^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*$/.test(name) || name === "appName").sort();
 }
 
+/**
+ * The mails' own colour: the product's teal, which passes contrast on the button and on links (L3-F6). The name stays
+ * the studio's and the sender the workspace's, because both are left empty here; the mark is the workspace's logo if it has one.
+ */
+const BRAND = { name: "", mark: "logo", accent: "#007167", fromName: "", fromEmail: "" };
+
 export function emailTemplates(): unknown[] {
   const words = emailWords();
   const of = <T>(pick: (w: Words) => T) => Object.fromEntries(LOCALES.map((tag) => [tag, pick(words[tag])]));
   return [
     ...KINDS.map((kind) => ({
       key: templateKey(kind),
+      brand: BRAND,
       ...(WITH_CALENDAR.has(kind) ? { calendar: { link: "booking" } } : {}),
       name: of((w) => w.names[kind]),
       vars: varsOf(layout(kind, EMAIL_EN)),
@@ -286,6 +296,7 @@ export function emailTemplates(): unknown[] {
     })),
     {
       key: STAFF_TEMPLATE,
+      brand: BRAND,
       name: of((w) => w.names.staff),
       vars: varsOf(staffLayout(EMAIL_EN)),
       locales: of((w) => staffLayout(w)),
