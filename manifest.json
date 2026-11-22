@@ -124,7 +124,7 @@
     "suggests": [
       {
         "key": "forms",
-        "range": "^1.0.33",
+        "range": "^1.0.34",
         "checked": true,
         "reason": {
           "en-US": "Take reviews from customers after their visit.",
@@ -139,7 +139,7 @@
       },
       {
         "key": "offers",
-        "range": "^1.0.33",
+        "range": "^1.0.34",
         "checked": true,
         "reason": {
           "en-US": "Sell gift cards and packs of visits, and take them at booking.",
@@ -154,7 +154,7 @@
       },
       {
         "key": "holiday-calendars",
-        "range": "^1.0.33",
+        "range": "^1.0.34",
         "reason": {
           "en-US": "Bring public holidays in as closures.",
           "de-DE": "Feiertage als Schließtage übernehmen.",

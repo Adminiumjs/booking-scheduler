@@ -1,15 +1,20 @@
 /** What Lumen offers at install: each add-on it can use, none of them needed. */
 import { describe, expect, it } from "vitest";
 
-import { ADD_ONS, NEW_ADD_ONS_RANGE } from "./add-ons.ts";
+import { ADD_ONS, ADD_ONS_RANGE } from "./add-ons.ts";
 import { LOCALES } from "./labels.ts";
 
 describe("the add-ons offered at install", () => {
   it("offers Google reviews, unticked, in every language", () => {
     const offer = ADD_ONS.suggests.find((a) => a.key === "google-reviews");
-    expect(offer?.range).toBe(NEW_ADD_ONS_RANGE);
+    expect(offer?.range).toBe(ADD_ONS_RANGE);
     expect(offer?.checked).toBeUndefined();
     expect(Object.keys(offer?.reason ?? {}).sort()).toEqual([...LOCALES].sort());
+  });
+
+  it("asks every add-on for the release that carries the calendars and Google reviews", () => {
+    expect(ADD_ONS_RANGE).toBe("^1.0.34");
+    expect(ADD_ONS.suggests.every((a) => a.range === ADD_ONS_RANGE)).toBe(true);
   });
 
   it("ticks only Forms and Offers", () => {
