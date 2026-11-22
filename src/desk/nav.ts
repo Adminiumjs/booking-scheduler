@@ -8,9 +8,9 @@
  * is read by the Vite config.
  */
 import type { SurfaceNavEntry } from "../surface-types.ts";
-import type { DeskKey } from "./i18n/index.ts";
+import type { en } from "./i18n/en.ts";
 
-export type DeskNavEntry = SurfaceNavEntry<string> & { labelKey: DeskKey; icon: string };
+export type DeskNavEntry = SurfaceNavEntry<string> & { labelKey: keyof typeof en; icon: string };
 
 export const DESK_NAV = [
   { id: "today", path: "", view: "today", side: "staff", icon: "house", labelKey: "nav.today" },

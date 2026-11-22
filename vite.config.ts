@@ -1,3 +1,7 @@
+import { surfaceJsonPlugin } from "./surface-emit.ts";
+import { APP_KEY, APP_LABEL_KEY, SURFACE_NAV } from "./src/surface-nav.ts";
+import { SURFACE_MESSAGES } from "./src/surface-words.ts";
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -60,13 +64,25 @@ const define = Object.fromEntries(
 const ADMINIUM_DEV_API = process.env.ADMINIUM_DEV_API ?? "http://127.0.0.1:4600";
 
 const server = {
-  proxy: { "/api": { target: ADMINIUM_DEV_API, changeOrigin: false } },
+  proxy: {
+    "/api": { target: ADMINIUM_DEV_API, changeOrigin: false },
+    // A hosted side's start, beside its index: run `vite --base=/apps/bookings/<side>/` and the screens read it from Adminium.
+    "^/apps/[^/]+/(staff|customer)/surface-config\\.json$": { target: ADMINIUM_DEV_API, changeOrigin: false },
+  },
 };
 
 export default defineConfig({
   define,
   server,
-  plugins: [react()],
+  plugins: [
+    react(),
+    /*
+     * `surface.json` beside `index.html`, on surface builds only: Adminium reads
+     * it to list this app's sections in its sidebar. A build with no side writes
+     * nothing. The nav is the module the desk itself routes with.
+     */
+    surfaceJsonPlugin({ appKey: APP_KEY, appLabelKey: APP_LABEL_KEY, nav: SURFACE_NAV, messages: SURFACE_MESSAGES }),
+  ],
   build: {
     rollupOptions: {
       output: {
