@@ -24,6 +24,8 @@
  *     pack use's reverse watches it, so a late cancel or a no-show keeps the
  *     use (MON-10, cQ31).
  */
+import { EMAIL_EN } from "./email-en.ts";
+import { KINDS } from "./outbox.ts";
 import { CALENDAR_ADD_ONS } from "./add-ons.ts";
 import { l, type Labels } from "./labels.ts";
 
@@ -132,6 +134,10 @@ const stamp = (set: unknown, on: unknown) => ({ stamp: { set, on } });
 const onState = (column: string, ...values: string[]) => ({ column, values });
 export const setting = (column: string) => ({ table: "settings", column });
 const c0 = (column: string) => ({ coalesce: [column, 0] });
+/** A formula's way of writing nothing: a division by zero is empty. */
+const NOTHING = { div: [1, 0] };
+/** The outbox's kinds, by the words the desk and the console show them in. */
+const MESSAGE_KINDS: Record<string, string> = Object.fromEntries(KINDS.map((kind) => [kind, EMAIL_EN.names[kind]]));
 /** The deposit or the whole price, by how the service is paid, less what a code or a pack covered. */
 const ASKED = {
   max: [0, { sub: [{ if: [{ eq: ["pay_mode", "full"] }, c0("price"), { if: [{ eq: ["pay_mode", "deposit"] }, c0("deposit"), 0] }] }, c0("discount")] }],
@@ -389,6 +395,8 @@ export const TABLES: Table[] = [
       bool("bookable_online", "Bookable online", true),
       choice("anyone_pick", "\"Anyone\" goes to", { even: "Share evenly", order: "In team order" }, { default: "even" }),
       text("bring", 200, "What to bring", opt),
+      // How long before a visit its reminder is written: the day before, at 10 AM (D26). A number the outbox reads, not a setting anyone edits.
+      int("remind_hours", "Reminder lead (hours)", { default: 24, rules: { validation: { min: 1, max: 48 } } }),
       bool("active", "Offered", true),
       int("position", "Position", { default: 0 }),
     ],
@@ -654,6 +662,37 @@ export const TABLES: Table[] = [
       int("buffer_min", "Clear-up (minutes)", { default: 0, rules: frozen("service_id", "buffer_min") }),
       // Until when a guest may move it, and cancel it for free: the moment the cancel window opens.
       at("free_until", "Free to change until", { ...opt, rules: stamp({ moment: { column: "starts_at", minus: { hours: setting("cancel_hours") } } }, { columns: ["starts_at"] }) }),
+      // ── what the e-mails need to know about the time ──
+      // When this time was set: a booking made or moved inside the last day gets no reminder, because its own mail is one (cQ11, FIL-8).
+      at("time_set_at", "Time set", { ...opt, rules: stamp("now", { columns: ["starts_at"] }) }),
+      // The moment the reminder would go: 10 AM on the day before, on the studio's clock.
+      at("remind_at", "Reminder goes out", { ...opt, rules: stamp({ moment: { column: "starts_at", time: "10:00", minus: { days: 1 } } }, { columns: ["starts_at"] }) }),
+      {
+        ref: "reminds",
+        type: "int",
+        nullable: true,
+        label: l("Gets a reminder"),
+        rules: {
+          formula: {
+            if: [
+              {
+                and: [
+                  { eq: ["state", "booked"] },
+                  { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "remind_at"] }, -1] }, 0] },
+                  { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "starts_at"] }, 0] }, 24] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+      // The morning the review request goes: the review reminder's days count from here, as K10 says them.
+      at("review_from", "Review reminder counts from", { ...opt, rules: stamp({ moment: { column: "starts_at", plus: { days: 1 } } }, { columns: ["starts_at"] }) }),
+      // Empty once the free window had already closed when the time was set, or when the reminder goes: the mail says the other sentence (L3-F7).
+      int("free_hours", "Hours free to change, when set", { ...opt, rules: { formula: { floor: { hoursBetween: ["time_set_at", "free_until"] } } } }),
+      int("free_at_reminder", "Hours free to change, at the reminder", { ...opt, rules: { formula: { floor: { hoursBetween: ["remind_at", "free_until"] } } } }),
       // The calendar file's count: a change of time or a cancel is a new revision of the same event (cT12).
       int("revision", "Revision", { default: 0 }),
       // ── money ──
@@ -719,6 +758,14 @@ export const TABLES: Table[] = [
       // What is still to pay online: it falls to nothing as money lands (MON-1).
       money("pay_due", "Still to pay online", { formula: { max: [0, { sub: ["asked", c0("paid")] }] } }),
       money("refunded", "Refunded", { rollup: { from: "payments", via: "booking_id", sum: "returned" } }),
+      // For the e-mails: each is empty when there is nothing to say, so the line is left out (a formula divided by zero is empty).
+      money("shown_paid", "Paid (for the e-mails)", { formula: { if: [{ gt: [c0("paid"), 0] }, "paid", NOTHING] } }),
+      money("rest_at_studio", "To pay at the studio", {
+        formula: {
+          if: [{ gt: [{ sub: [c0("net_price"), { max: [c0("asked"), c0("paid")] }] }, 0] }, { sub: [c0("net_price"), { max: [c0("asked"), c0("paid")] }] }, NOTHING],
+        },
+      }),
+      { ref: "shown_anyone", type: "int", nullable: true, label: l("Chosen as Anyone (for the e-mails)"), rules: { formula: { if: [{ eq: ["picked_by_anyone", true] }, 1, NOTHING] } } },
       // R5: a deposit link holds the time until `link_until`; pressing Pay starts the usual minutes.
       bool("deposit_link", "Deposit link sent", false),
       at("link_until", "Deposit link holds until", {
@@ -1006,13 +1053,14 @@ export const TABLES: Table[] = [
     keyField: "kind",
     columns: [
       id,
-      text("kind", 40, "Kind"),
+      choice("kind", "Kind", MESSAGE_KINDS),
       choice("status", "Status", { queued: "Going out", sent: "Sent", failed: "Not sent", skipped: "Skipped" }, {
         default: "queued",
         tones: { queued: "info", sent: "pos", failed: "danger", skipped: "neutral" },
       }),
       text("to_address", 254, "Sent to", { ...opt, semantic: "email" }),
-      language("language"),
+      // Adminium writes it as it sends, in the language the mail was written in.
+      text("language", 16, "Language", opt),
       fk("booking_id", "bookings", "Booking", opt),
       fk("purchase_id", "purchases", "Purchase", opt),
       fk("waitlist_id", "waitlist", "Waiting-list entry", opt),

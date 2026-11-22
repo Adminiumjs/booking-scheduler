@@ -4,6 +4,9 @@
  * together.
  */
 import { ADD_ONS } from "./add-ons.ts";
+import { AUTOMATIONS } from "./automations.ts";
+import { emailTemplates } from "./emails.ts";
+import { OUTBOX } from "./outbox.ts";
 import { NAV_GROUPS, pages } from "./pages.ts";
 import { PAYMENTS } from "./payments.ts";
 import { PEOPLE } from "./people.ts";
@@ -25,7 +28,7 @@ const ENV = {
   VITE_ADMINIUM_PUBLISHABLE_KEY: { required: false, example: "adm_pub_..." },
 };
 
-export const STAFF_ROUTES = { today: "/", calendar: "/calendar", clients: "/clients", services: "/services", team: "/team", waitlist: "/waitlist", reviews: "/reviews", settings: "/settings" };
+export const STAFF_ROUTES = { today: "/", calendar: "/calendar", clients: "/clients", services: "/services", team: "/team", waiting: "/waiting", reviews: "/reviews", settings: "/settings" };
 
 export const CUSTOMER_ROUTES = {
   home: "/",
@@ -97,6 +100,9 @@ export function buildManifest(): Record<string, unknown> {
     publicAccess: PUBLIC_ACCESS,
     people: PEOPLE,
     payments: PAYMENTS,
+    outbox: OUTBOX,
+    emailTemplates: emailTemplates(),
+    automations: AUTOMATIONS,
     sampleData: { file: "seeds/bookings.sample.json" },
   };
 }

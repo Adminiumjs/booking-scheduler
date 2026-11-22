@@ -13,13 +13,13 @@ import { useApp } from "../app.tsx";
 import type { ReviewLink } from "../door.ts";
 import { firstName, fmtDay } from "../format.ts";
 import { Blank, Err, Icon } from "../parts.tsx";
-import { tokenOf } from "../route.ts";
+import { starOf, tokenOf } from "../route.ts";
 
 type View = "loading" | "form" | "thanks" | "already" | "expired";
 
-function Form({ what, shownAs, onSend, onStop }: { what: string; shownAs: string; onSend: (stars: number, body: string) => Promise<void>; onStop: (() => Promise<void>) | null }) {
+function Form({ what, shownAs, onSend, onStop, chosen = 0 }: { what: string; shownAs: string; onSend: (stars: number, body: string) => Promise<void>; onStop: (() => Promise<void>) | null; chosen?: number }) {
   const { t, toast } = useApp();
-  const [stars, setStars] = useState(0);
+  const [stars, setStars] = useState(chosen);
   const [text, setText] = useState("");
   const [err, setErr] = useState<"stars" | "address" | "failed" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -229,6 +229,8 @@ export function ReviewLinkPage() {
   const { t, door } = useApp();
   const [view, setView] = useState<View>("loading");
   const [token] = useState(() => tokenOf(window.location.hash));
+  // A star pressed in the mail opens the form with it chosen, and nothing is saved until it is sent (FIL-12).
+  const [chosen] = useState(() => starOf(window.location.hash));
   const [link, setLink] = useState<ReviewLink | null>(null);
 
   useEffect(() => {
@@ -259,6 +261,7 @@ export function ReviewLinkPage() {
         <Form
           what={what}
           shownAs={link?.shownName ?? ""}
+          chosen={chosen}
           onSend={async (stars, body) => {
             await door.sendReviewLink(token, stars, body);
             setView("thanks");

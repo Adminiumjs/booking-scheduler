@@ -352,7 +352,7 @@ export function sampleBundle(): SampleBundle {
           .filter((b) => b.review !== null && b.review !== "opted-out")
           .map((b) => {
             const customer = customerById.get(b.customer)!;
-            return { kind: "review-request", status: "sent", to_address: customer.email, language: "en-US", booking_id: ref(`booking:${b.code}`), customer_id: ref(customerLabel(b.customer)), created_at: passed({ day: b.day + 1, time: "10:00" }), sent_at: passed({ day: b.day + 1, time: "10:00" }) };
+            return { kind: "review_request", status: "sent", to_address: customer.email, language: "en-US", booking_id: ref(`booking:${b.code}`), customer_id: ref(customerLabel(b.customer)), created_at: passed({ day: b.day + 1, time: "10:00" }), sent_at: passed({ day: b.day + 1, time: "10:00" }) };
           }),
       },
     ],

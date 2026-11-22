@@ -73,3 +73,9 @@ export function tokenOf(hash: string, max = 1600): string | null {
   const [token = ""] = hash.replace(/^#/, "").split("&");
   return token.length >= 8 && token.length <= max && /^[A-Za-z0-9_.-]+$/.test(token) ? token : null;
 }
+
+/** The star a review mail's link was pressed on (`#<token>&star=4`), or 0. */
+export function starOf(hash: string): number {
+  const found = /(?:^#?|&)star=([1-5])(?:&|$)/.exec(hash);
+  return found === null ? 0 : Number(found[1]);
+}

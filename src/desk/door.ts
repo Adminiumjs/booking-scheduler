@@ -208,7 +208,7 @@ export interface NewBooking {
   /** Null means Anyone: Adminium picks. */
   person: Id | null;
   startsAt: string;
-  customer: { id: Id | null; name: string; email: string | null; phone: string | null };
+  customer: { id: Id | null; name: string; email: string | null; phone: string | null; language?: string | null };
   /** Send a deposit link: the booking is held as being paid until it is paid or let go. */
   depositLink: boolean;
   /** A retry of the same press carries the same key, so it cannot book twice (cT18). */

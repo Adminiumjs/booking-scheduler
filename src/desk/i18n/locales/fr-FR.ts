@@ -268,11 +268,6 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "offer.preview": "L’e-mail",
   "offer.to": "À",
   "offer.subject": "Objet",
-  "offer.subjectLine": "Un créneau s’est libéré chez {studio}",
-  "offer.hi": "Bonjour {name},",
-  "offer.body": "Un créneau {service} s’est libéré le {day} à {time} avec {who}. La première personne à le réserver l’obtient.",
-  "offer.cta": "Réserver ce créneau",
-  "offer.leave": "Plus besoin ? Me retirer de la liste d’attente",
   "offer.send": "Envoyer la proposition",
   "offer.tooLate": "Ce créneau est désormais dans le délai de préavis des clients, il ne peut donc pas être proposé.",
 

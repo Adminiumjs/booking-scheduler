@@ -268,11 +268,6 @@ export const zhCN: Partial<Record<keyof typeof en, string>> = {
   "offer.preview": "邮件内容",
   "offer.to": "收件人",
   "offer.subject": "主题",
-  "offer.subjectLine": "{studio} 空出了一个时段",
-  "offer.hi": "{name}，您好：",
-  "offer.body": "{day} {time}，{who} 空出了一个{service}的时段。先预约的人先得。",
-  "offer.cta": "预约此时段",
-  "offer.leave": "不再需要了？请将我移出候补名单",
   "offer.send": "发送邀请",
   "offer.tooLate": "该时段已在客人的提前预约时限之内，无法再邀请。",
 

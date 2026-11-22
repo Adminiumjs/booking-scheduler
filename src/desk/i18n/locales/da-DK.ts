@@ -268,11 +268,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "offer.preview": "E-mailen",
   "offer.to": "Til",
   "offer.subject": "Emne",
-  "offer.subjectLine": "Der er åbnet en tid hos {studio}",
-  "offer.hi": "Hej {name},",
-  "offer.body": "Der er åbnet en tid til {service} {day} kl. {time} hos {who}. Den første, der booker den, får den.",
-  "offer.cta": "Book denne tid",
-  "offer.leave": "Behøver du den ikke mere? Fjern mig fra ventelisten",
   "offer.send": "Send tilbuddet",
   "offer.tooLate": "Den tid ligger nu inden for gæsternes bookingfrist, så den kan ikke tilbydes.",
 

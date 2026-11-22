@@ -270,11 +270,6 @@ export const en = {
   "offer.preview": "The e-mail",
   "offer.to": "To",
   "offer.subject": "Subject",
-  "offer.subjectLine": "A time has opened at {studio}",
-  "offer.hi": "Hi {name},",
-  "offer.body": "A {service} time has opened on {day} at {time} with {who}. The first person to book it gets it.",
-  "offer.cta": "Book this time",
-  "offer.leave": "Not needed any more? Take me off the waiting list",
   "offer.send": "Send the offer",
   "offer.tooLate": "That time is now inside the guests' notice, so it can't be offered.",
 

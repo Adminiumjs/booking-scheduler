@@ -415,6 +415,8 @@ export class AdminiumDesk implements DeskDoor {
         name: input.customer.name,
         email: input.customer.email,
         phone: input.customer.phone,
+        // The mails about this visit are written in the language the customer's own row keeps.
+        ...(input.customer.language ? { language: input.customer.language } : {}),
         starts_at: input.startsAt,
         channel: "desk",
         ...(input.depositLink ? { state: "paying", ask_online: true, deposit_link: true } : {}),

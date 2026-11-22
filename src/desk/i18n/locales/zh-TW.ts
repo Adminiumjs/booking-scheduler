@@ -268,11 +268,6 @@ export const zhTW: Partial<Record<keyof typeof en, string>> = {
   "offer.preview": "郵件內容",
   "offer.to": "收件者",
   "offer.subject": "主旨",
-  "offer.subjectLine": "{studio} 空出了一個時段",
-  "offer.hi": "{name}，您好：",
-  "offer.body": "{day} {time}，{who} 空出了一個{service}的時段。先預約的人先得。",
-  "offer.cta": "預約此時段",
-  "offer.leave": "不再需要了嗎？請將我移出候補名單",
   "offer.send": "傳送邀請",
   "offer.tooLate": "該時段已在客人的預約提前時限內，無法再邀請。",
 

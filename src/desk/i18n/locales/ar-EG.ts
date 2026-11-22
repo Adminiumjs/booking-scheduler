@@ -268,11 +268,6 @@ export const ar: Partial<Record<keyof typeof en, string>> = {
   "offer.preview": "الرسالة",
   "offer.to": "إلى",
   "offer.subject": "الموضوع",
-  "offer.subjectLine": "توفر موعد في {studio}",
-  "offer.hi": "مرحبًا {name}،",
-  "offer.body": "توفر موعد لخدمة {service} يوم {day} الساعة {time} لدى {who}. يحصل عليه أول من يحجزه.",
-  "offer.cta": "احجز هذا الموعد",
-  "offer.leave": "لم تعد بحاجة إليه؟ احذفني من قائمة الانتظار",
   "offer.send": "إرسال العرض",
   "offer.tooLate": "أصبح هذا الموعد ضمن مهلة الإشعار المسبق للضيوف، لذا لا يمكن عرضه.",
 

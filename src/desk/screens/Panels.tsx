@@ -62,6 +62,8 @@ const MAIL_WORDS: Record<string, DeskKey> = {
   reminder: "mail.reminder",
   moved: "mail.moved",
   cancelled: "mail.cancelled",
+  cancelled_late: "mail.cancelled",
+  cancelled_studio: "mail.cancelled",
   let_go: "mail.letGo",
   lapsed: "mail.letGo",
   offer: "mail.offer",

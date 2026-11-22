@@ -11,6 +11,7 @@ import { useData, useEnv, useRun } from "../env.tsx";
 import type { DayCount, Slot } from "../door.ts";
 import { byId, firstName, letGoAt, moveRefusal, onlinePaid, personDay } from "../facts.ts";
 import { useFmt } from "../format.ts";
+import { offerText, useMailWords } from "../mailPreview.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { DESK_NAV } from "../nav.ts";
 import { closeSheet, go, toast, useDesk, type BookingDraft, type Overlay, type View } from "../store.ts";
@@ -160,7 +161,7 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
         service: service!,
         person,
         startsAt: at,
-        customer: { id: who!.id, name: text(who!["name"]) ?? "", email: text(who!["email"]), phone: text(who!["phone"]) },
+        customer: { id: who!.id, name: text(who!["name"]) ?? "", email: text(who!["email"]), phone: text(who!["phone"]), language: text(who!["language"]) },
         depositLink: depositLink && asks && farEnough,
         key: retryKey,
       });
@@ -662,17 +663,17 @@ function OfferSheet({ overlay }: { overlay: Extract<Overlay, { kind: "offer" }> 
   const { door } = useEnv();
   const data = useData();
   const t = useDeskT();
-  const fmt = useFmt();
   const { busy, run } = useRun();
   const [retryKey] = useState(key);
   const entry = byId(data.waitlist, overlay.entryId);
+  const mail = useMailWords(text(entry?.["language"]) ?? null);
   if (entry === undefined) return null;
   const { zone } = door.facts();
   const at = instantOf(overlay.day, overlay.clock, zone);
   const name = text(entry["name"]) ?? t("common.noName");
   const person = byId(data.team, overlay.person);
   const service = text(byId(data.services, entry["service_id"])?.["name"]) ?? "";
-  const studio = text(data.settings?.["studio_name"]) ?? "";
+  const sent = offerText(mail.words, mail.tag, at, zone, { service, person: text(person?.["name"]) ?? "", first: firstName(name) });
   return (
     <Frame
       title={t("offer.title")}
@@ -705,17 +706,18 @@ function OfferSheet({ overlay }: { overlay: Extract<Overlay, { kind: "offer" }> 
       }
     >
       <p>{t("offer.lead", { name })}</p>
-      <div className="lm-mail-preview" aria-label={t("offer.preview")}>
+      <div className="lm-mail-preview" aria-label={t("offer.preview")} lang={mail.tag} dir={mail.tag.startsWith("ar") ? "rtl" : "ltr"}>
         <dl>
           <dt>{t("offer.to")}</dt>
           <dd>{text(entry["email"])}</dd>
           <dt>{t("offer.subject")}</dt>
-          <dd>{t("offer.subjectLine", { studio })}</dd>
+          <dd>{sent.subject}</dd>
         </dl>
-        <p>{t("offer.hi", { name: firstName(name) })}</p>
-        <p>{t("offer.body", { service, day: fmt.day(overlay.day), time: fmt.time(at), who: firstName(person?.["name"]) })}</p>
-        <span className="lm-mail-cta" aria-hidden="true">{t("offer.cta")}</span>
-        <small>{t("offer.leave")}</small>
+        <p><strong>{sent.heading}</strong></p>
+        <p>{sent.intro}</p>
+        <span className="lm-mail-cta" aria-hidden="true">{sent.button}</span>
+        <p>{sent.first}</p>
+        <small>{sent.leave}</small>
       </div>
     </Frame>
   );

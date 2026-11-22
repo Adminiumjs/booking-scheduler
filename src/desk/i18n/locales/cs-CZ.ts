@@ -268,11 +268,6 @@ export const cs: Partial<Record<keyof typeof en, string>> = {
   "offer.preview": "E-mail",
   "offer.to": "Komu",
   "offer.subject": "Předmět",
-  "offer.subjectLine": "Ve studiu {studio} se uvolnil termín",
-  "offer.hi": "Dobrý den, {name},",
-  "offer.body": "Uvolnil se termín na službu {service}, {day} v {time}, u {who}. Získá ho ten, kdo si ho zarezervuje první.",
-  "offer.cta": "Rezervovat tento termín",
-  "offer.leave": "Už to nepotřebujete? Odebrat mě z pořadníku",
   "offer.send": "Odeslat nabídku",
   "offer.tooLate": "Tento termín je už v době předstihu pro hosty, proto ho nelze nabídnout.",
 
