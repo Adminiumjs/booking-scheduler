@@ -22,8 +22,8 @@ import { dayIn } from "../desk/time.ts";
 import { createSessionTransport } from "../desk/transport/sessionSource.ts";
 import { loadStaffConfig } from "../desk/transport/staffConnection.ts";
 import type { Row } from "../desk/wire.ts";
-import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, type Engine } from "./harness.ts";
-import { ADD_ONS, CLOCK, standUp, type Stand } from "./stand.ts";
+import { ADMINIUM_REPO, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, until, type Engine } from "./harness.ts";
+import { ADD_ONS, CLOCK, inbox, standUp, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the desk contract must run here, and cannot: ${why}`);
@@ -360,6 +360,14 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         await refused(() => doors.noor.sendConnectLink(other.id));
         await refused(() => doors.noor.connectCalendar(other.id, "calendar-google"));
         await refused(() => doors.noor.syncNow(other.id));
+      });
+
+      it("a front desk that may not read addresses sends the link, and is not told where it went", async () => {
+        const address = `noor.desk.${engine}@lumen-staff.dev`;
+        const before = (await inbox(stand.server)).length;
+        expect(await doors.desk.sendConnectLink(noorTeam["id"] as string)).toBeNull();
+        const mail = await until(async () => (await inbox(stand.server)).slice(before).find((m) => m.to.includes(address)), "the connect link's mail", 60_000);
+        expect(mail.text).toMatch(/https?:\/\//);
       });
 
       it.skipIf(!staffReachCalendars)(`the private feed link is shown only to its own person; the front desk reaches neither (A5)${staffReachCalendars ? "" : " — skipped: screens-only staff cannot reach the calendar routes on this engine"}`, async () => {
