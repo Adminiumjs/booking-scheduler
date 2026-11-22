@@ -51,7 +51,7 @@
       },
       "placement": "internal",
       "routes": {
-        "today": "/",
+        "today": "/today",
         "calendar": "/calendar",
         "clients": "/clients",
         "services": "/services",

@@ -13,7 +13,7 @@ import type { en } from "./i18n/en.ts";
 export type DeskNavEntry = SurfaceNavEntry<string> & { labelKey: keyof typeof en; icon: string };
 
 export const DESK_NAV = [
-  { id: "today", path: "", view: "today", side: "staff", icon: "house", labelKey: "nav.today" },
+  { id: "today", path: "today", view: "today", side: "staff", icon: "house", labelKey: "nav.today" },
   { id: "calendar", path: "calendar", view: "calendar", side: "staff", icon: "calendar-days", labelKey: "nav.calendar" },
   { id: "clients", path: "clients", view: "clients", side: "staff", icon: "users", labelKey: "nav.clients" },
   { id: "services", path: "services", view: "services", side: "staff", icon: "sparkles", labelKey: "nav.services" },

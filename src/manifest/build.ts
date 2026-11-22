@@ -28,7 +28,7 @@ const ENV = {
   VITE_ADMINIUM_PUBLISHABLE_KEY: { required: false, example: "adm_pub_..." },
 };
 
-export const STAFF_ROUTES = { today: "/", calendar: "/calendar", clients: "/clients", services: "/services", team: "/team", waiting: "/waiting", reviews: "/reviews", settings: "/settings" };
+export const STAFF_ROUTES = { today: "/today", calendar: "/calendar", clients: "/clients", services: "/services", team: "/team", waiting: "/waiting", reviews: "/reviews", settings: "/settings" };
 
 export const CUSTOMER_ROUTES = {
   home: "/",
