@@ -1,3 +1,4 @@
+import { buildDefine } from "./src/build-flags.ts";
 import { surfaceJsonPlugin } from "./surface-emit.ts";
 import { demoJsonPlugin } from "./demo-emit.ts";
 import { CARD_MESSAGES, DEMO_CARD } from "./src/demo/card.ts";
@@ -26,20 +27,7 @@ import react from "@vitejs/plugin-react";
  * `define` always emits a literal, so absence becomes `""` rather than a lookup
  * and `SURFACE_SIDE`/`HOSTED`/`DEMO` in `src/surface.ts` fold in every build.
  */
-const FLAGS = [
-  "VITE_ADMINIUM_SURFACE_SIDE",
-  "VITE_ADMINIUM_API_BASE_URL",
-  "VITE_ADMINIUM_PUBLISHABLE_KEY",
-  "VITE_ADMINIUM_LINK_KEY",
-  "VITE_LUMEN_CUSTOMER",
-] as const;
-
-const define = Object.fromEntries(
-  FLAGS.map((name) => [
-    `import.meta.env.${name}`,
-    JSON.stringify(process.env[name] ?? ""),
-  ]),
-);
+const define = buildDefine(process.env);
 
 /*
  * THE HOSTED DEV LOOP.

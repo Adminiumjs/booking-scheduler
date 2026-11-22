@@ -14,6 +14,7 @@ interface ImportMetaEnv {
   readonly VITE_ADMINIUM_API_BASE_URL?: string;
   readonly VITE_ADMINIUM_PUBLISHABLE_KEY?: string;
   readonly VITE_ADMINIUM_LINK_KEY?: string;
+  readonly VITE_ADMINIUM_SALE_KEY?: string;
   readonly VITE_LUMEN_CUSTOMER?: string;
 }
 

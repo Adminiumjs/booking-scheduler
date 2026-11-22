@@ -15,12 +15,12 @@ import { frameEvents, Root } from "./Root.tsx";
 
 /** Where this page was served from, and with which keys. */
 export async function resolveServed(framed: boolean): Promise<Served | null> {
-  const env = import.meta.env as Record<string, string | undefined>;
-  const baseUrl = env["VITE_ADMINIUM_API_BASE_URL"];
-  const key = env["VITE_ADMINIUM_PUBLISHABLE_KEY"];
+  // By name: `vite.config.ts` defines these, and a hosted build defines them empty.
+  const baseUrl = import.meta.env.VITE_ADMINIUM_API_BASE_URL;
+  const key = import.meta.env.VITE_ADMINIUM_PUBLISHABLE_KEY;
   if (baseUrl && key) {
-    const link = env["VITE_ADMINIUM_LINK_KEY"];
-    const sale = env["VITE_ADMINIUM_SALE_KEY"];
+    const link = import.meta.env.VITE_ADMINIUM_LINK_KEY;
+    const sale = import.meta.env.VITE_ADMINIUM_SALE_KEY;
     return { baseUrl, publishableKey: key, publicKeys: { ...(link ? { link } : {}), ...(sale ? { sale } : {}) } };
   }
   const mount = mountOf(window.location.pathname);
