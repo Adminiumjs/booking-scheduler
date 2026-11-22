@@ -28,6 +28,7 @@ import { TodayScreen } from "./screens/Today.tsx";
 import { WaitingScreen } from "./screens/Waiting.tsx";
 import { go, newBooking, openBooking, openClient, openSheet, useDesk, type View } from "./store.ts";
 import { text } from "./wire.ts";
+import { isEmbedded } from "../embed.ts";
 
 const ICON: Record<string, ReactNode> = {
   house: <House size={18} aria-hidden="true" />,
@@ -144,12 +145,14 @@ function Shell() {
   const line = text(data.settings?.["address_line1"]);
   const roleWord = who.can("settings", "update") ? t("shell.owner") : who.can("bookings", "create") ? t("shell.frontDesk") : t("shell.specialist");
   const tabs = DESK_NAV.filter((n) => sections.includes(n.id) && ["today", "calendar", "clients", "waiting"].includes(n.id));
+  // Inside the console its sidebar and header name the section: the desk draws neither twice.
+  const framed = isEmbedded();
   return (
     <div className="lm-app">
       <div aria-live="polite" className="lm-sr-only">
         {said}
       </div>
-      {!phone && (
+      {!phone && !framed && (
         <nav className="lm-side" aria-label={t("shell.nav")}>
           <div className="lm-brand">
             <span className="lm-logo" aria-hidden="true">
@@ -185,10 +188,12 @@ function Shell() {
       )}
       <div className="lm-column">
         <header className="lm-top">
-          <div className="lm-top-title">
-            <strong>{t(DESK_NAV.find((n) => n.view === shown)!.labelKey)}</strong>
-            <small dir="auto">{line === null ? studio : `${studio} · ${line}`}</small>
-          </div>
+          {!framed && (
+            <div className="lm-top-title">
+              <strong>{t(DESK_NAV.find((n) => n.view === shown)!.labelKey)}</strong>
+              <small dir="auto">{line === null ? studio : `${studio} · ${line}`}</small>
+            </div>
+          )}
           <SearchBox />
           {who.can("bookings", "create") && (
             <button type="button" className="lm-btn lm-btn--primary" aria-label={t("nav.newBooking")} onClick={() => newBooking()}>
@@ -204,7 +209,7 @@ function Shell() {
           {panel?.kind === "booking" && <BookingPanel key={`b${String(panel.id)}`} id={panel.id} />}
           {panel?.kind === "client" && <ClientPanel key={`c${String(panel.id)}`} id={panel.id} />}
         </div>
-        {phone && (
+        {phone && !framed && (
           <nav className="lm-tabs" aria-label={t("shell.nav")}>
             {tabs.map((n) => (
               <button key={n.id} type="button" aria-current={shown === n.view ? "page" : undefined} className={shown === n.view ? "is-on" : ""} onClick={() => go(n.view)}>

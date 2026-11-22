@@ -49,7 +49,7 @@
           "example": "adm_pub_..."
         }
       },
-      "placement": "external",
+      "placement": "internal",
       "routes": {
         "today": "/",
         "calendar": "/calendar",

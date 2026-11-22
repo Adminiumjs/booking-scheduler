@@ -87,7 +87,7 @@ export function buildManifest(): Record<string, unknown> {
     },
     capabilities: ["file-storage", "email-delivery", "realtime"],
     frontends: [
-      { side: "staff", kind: "spa", entry: "index.html", env: ENV, placement: "external", routes: STAFF_ROUTES, instances: true },
+      { side: "staff", kind: "spa", entry: "index.html", env: ENV, placement: "internal", routes: STAFF_ROUTES, instances: true },
       { side: "customer", kind: "spa", entry: "index.html", env: ENV, routes: CUSTOMER_ROUTES, instances: true, embed: EMBED },
     ],
     addOns: ADD_ONS,
