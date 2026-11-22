@@ -88,7 +88,7 @@ function FeedPart({ person, calendar, connected }: { person: Row; calendar: Pers
 }
 
 /** The six states of a connection (SYN-8), plus "not connected". */
-function CalendarPart({ person }: { person: Row }) {
+export function CalendarPart({ person }: { person: Row }) {
   const { door } = useEnv();
   const data = useData();
   const t = useDeskT();
@@ -109,6 +109,12 @@ function CalendarPart({ person }: { person: Row }) {
     void run(async (d) => {
       window.location.assign(await d.connectCalendar(person.id, key));
     });
+  const connectButtons = () =>
+    calendar.providers.map((p) => (
+      <button key={p.key} type="button" className="lm-btn lm-btn--primary" disabled={busy} onClick={() => connect(p.key)}>
+        {t("team.connectTo", { provider: p.name })}
+      </button>
+    ));
   const sendLink = (
     <button key="send" type="button" className="lm-btn" onClick={() => openSheet({ kind: "link", teamId: person.id })}>
       {account === undefined ? t("team.sendConnect") : t("calendar.sendLink", { who })}
@@ -155,13 +161,7 @@ function CalendarPart({ person }: { person: Row }) {
     else lines.push({ text: t("team.notConnectedLine", { who }) });
     if (calendar.reach !== "cannot-connect") {
       acts = [
-        ...(may.connect
-          ? calendar.providers.map((p) => (
-              <button key={p.key} type="button" className="lm-btn lm-btn--primary" disabled={busy} onClick={() => connect(p.key)}>
-                {t("team.connectTo", { provider: p.name })}
-              </button>
-            ))
-          : []),
+        ...(may.connect ? connectButtons() : []),
         ...(may.sendLink ? [sendLink] : []),
       ];
     }
@@ -203,6 +203,8 @@ function CalendarPart({ person }: { person: Row }) {
       lines.push({ text: t("team.firstRead") });
     } else if (account.state === "disconnecting") {
       lines.push({ text: t("team.disconnecting") });
+      // Its retries can run for hours. The next person need not wait: the server ends the old connection when they connect.
+      if (calendar.reach !== "cannot-connect") acts = mine && may.connect ? connectButtons() : may.sendLink ? [sendLink] : [];
     } else {
       tone = "ok";
       icon = <CalendarCheck size={16} />;
