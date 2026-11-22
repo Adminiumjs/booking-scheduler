@@ -306,6 +306,9 @@ export const WORDS: Words = {
   delKeep: "Behold dem",
   delStepUp: "Af hensyn til sikkerheden skal du logge ind igen med en ny kode og derefter slette dine oplysninger.",
   deleted: "Dine oplysninger er slettet.",
+  deletedExcept: "Dine oplysninger er slettet, bortset fra det, der står nedenfor.",
+  deletedKept: "{n} pakke, gavekort eller butikskredit har stadig en saldo. Den beholder dit navn og din e-mail, så du stadig kan bruge den, indtil den er brugt op eller udløber.|{n} pakker, gavekort eller butikskreditter har stadig en saldo. De beholder dit navn og din e-mail, så du stadig kan bruge dem, indtil de er brugt op eller udløber.",
+  deletedGifts: "Hvis en anden har købt et gavekort til dig, er det ikke knyttet til din konto, så det kunne ikke fjernes her. Det beholder det navn og den e-mail, køberen skrev, og dets påmindelse om udløb kan stadig nå dig. Bed studiet om at fjerne de oplysninger.",
   reviewsOff: "Vi beder dig ikke om anmeldelser igen.",
   reviewsOn: "Vi beder dig om en anmeldelse efter et besøg.",
 

@@ -10,10 +10,10 @@
  *
  * DEMO BUILD ONLY: nothing in a real build imports it.
  */
-import { newClientKey, PublicApiError, type VerifyCodeResult } from "@adminiumjs/public-client";
+import { newClientKey, PublicApiError, type ForgetMeResult, type VerifyCodeResult } from "@adminiumjs/public-client";
 
 import type { Booked, BookingValues, CustomerDoor, Held, ReviewLink, ReviewPage, Row, Served, StudioRows } from "../customer/door.ts";
-import type { DoorName } from "../customer/rules.ts";
+import { usesLeft, type DoorName } from "../customer/rules.ts";
 import { same, type Id } from "../desk/wire.ts";
 import { DEMO_LOCALES } from "../demo-types.ts";
 import { googleNote } from "./card.ts";
@@ -266,8 +266,14 @@ export class DemoGuest implements CustomerDoor {
     });
   }
 
-  forgetMe(ahead: readonly Row[]): Promise<void> {
+  forgetMe(ahead: readonly Row[]): Promise<ForgetMeResult> {
     return run(() => {
+      // As the real door answers: the packs that still hold a visit keep their holder until they end.
+      const today = this.world.nowIso().slice(0, 10);
+      const keptBalances = this.world.all("vouchers").filter((v) => {
+        const ends = String(v["expires_on"] ?? "").slice(0, 10);
+        return String(v["holder_email"] ?? "").toLowerCase() === this.email && usesLeft({ uses_left: v["uses_left"], uses_total: v["uses_total"] }) > 0 && (ends === "" || ends >= today);
+      }).length;
       for (const row of ahead) {
         if (row["state"] === "booked") this.world.moveVisit(row["id"], "booked", "cancelled", { cancelled_by: "customer" });
         if (row["state"] === "offered") this.world.moveVisit(row["id"], "offered", "lapsed", { lapsed_by: "guest" });
@@ -278,6 +284,7 @@ export class DemoGuest implements CustomerDoor {
       this.email = null;
       this.provedAt = null;
       this.world.changed();
+      return { keptBalances, giftsNotLinked: true };
     });
   }
 

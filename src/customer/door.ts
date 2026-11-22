@@ -17,6 +17,7 @@ import {
   createPublicClient,
   newClientKey,
   PublicApiError,
+  type ForgetMeResult,
   type HeldSession,
   type PublicClient,
   type PublicConfig,
@@ -567,15 +568,16 @@ export class LumenDoor {
    * cannot be cancelled: its hold runs out by itself. Letting an offer go puts its row back to waiting, so the list is read
    * again before it is left.
    */
-  async forgetMe(ahead: readonly Row[]): Promise<void> {
+  async forgetMe(ahead: readonly Row[]): Promise<ForgetMeResult> {
     const refs = await this.refs();
     for (const row of ahead) {
       if (row["state"] === "booked" && refs.cancel !== null) await this.client.update(refs.cancel, String(row["id"]), { state: "cancelled" });
       if (row["state"] === "offered" && refs.letOfferGo !== null) await this.client.update(refs.letOfferGo, String(row["id"]), { state: "lapsed", lapsed_by: "guest" });
     }
     for (const row of await this.myWaitlist()) if (row["state"] === "waiting") await this.leaveList(row["id"]);
-    await this.client.forgetMe();
+    const left = await this.client.forgetMe();
     forgetPurchase();
+    return left;
   }
 
   // ── changing a booking, signed in or by its link ──────────────────────────

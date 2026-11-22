@@ -306,6 +306,9 @@ export const WORDS: Words = {
   delKeep: "Les garder",
   delStepUp: "Par sécurité, reconnectez-vous avec un nouveau code, puis supprimez vos données.",
   deleted: "Vos données ont été supprimées.",
+  deletedExcept: "Vos données ont été supprimées, sauf ce qui est indiqué ci-dessous.",
+  deletedKept: "{n} forfait, carte cadeau ou avoir a encore un solde. Il garde votre nom et votre e-mail pour rester utilisable, jusqu'à épuisement ou expiration.|{n} forfaits, cartes cadeaux ou avoirs ont encore un solde. Ils gardent votre nom et votre e-mail pour rester utilisables, jusqu'à épuisement ou expiration.",
+  deletedGifts: "Si quelqu'un d'autre vous a offert une carte cadeau, elle n'est pas liée à votre compte et n'a donc pas pu être supprimée ici. Elle garde le nom et l'e-mail saisis à l'achat, et son rappel d'expiration peut encore vous parvenir. Demandez au studio de retirer ces informations.",
   reviewsOff: "Nous ne vous demanderons plus d'avis.",
   reviewsOn: "Nous vous demanderons un avis après une visite.",
 

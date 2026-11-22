@@ -292,7 +292,8 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
           expect(ahead.length).toBe(1);
           // Booked as a guest, with only a typed address behind it.
           expect(Number(ahead[0]!["made_proved"])).toBe(0);
-          await rae.forgetMe(ahead);
+          // Nothing of theirs still holds value, and Offers is installed, so only a gift from someone else could remain.
+          expect(await rae.forgetMe(ahead)).toEqual({ keptBalances: 0, giftsNotLinked: true });
 
           const row = await stand.row("bookings", first.row["id"]);
           expect(row["state"]).toBe("cancelled");
@@ -402,12 +403,17 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
         const freeOn = async (door: LumenDoor, day: string) => (await door.times(String(services["Reformer Pilates, private"]!["id"]), null, day)).find((t) => t.state === "free")!.time;
         const reformer = (day: string, time: string) => values("Reformer Pilates, private", pdt(day, time), "Nell Pack", { email: email() });
 
+        let rehearsal: { rehearsal: { cookie: string; csrf: string } };
+        /** A rehearsal ends on the server's clock: a test that follows a clock move starts its own. */
+        const rehearse = async () => {
+          rehearsal = (await stand.rehearsing()) as unknown as typeof rehearsal;
+        };
+
         beforeAll(async () => {
           await nextHour();
           await setSetting({ online_payments: "on" });
           ok(await stand.staff.post("/api/v1/payments/apps/switch", { connectionId: stand.connectionId, appKey: "bookings", enabled: true }));
-          const guest = await stand.rehearsing();
-          const rehearsal = guest as unknown as { rehearsal: { cookie: string; csrf: string } };
+          await rehearse();
           money = () => {
             const fetcher: typeof fetch = (input, init) => {
               const headers = new Headers(init?.headers);
@@ -532,7 +538,7 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
           expect([num(refund["amount"]), yes(refund["automatic"])]).toEqual([num(pack["price"]), true]);
         }, 180_000);
 
-        // Last: it moves the clock past the visit, which outlives the customer's session.
+        // Moves the clock past the visit, which outlives Nell's session: only a test with its own sign-in may follow.
         it("keeps a pack use on a no-show (cQ31)", async () => {
           const held = await voucher(nell);
           const before = usesLeft(held);
@@ -547,6 +553,39 @@ describe.skipIf(why !== null)(`the customer's door${why === null ? "" : ` — sk
           const row = (await stand.rows("offers_vouchers")).find((v) => v["id"] === held["id"])!;
           expect(usesLeft(row)).toBe(before - 1);
         }, 120_000);
+
+        it("says what a delete could not reach: their live pack, and a gift someone else bought them", async () => {
+          await nextHour();
+          await rehearse();
+          const address = `kit.${engine}@lumen-guests.dev`;
+          const cut = String(services["Cut & Style"]!["id"]);
+          const day = (await tab().days(cut, null, "2026-10-19", 14)).find((d) => d.state === "open" && d.open > 0)!.date;
+          const time = (await tab().times(cut, null, day)).find((t) => t.state === "free")!.time;
+          // Known to the studio by a first booking, so a code can be mailed to them.
+          const first = await tab().book("studio", values("Cut & Style", pdt(day, time), "Kit Kept", { email: address }), retryKey("k0"));
+          await tab().openLink(first.token!);
+          const kit = money();
+          await signIn(kit, address);
+
+          const sold = await kit.buyPack(String((await product("Movement Ten"))["id"]), { buyer_name: "Kit Kept", buyer_email: address, language: "en-US" }, retryKey("k1"));
+          await stand.payDemo(sold.payUrl!);
+          await paidPurchase(sold.row["id"]);
+          const pack = await until(() => voucher(kit), "the pack held");
+
+          const amount = (await stand.rows("gift_amounts")).find((a) => num(a["amount"]) === 100)!;
+          const gift = await money().buyCard({ gift_amount_id: amount["id"], to_name: "Kit Kept", to_email: address }, { buyer_name: "A Friend", buyer_email: `friend.kit.${engine}@lumen-guests.dev`, language: "en-US" }, retryKey("k2"));
+          await stand.payDemo(gift.payUrl!);
+          await paidPurchase(gift.row["id"]);
+          const card = await until(async () => (await kit.held()).cards.find((c) => num(c["balance"]) === 100), "the card held");
+
+          const ahead = (await kit.myBookings()).filter((b) => b["state"] === "booked");
+          // Counted once: the pack is theirs, and the gift is only named by the address its buyer typed.
+          expect(await kit.forgetMe(ahead)).toEqual({ keptBalances: 1, giftsNotLinked: true });
+          const keptPack = (await stand.rows("offers_vouchers")).find((v) => v["id"] === pack["id"])!;
+          expect(String(keptPack["holder_email"]).toLowerCase()).toBe(address);
+          const keptCard = (await stand.rows("offers_gift_cards")).find((c) => c["id"] === card["id"])!;
+          expect(String(keptCard["recipient_email"]).toLowerCase()).toBe(address);
+        }, 240_000);
       });
     });
   });
