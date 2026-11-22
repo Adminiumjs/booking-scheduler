@@ -10,7 +10,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 import type { DeskData, DeskDoor } from "./door.ts";
-import { guestFits, type WaitFit } from "./facts.ts";
+import { guestFits, withBookablePerson, type WaitFit } from "./facts.ts";
+import { same } from "./wire.ts";
 import { useDeskT, type DeskT } from "./i18n/index.ts";
 import { toast, useDesk } from "./store.ts";
 import { isApiError } from "./wire.ts";
@@ -65,7 +66,18 @@ async function loadFits(door: DeskDoor, data: DeskData): Promise<Record<string, 
       .filter((entry) => entry["state"] === "waiting")
       .map(async (entry) => {
         try {
-          const slots = await door.slots({ service: entry["service_id"] as string, person: (entry["team_id"] as string | null) ?? null, day: String(entry["day"]).slice(0, 10) });
+          const service = entry["service_id"] as string;
+          const named = (entry["team_id"] as string | null) ?? null;
+          const day = String(entry["day"]).slice(0, 10);
+          let slots = await door.slots({ service, person: named, day });
+          if (named === null) {
+            const offered = data.team.filter((p) => p["active"] !== false && p["bookable_online"] !== false && data.teamServices.some((l) => same(l["team_id"], p.id) && same(l["service_id"], service)));
+            // Only when the first free person cannot take it online is each person asked.
+            if (slots.some((s) => s.state === "free" && !offered.some((p) => same(p.id, s.resource)))) {
+              const own = await Promise.all(offered.map(async (p) => ({ person: p.id, slots: await door.slots({ service, person: p.id, day }) })));
+              slots = withBookablePerson(slots, data, own);
+            }
+          }
           out[String(entry.id)] = guestFits(slots, entry, data, now, zone);
         } catch {
           out[String(entry.id)] = [];
@@ -75,14 +87,19 @@ async function loadFits(door: DeskDoor, data: DeskData): Promise<Record<string, 
   return out;
 }
 
+/** The newest read asked for: an older one that answers late is dropped, so a row never flips back after a write. */
+let latestRead = 0;
+
 /** Read every row again, and keep them. */
 export async function reload(door: DeskDoor): Promise<void> {
+  latestRead += 1;
+  const mine = latestRead;
   try {
     const data = await door.load();
     const fits = await loadFits(door, data);
-    useDesk.setState({ data, fits, failure: null });
+    if (mine === latestRead) useDesk.setState({ data, fits, failure: null });
   } catch (error) {
-    useDesk.setState({ failure: error instanceof Error ? error.message : String(error) });
+    if (mine === latestRead) useDesk.setState({ failure: error instanceof Error ? error.message : String(error) });
   }
 }
 

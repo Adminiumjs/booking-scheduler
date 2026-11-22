@@ -241,7 +241,8 @@ export interface DeskDoor {
   /** A booking's own columns that are not its state: its time, person or staff note. */
   saveBooking(booking: Row, values: Record<string, unknown>): Promise<Row>;
   panel(booking: Row): Promise<PaymentPanel | null>;
-  refund(input: { attemptId: string; amount: string; reason: string; note: string; key: string }): Promise<void>;
+  /** Asks for a refund. The payment service may settle it later, or refuse it: the answer says which. */
+  refund(input: { attemptId: string; amount: string; reason: string; note: string; key: string }): Promise<{ state: string; failureMessage: string | null }>;
 
   createCustomer(values: { name: string; email: string | null; phone: string | null }): Promise<Row>;
   saveCustomer(customer: Row, values: Record<string, unknown>): Promise<Row>;

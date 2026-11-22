@@ -11,7 +11,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import type { CalendarAccount, PersonCalendar } from "../door.ts";
 import { useData, useEnv, useRun } from "../env.tsx";
-import { firstName } from "../facts.ts";
+import { firstName, isMine } from "../facts.ts";
 import { useFmt } from "../format.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { openSheet, toast } from "../store.ts";
@@ -97,7 +97,7 @@ function CalendarPart({ person }: { person: Row }) {
   const who = firstName(person["name"]);
   if (calendar === undefined) return <FeedPart person={person} calendar={calendar} />;
   const account: CalendarAccount | undefined = calendar.accounts[0];
-  const mine = text(person["user_id"]) !== null && text(person["user_id"]) === door.who().id;
+  const mine = isMine(person, door.who());
   const { may, sync } = calendar;
   // The built-in demo calendar has no add-on behind it, and is not "missing".
   const unavailable = account !== undefined && sync?.demo !== true && !calendar.providers.some((p) => p.key === account.provider);
@@ -248,7 +248,7 @@ function PersonCard({ person, index, total }: { person: Row; index: number; tota
   const clock = (value: unknown) => instantOf(REFERENCE, String(value), zone);
   const daysOff = data.closures.filter((row) => same(row["team_id"], person.id) && row["active"] !== false && String(row["to_date"]).slice(0, 10) >= today);
   const timeOff = data.timeOff.filter((row) => same(row["team_id"], person.id) && dayIn(String(row["ends_at"]), zone) >= today);
-  const mine = text(person["user_id"]) !== null && text(person["user_id"]) === who.id;
+  const mine = isMine(person, who);
   const mayAddOff = who.can("time_off", "create");
   const mayRemoveOff = who.can("time_off", "delete");
   const swap = (other: Row | undefined) => {

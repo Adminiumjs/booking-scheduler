@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { DeskData, Person, Table } from "./door.ts";
-import { clientFacts, firstRunGaps, gridHours, guestFits, guestLastDay, holdsLetGo, kindOf, letGoAt, movesOf, needsOf, payLine, personDay, reviewsOfClient, search, shortName, whyRefused } from "./facts.ts";
+import { clientFacts, clipToDay, firstRunGaps, gridHours, guestFits, guestLastDay, holdsLetGo, isMine, kindOf, letGoAt, moveRefusal, movesOf, needsOf, onlinePaid, payLine, personDay, reviewsOfClient, search, shortName, whyRefused, withBookablePerson } from "./facts.ts";
 import { instantOf } from "./time.ts";
 import type { Row } from "./wire.ts";
 
@@ -85,6 +85,46 @@ describe("movesOf", () => {
     const m = movesOf(booking({ state: "cancelled", paid: 50 }), OWNER, NOW, ZONE, true);
     expect([m.arrived, m.done, m.noShow, m.cancel, m.move, m.letGo, m.bookAgain]).toEqual([false, false, false, false, false, false, false]);
     expect(m.refund).toBe(true);
+  });
+});
+
+describe("moving a booking (BOOK-15.3, cQ30)", () => {
+  const later = at("2026-09-18", "12:00");
+  it("a visit that has begun keeps its person and time, even for a later start", () => {
+    expect(moveRefusal(booking({ starts_at: iso("2026-09-15", "10:00") }), later, NOW)).toBe("started");
+    expect(moveRefusal(booking({ state: "arrived", starts_at: iso("2026-09-15", "12:00") }), later, NOW)).toBe("started");
+    expect(moveRefusal(booking(), later, NOW)).toBeNull();
+  });
+  it("a booking being paid may not land inside 4 hours, or before its hold ends", () => {
+    const paying = booking({ state: "paying", starts_at: iso("2026-09-21", "12:00"), link_until: iso("2026-09-16", "10:40") });
+    expect(moveRefusal(paying, at("2026-09-15", "12:00"), NOW)).toBe("tooSoon");
+    expect(moveRefusal(paying, at("2026-09-16", "09:00"), NOW)).toBe("hold");
+    expect(moveRefusal(paying, at("2026-09-17", "12:00"), NOW)).toBeNull();
+  });
+});
+
+describe("whose row, and whose money", () => {
+  it("a row without the sign-in column is the specialist's own", () => {
+    expect(isMine({ id: 1, name: "Noor" }, SPECIALIST)).toBe(true);
+    expect(isMine({ id: 1, user_id: "u1" }, DESK)).toBe(true);
+    expect(isMine({ id: 1, user_id: "u2" }, DESK)).toBe(false);
+    expect(isMine({ id: 1, user_id: null }, DESK)).toBe(false);
+  });
+  it("only what was taken online is refunded by a studio's cancel (cQ28)", () => {
+    const payments = [
+      { id: 1, booking_id: 5, kind: "taken", method: "online", kept: "30.00" },
+      { id: 2, booking_id: 5, kind: "taken", method: "cash", kept: "20.00" },
+      { id: 3, booking_id: 6, kind: "taken", method: "online", kept: "99.00" },
+    ];
+    expect(onlinePaid(payments, 5)).toBe(30);
+    expect(onlinePaid(payments, 7)).toBe(0);
+  });
+  it("an Anyone slot goes to the first person who takes it online", () => {
+    const data = empty({ team: [{ id: 1, active: true, bookable_online: false }, { id: 2, active: true, bookable_online: true }] });
+    const out = withBookablePerson([{ time: "15:00", state: "free", resource: 1 }], data, [{ person: 2, slots: [{ time: "15:00", state: "free" }] }]);
+    expect(out[0]?.resource).toBe(2);
+    const nobody = withBookablePerson([{ time: "15:00", state: "free", resource: 1 }], data, [{ person: 2, slots: [{ time: "16:00", state: "free" }] }]);
+    expect(nobody[0]?.resource).toBe(1);
   });
 });
 
@@ -186,7 +226,24 @@ describe("the calendar", () => {
     expect(personDay(data, 1, "2026-09-15")).toEqual({ off: null, opens: 540, closes: 1020, breakStart: 780, breakEnd: 810 });
     expect(personDay(data, 1, "2026-09-22")).toEqual({ off: "dayOff", why: "Holiday" });
     expect(personDay(data, 1, "2026-09-16").off).toBe("notWorking");
-    expect(personDay(data, 1, "2026-09-20").off).toBe("notWorking");
+    expect(personDay(data, 1, "2026-09-20").off).toBe("closed");
+  });
+  it("reads hours as the booking guard does: the studio's when someone has none, and never past them (cQ1)", () => {
+    const none = empty({ teamHours: [] });
+    expect(personDay(none, 1, "2026-09-15")).toEqual({ off: null, opens: 540, closes: 1140, breakStart: null, breakEnd: null });
+    const late = empty({ teamHours: [{ id: 1, team_id: 1, weekday: "tue", opens: "08:00", closes: "21:00" }] });
+    expect(personDay(late, 1, "2026-09-15")).toMatchObject({ opens: 540, closes: 1140 });
+  });
+  it("clips a long busy time to the day shown, across midnight and a whole week", () => {
+    const start = at("2026-09-14", "22:00");
+    const end = at("2026-09-16", "10:00");
+    expect(clipToDay(start, end, "2026-09-14", ZONE)).toEqual({ from: 1320, to: 1440 });
+    expect(clipToDay(start, end, "2026-09-15", ZONE)).toEqual({ from: 0, to: 1440 });
+    expect(clipToDay(start, end, "2026-09-16", ZONE)).toEqual({ from: 0, to: 600 });
+    expect(clipToDay(start, end, "2026-09-17", ZONE)).toBeNull();
+  });
+  it("keeps a whole day whole on the day the clocks change", () => {
+    expect(clipToDay(at("2026-10-31", "12:00"), at("2026-11-02", "12:00"), "2026-11-01", ZONE)).toEqual({ from: 0, to: 1440 });
   });
   it("draws from the earliest opening to the latest closing", () => {
     expect(gridHours(empty())).toEqual({ from: 540, to: 1140 });

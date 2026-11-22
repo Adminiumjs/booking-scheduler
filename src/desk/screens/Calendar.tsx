@@ -13,11 +13,11 @@ import { useEffect, useMemo, useState, type CSSProperties, type DragEvent, type 
 
 import { useData, useEnv } from "../env.tsx";
 import type { BusyBlock, DeskData } from "../door.ts";
-import { byId, endOf, firstName, gridHours, kindOf, ON_THE_DAY, personDay, shortName, startOf, whyRefused, type DropRefusal, type PersonDay } from "../facts.ts";
+import { byId, clipToDay, endOf, firstName, gridHours, kindOf, ON_THE_DAY, personDay, shortName, startOf, whyRefused, type DropRefusal, type PersonDay } from "../facts.ts";
 import { useFmt, type Fmt } from "../format.ts";
 import { useDeskT, type DeskT } from "../i18n/index.ts";
 import { newBooking, openBooking, useDesk } from "../store.ts";
-import { addDays, dayIn, instantOf, minuteOfDay, weekdayOf } from "../time.ts";
+import { addDays, dayIn, dayStartIn, instantOf, minuteOfDay, weekdayOf } from "../time.ts";
 import { Fig } from "../ui.tsx";
 import { num, same, text, type Id, type Row } from "../wire.ts";
 import { Avatar, kindTone, kindWord, StateChip } from "./parts.tsx";
@@ -124,13 +124,15 @@ function Column({ person, day, title, hours, busy, ghost, spring, onDrop }: Colu
     shade("before", hours.from, today.opens, "out");
     shade("after", today.closes, hours.to, "out");
     if (today.breakStart !== null && today.breakEnd !== null) shade("break", today.breakStart, today.breakEnd, "break", t("calendar.break"));
+    // Each drawn on the part that falls on this day: a holiday in someone's calendar can run for a week.
     for (const row of data.timeOff) {
-      if (!same(row["team_id"], person.id) || dayIn(String(row["starts_at"]), zone) !== day) continue;
-      shade(`off-${String(row.id)}`, minuteOfDay(String(row["starts_at"]), zone), minuteOfDay(String(row["ends_at"]), zone), "busy", t("calendar.busyTimeOff"));
+      if (!same(row["team_id"], person.id)) continue;
+      const span = clipToDay(Date.parse(String(row["starts_at"])), Date.parse(String(row["ends_at"])), day, zone);
+      if (span !== null) shade(`off-${String(row.id)}`, span.from, span.to, "busy", t("calendar.busyTimeOff"));
     }
     for (const block of busy) {
-      if (dayIn(block.start, zone) !== day) continue;
-      shade(`busy-${String(block.start)}`, minuteOfDay(block.start, zone), dayIn(block.end, zone) === day ? minuteOfDay(block.end, zone) : hours.to, "busy", busyWord);
+      const span = clipToDay(block.start, block.end, day, zone);
+      if (span !== null) shade(`busy-${String(block.start)}`, span.from, span.to, "busy", busyWord);
     }
   }
 
@@ -266,13 +268,16 @@ function Diary({ day, setDay, busy }: { day: string; setDay: (day: string) => vo
     const state = personDay(data, person.id, day);
     if (state.off === "dayOff") items.push({ key: `off-${String(person.id)}`, at: -1, time: "—", title: first, sub: offWord(t, state), booking: null, tint: person["tint"], clash: false });
     const source = data.calendars[String(person.id)]?.accounts[0]?.providerName ?? t("calendar.theirCalendar");
+    const dayOpens = dayStartIn(day, zone);
     for (const block of busy[String(person.id)] ?? []) {
-      if (dayIn(block.start, zone) !== day) continue;
-      items.push({ key: `busy-${String(person.id)}-${String(block.start)}`, at: block.start, time: fmt.time(block.start), title: t("calendar.busy"), sub: `${source} · ${first} · ${fmt.range(block.start, block.end)}`, booking: null, tint: null, clash: false });
+      if (clipToDay(block.start, block.end, day, zone) === null) continue;
+      const shownAt = Math.max(block.start, dayOpens);
+      items.push({ key: `busy-${String(person.id)}-${String(block.start)}`, at: shownAt, time: fmt.time(shownAt), title: t("calendar.busy"), sub: `${source} · ${first} · ${fmt.range(block.start, block.end)}`, booking: null, tint: null, clash: false });
     }
     for (const row of data.timeOff) {
-      if (!same(row["team_id"], person.id) || dayIn(String(row["starts_at"]), zone) !== day) continue;
-      items.push({ key: `timeoff-${String(row.id)}`, at: Date.parse(String(row["starts_at"])), time: fmt.time(row["starts_at"]), title: t("calendar.busy"), sub: `${t("calendar.timeOff")} · ${first} · ${fmt.range(row["starts_at"], row["ends_at"])}`, booking: null, tint: null, clash: false });
+      if (!same(row["team_id"], person.id) || clipToDay(Date.parse(String(row["starts_at"])), Date.parse(String(row["ends_at"])), day, zone) === null) continue;
+      const offAt = Math.max(Date.parse(String(row["starts_at"])), dayOpens);
+      items.push({ key: `timeoff-${String(row.id)}`, at: offAt, time: fmt.time(offAt), title: t("calendar.busy"), sub: `${t("calendar.timeOff")} · ${first} · ${fmt.range(row["starts_at"], row["ends_at"])}`, booking: null, tint: null, clash: false });
     }
     for (const booking of data.bookings) {
       if (!ON_THE_DAY.includes(String(booking["state"])) || !same(booking["team_id"], person.id) || dayIn(startOf(booking), zone) !== day) continue;
@@ -372,8 +377,15 @@ export function CalendarScreen() {
   const weekday = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].indexOf(weekdayOf(day));
   const monday = addDays(day, -weekday);
   const step = week ? 7 : 1;
+  // Monday to Saturday, as the comp draws it, and Sunday too for a studio that opens then or a visit that falls on it.
+  const sunday = addDays(monday, 6);
+  const usesSunday =
+    data.openingHours.some((row) => row["weekday"] === "sun" && row["open"] !== false) ||
+    data.bookings.some((b) => same(b["team_id"], person?.id) && ON_THE_DAY.includes(String(b["state"])) && dayIn(startOf(b), zone) === sunday);
+  const weekDays = usesSunday ? [0, 1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 5];
+  const lastDay = addDays(monday, weekDays[weekDays.length - 1]!);
   const from = phone ? today : week ? monday : day;
-  const to = phone ? addDays(today, 6) : week ? addDays(monday, 5) : day;
+  const to = phone ? addDays(today, 6) : week ? lastDay : day;
   const people = useMemo(() => (week && person !== undefined ? [person] : data.team), [week, person, data.team]);
   const busy = useBusy(people, from, to, data);
   const hours = gridHours(data);
@@ -411,7 +423,7 @@ export function CalendarScreen() {
 
   const hourLabels: number[] = [];
   for (let m = hours.from; m <= hours.to; m += 60) hourLabels.push(m);
-  const columns = week ? [0, 1, 2, 3, 4, 5].map((k) => ({ person: person!, day: addDays(monday, k), title: fmt.day(addDays(monday, k)) })) : data.team.map((p) => ({ person: p, day, title: firstName(p["name"]) }));
+  const columns = week ? weekDays.map((k) => ({ person: person!, day: addDays(monday, k), title: fmt.day(addDays(monday, k)) })) : data.team.map((p) => ({ person: p, day, title: firstName(p["name"]) }));
 
   return (
     <div className="lm-cal">
@@ -427,7 +439,7 @@ export function CalendarScreen() {
             <ChevronRight size={17} className="lm-flip" aria-hidden="true" />
           </button>
         </div>
-        <h1 className="lm-cal-label">{week ? `${fmt.day(monday)} – ${fmt.day(addDays(monday, 5))}` : fmt.day(day)}</h1>
+        <h1 className="lm-cal-label">{week ? `${fmt.day(monday)} – ${fmt.day(lastDay)}` : fmt.day(day)}</h1>
         <span className="lm-spacer" />
         {week && !single && (
           <label className="lm-inline-field">

@@ -17,7 +17,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { AdminiumDesk } from "../desk/adminiumDesk.ts";
 import type { DeskData } from "../desk/door.ts";
-import { clientFacts, guestFits, holdsLetGo, kindOf, movesOf, needsOf, ON_THE_DAY, startOf, type WaitFit } from "../desk/facts.ts";
+import { clientFacts, guestFits, holdsLetGo, kindOf, moveRefusal, movesOf, needsOf, ON_THE_DAY, startOf, type WaitFit } from "../desk/facts.ts";
 import { dayIn } from "../desk/time.ts";
 import { createSessionTransport } from "../desk/transport/sessionSource.ts";
 import { loadStaffConfig } from "../desk/transport/staffConnection.ts";
@@ -100,6 +100,7 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
 
       beforeAll(async () => {
         stand = await standUp(engine as Engine, PORT_BASE + index * PORTS_PER_ENGINE, "desk");
+        ok(await stand.staff.post("/api/v1/payments/apps/switch", { connectionId: stand.connectionId, appKey: "bookings", enabled: true }));
         const owner = await member(/^owner$/i, "selma");
         const desk = await member(/front/i, "jun");
         const noor = await member(/specialist/i, "noor");
@@ -195,7 +196,8 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
         const asOwner = movesOf(booking, doors.owner.who(), CLOCK, ZONE, doors.owner.payments()?.refund === true);
         const asDesk = movesOf(code(data.desk, "LMN-1706"), doors.desk.who(), CLOCK, ZONE, doors.desk.payments()?.refund === true);
         expect(asDesk.refund).toBe(false);
-        expect(doors.owner.payments()?.refund === true ? asOwner.refund : true).toBe(true);
+        expect(doors.owner.payments()?.refund).toBe(true);
+        expect(asOwner.refund).toBe(true);
       });
 
       // ── K3 the moves ──
@@ -265,6 +267,8 @@ describe.skipIf(why !== null)(`the desk on a built Adminium${why === null ? "" :
 
         const started = fresh.bookings.find((b) => b["state"] === "arrived" && startOf(b) < CLOCK)!;
         expect(movesOf(started, doors.desk.who(), CLOCK, ZONE, false).move).toBe(false);
+        // The engine would take a new future time, so this is the desk's own rule (T04's ruling): the sheet refuses it.
+        expect(moveRefusal(started, Date.parse(pdt("2026-09-22", "12:00")), CLOCK)).toBe("started");
         const other = fresh.team.find((p) => String(p.id) !== String(started["team_id"]))!;
         await refused(() => doors.desk.saveBooking(started, { team_id: other.id }));
       });

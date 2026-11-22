@@ -7,7 +7,7 @@ import { CalendarSync, ChevronRight, Hourglass, ListOrdered, Rocket, ShieldAlert
 import type { ReactNode } from "react";
 
 import { useData, useEnv, useRun } from "../env.tsx";
-import { byId, endOf, firstName, kindOf, letGoAt, needsOf, ON_THE_DAY, startOf, type Need } from "../facts.ts";
+import { byId, endOf, firstName, kindOf, letGoAt, movesOf, needsOf, ON_THE_DAY, startOf, type Need } from "../facts.ts";
 import { useFmt, type Fmt } from "../format.ts";
 import { useDeskT, type DeskT } from "../i18n/index.ts";
 import { go, newBooking, openBooking, useDesk } from "../store.ts";
@@ -85,7 +85,7 @@ function TodayRow({ booking }: { booking: Row }) {
         {sub !== null && <span className={`lm-today-sub${warnSub ? " is-warn" : ""}`}>{sub}</span>}
         {(paid || refunded || booking["picked_by_anyone"] === true) && (
           <span className="lm-tags">
-            {refunded ? <Chip>{t("pay.refundedTag")}</Chip> : paid ? <Chip tone="pos">{t("pay.depositPaid")}</Chip> : null}
+            {refunded ? <Chip>{t("pay.refundedTag")}</Chip> : paid ? <Chip tone="pos">{t(booking["pay_mode"] === "deposit" ? "pay.depositPaid" : "pay.paidTag")}</Chip> : null}
             {booking["picked_by_anyone"] === true && <Chip tone="info">{t("booking.pickedAnyone")}</Chip>}
           </span>
         )}
@@ -145,16 +145,22 @@ function NeedRow({ need }: { need: Need }) {
         go("calendar", { calendarDay: dayIn(startOf(booking), door.facts().zone), calendarMode: "day" });
         openBooking(booking.id);
       };
-      acts = (
+      const who = door.who();
+      const { zone } = door.facts();
+      // Only the desk settles a clash. A visit that has begun keeps its person and time (BOOK-15.3).
+      const mayMove = movesOf(booking, who, door.now(), zone, false).move;
+      acts = !who.can("bookings", "create") ? null : (
         <>
-          <button
-            type="button"
-            className="lm-btn lm-btn--ink"
-            disabled={busy}
-            onClick={() => newBooking({ moving: booking.id, service: booking["service_id"] as string, person: booking["team_id"] as string | null, customer: booking["customer_id"] as string | null })}
-          >
-            {t("clash.moveIt")}
-          </button>
+          {mayMove && (
+            <button
+              type="button"
+              className="lm-btn lm-btn--ink"
+              disabled={busy}
+              onClick={() => newBooking({ moving: booking.id, service: booking["service_id"] as string, person: booking["team_id"] as string | null, day: dayIn(startOf(booking), zone), customer: booking["customer_id"] as string | null })}
+            >
+              {t("clash.moveIt")}
+            </button>
+          )}
           <button
             type="button"
             className="lm-btn"

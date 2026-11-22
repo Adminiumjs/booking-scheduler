@@ -94,6 +94,8 @@ export class AdminiumDesk implements DeskDoor {
   private readonly cfg: StaffConfig;
   private readonly skew: number;
   private readonly kept = new Map<string, { at: number; value: unknown }>();
+  /** Bumped by every write: a read that began before it may not be kept. */
+  private readonly written = new Map<string, number>();
   private actions: Promise<readonly string[]> | null = null;
 
   constructor(transport: SessionTransport, config: StaffConfig, options: DeskDoorOptions = {}) {
@@ -155,9 +157,23 @@ export class AdminiumDesk implements DeskDoor {
   private async keep<T>(name: string, read: () => Promise<T>): Promise<T> {
     const held = this.kept.get(name);
     if (held !== undefined && Date.now() - held.at < KEPT_MS) return held.value as T;
+    const before = this.written.get(name) ?? 0;
     const value = await read();
-    this.kept.set(name, { at: Date.now(), value });
+    if ((this.written.get(name) ?? 0) === before) this.kept.set(name, { at: Date.now(), value });
     return value;
+  }
+  /** What this desk just wrote is read afresh, and a read still on its way cannot put the old answer back. */
+  private forget(name: string): void {
+    this.kept.delete(name);
+    this.written.set(name, (this.written.get(name) ?? 0) + 1);
+  }
+  private async writing<T>(name: string, work: () => Promise<T>): Promise<T> {
+    this.forget(name);
+    try {
+      return await work();
+    } finally {
+      this.forget(name);
+    }
   }
   private async listAddOn(addOn: string, table: string, query: { where?: unknown; order?: string } = {}): Promise<Row[] | null> {
     if (!this.readsAddOn(addOn, table)) return null;
@@ -170,18 +186,15 @@ export class AdminiumDesk implements DeskDoor {
   }
   /** `clientKey` is the engine's retry key: the same press sent twice answers with the first row (cT18). */
   private async create(table: Table, values: Record<string, unknown>, clientKey?: string): Promise<Row> {
-    this.kept.delete(table);
     const body = clientKey === undefined ? { values } : { values, clientKey };
-    return this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table)), "POST", body)).data);
+    return this.writing(table, async () => this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table)), "POST", body)).data));
   }
   private async change(table: Table, id: Id, values: Record<string, unknown>, from?: string): Promise<Row> {
-    this.kept.delete(table);
     const body = from === undefined ? { values } : { values, from };
-    return this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table), `/${encodeURIComponent(String(id))}`), "PATCH", body)).data);
+    return this.writing(table, async () => this.row(table, (await this.t.mutate<{ data: Row }>(await this.path(this.real(table), `/${encodeURIComponent(String(id))}`), "PATCH", body)).data));
   }
   private async remove(table: Table, id: Id): Promise<void> {
-    this.kept.delete(table);
-    await this.t.mutate(await this.path(this.real(table), `/${encodeURIComponent(String(id))}`), "DELETE");
+    await this.writing(table, async () => this.t.mutate(await this.path(this.real(table), `/${encodeURIComponent(String(id))}`), "DELETE"));
   }
   /** A person's row, as the calendar routes name it. */
   private async teamRef(team: Id): Promise<{ connection: string; table: string; row: string }> {
@@ -449,10 +462,11 @@ export class AdminiumDesk implements DeskDoor {
     });
   }
 
-  refund(input: { attemptId: string; amount: string; reason: string; note: string; key: string }): Promise<void> {
+  refund(input: { attemptId: string; amount: string; reason: string; note: string; key: string }): Promise<{ state: string; failureMessage: string | null }> {
     return this.run(async () => {
       await this.t.port.config();
-      await this.t.mutate("/api/v1/payments/refunds", "POST", { attemptId: input.attemptId, amount: input.amount, reason: input.reason, note: input.note, key: input.key });
+      const reply = await this.t.mutate<{ data: { refund: { state: string; failureMessage: string | null } } }>("/api/v1/payments/refunds", "POST", { attemptId: input.attemptId, amount: input.amount, reason: input.reason, note: input.note, key: input.key });
+      return { state: reply.data.refund.state, failureMessage: reply.data.refund.failureMessage };
     });
   }
 
@@ -506,12 +520,13 @@ export class AdminiumDesk implements DeskDoor {
     return this.run(() => this.change("waitlist", entry.id, { state: "closed" }, String(entry["state"])));
   }
   saveReview(review: Row, values: Record<string, unknown>): Promise<Row> {
-    return this.run(async () => {
-      this.kept.delete("reviews");
-      const real = this.realAddOn("forms", "reviews");
-      const path = await this.path(real, `/${encodeURIComponent(String(review.id))}`);
-      return this.row("reviews", (await this.t.mutate<{ data: Row }>(path, "PATCH", { values })).data);
-    });
+    return this.run(() =>
+      this.writing("reviews", async () => {
+        const real = this.realAddOn("forms", "reviews");
+        const path = await this.path(real, `/${encodeURIComponent(String(review.id))}`);
+        return this.row("reviews", (await this.t.mutate<{ data: Row }>(path, "PATCH", { values })).data);
+      }),
+    );
   }
   saveSettings(settings: Row, values: Record<string, unknown>): Promise<Row> {
     return this.run(() => this.change("settings", settings.id, values));
@@ -534,16 +549,18 @@ export class AdminiumDesk implements DeskDoor {
     });
   }
   syncNow(team: Id): Promise<void> {
-    return this.run(async () => {
-      this.kept.delete("calendars");
-      await this.t.mutate("/api/v1/calendar-sync/row/sync-now", "POST", await this.teamRef(team));
-    });
+    return this.run(() =>
+      this.writing("calendars", async () => {
+        await this.t.mutate("/api/v1/calendar-sync/row/sync-now", "POST", await this.teamRef(team));
+      }),
+    );
   }
   saveCalendarChoices(team: Id, choices: { readCalendars?: string[] | null; countAllDay?: boolean; detail?: "first-name+initial" | "none"; resume?: true }): Promise<void> {
-    return this.run(async () => {
-      this.kept.delete("calendars");
-      await this.t.mutate("/api/v1/calendar-sync/row/choices", "POST", { ...(await this.teamRef(team)), ...choices });
-    });
+    return this.run(() =>
+      this.writing("calendars", async () => {
+        await this.t.mutate("/api/v1/calendar-sync/row/choices", "POST", { ...(await this.teamRef(team)), ...choices });
+      }),
+    );
   }
   connectCalendar(team: Id, addOn: string): Promise<string> {
     return this.run(async () => (await this.t.mutate<{ url: string }>("/api/v1/connected-accounts/connect", "POST", { ...(await this.teamRef(team)), addOn })).url);
@@ -590,9 +607,10 @@ export class AdminiumDesk implements DeskDoor {
     });
   }
   disconnectCalendar(team: Id, addOn: string): Promise<void> {
-    return this.run(async () => {
-      this.kept.delete("calendars");
-      await this.t.mutate("/api/v1/connected-accounts/disconnect", "POST", { ...(await this.teamRef(team)), addOn });
-    });
+    return this.run(() =>
+      this.writing("calendars", async () => {
+        await this.t.mutate("/api/v1/connected-accounts/disconnect", "POST", { ...(await this.teamRef(team)), addOn });
+      }),
+    );
   }
 }

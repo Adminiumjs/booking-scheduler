@@ -156,7 +156,7 @@ export function BookingPanel({ id }: { id: Id }) {
         return t(booking["pay_mode"] === "deposit" ? "pay.paidDeposit" : "pay.paidFull", { amt: fmt.money(line.amount), how });
       }
       case "kept":
-        return t("pay.kept", { amt: fmt.money(line.amount) });
+        return t(booking["pay_mode"] === "deposit" ? "pay.kept" : "pay.keptFull", { amt: fmt.money(line.amount) });
       case "refunded":
         return t("pay.refunded", { amt: fmt.money(line.amount) });
       case "nothing":

@@ -7,7 +7,7 @@
  * here is a courtesy: Adminium refuses the write whatever a screen offers.
  */
 import type { Clash, DeskData, Person, Slot } from "./door.ts";
-import { addDays, dayIn, instantOf, weekdayOf } from "./time.ts";
+import { addDays, dayIn, dayStartIn, instantOf, minuteOfDay, weekdayOf } from "./time.ts";
 import { num, same, text, type Id, type Row } from "./wire.ts";
 
 const MINUTE = 60_000;
@@ -89,6 +89,35 @@ export function movesOf(booking: Row, who: Person, now: number, zone: string, ma
     bookAgain: desk && ["booked", "arrived", "done", "no_show"].includes(state),
     refund: mayRefund && paid && ["booked", "arrived", "done", "no_show", "cancelled", "lapsed"].includes(state),
   };
+}
+
+/**
+ * Whether this is the signed-in person's own team row. A specialist's role hides `user_id` and reaches only their own row, so a
+ * row without that column is theirs; for anyone who reads it, the column says.
+ */
+export function isMine(person: Row, who: Person): boolean {
+  if (!("user_id" in person)) return true;
+  return text(person["user_id"]) !== null && text(person["user_id"]) === who.id;
+}
+
+export type MoveRefusal = "started" | "hold" | "tooSoon";
+
+/**
+ * Why the desk will not move a booking to this start (BOOK-15.3). A visit that has begun keeps its person and time. A booking
+ * being paid keeps the hold it was stamped with, so it may not land before that hold ends, or inside the 4 hours in which no
+ * deposit link is offered (cQ30).
+ */
+export function moveRefusal(booking: Row, start: number, now: number): MoveRefusal | null {
+  if (startOf(booking) <= now || !["booked", "paying"].includes(String(booking["state"]))) return "started";
+  if (booking["state"] !== "paying") return null;
+  if (start - now < 4 * HOUR) return "tooSoon";
+  const hold = letGoAt(booking);
+  return hold !== null && start < hold ? "hold" : null;
+}
+
+/** What was taken online for a booking and is still held: the only money a studio's cancel refunds by itself (cQ28). */
+export function onlinePaid(payments: readonly Row[], bookingId: Id): number {
+  return payments.filter((p) => same(p["booking_id"], bookingId) && p["kind"] === "taken" && p["method"] === "online").reduce((sum, p) => sum + (num(p["kept"]) ?? 0), 0);
 }
 
 /** How a booking's money reads on its panel. */
@@ -186,6 +215,22 @@ export function guestFits(slots: readonly Slot[], entry: Row, data: DeskData, no
     out.push({ clock: slot.time, person });
   }
   return out;
+}
+
+/**
+ * An "Anyone" slot names only the first free person, who may not take online bookings while a later one does. Each such slot
+ * is given to the first person who can take it online, from each person's own free times.
+ */
+export function withBookablePerson(slots: readonly Slot[], data: DeskData, own: readonly { person: Id; slots: readonly Slot[] }[]): Slot[] {
+  const bookable = (id: unknown) => {
+    const row = byId(data.team, id);
+    return row !== undefined && row["active"] !== false && row["bookable_online"] !== false;
+  };
+  return slots.map((slot) => {
+    if (slot.state !== "free" || bookable(slot.resource)) return slot;
+    const other = own.find((one) => bookable(one.person) && one.slots.some((s) => s.time === slot.time && s.state === "free"));
+    return other === undefined ? slot : { ...slot, resource: other.person };
+  });
 }
 
 /** The cancelled booking that freed this time, when one did: what the entry's line says. */
@@ -292,19 +337,35 @@ const clockMinutes = (value: unknown): number | null => {
   return h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m) ? null : h * 60 + m;
 };
 
+/** The part of a span that falls on one of the studio's days, in minutes of that day; null when none does. */
+export function clipToDay(start: number, end: number, day: string, zone: string): { from: number; to: number } | null {
+  const opens = dayStartIn(day, zone);
+  const closes = dayStartIn(addDays(day, 1), zone);
+  if (end <= opens || start >= closes) return null;
+  return { from: start <= opens ? 0 : minuteOfDay(start, zone), to: end >= closes ? 24 * 60 : minuteOfDay(end, zone) };
+}
+
 export function personDay(data: DeskData, person: Id, day: string): PersonDay {
   const inRange = (row: Row) => row["active"] !== false && day >= String(row["from_date"]).slice(0, 10) && day <= String(row["to_date"]).slice(0, 10);
   const studio = data.closures.find((row) => (row["team_id"] === null || row["team_id"] === undefined) && inRange(row));
   if (studio !== undefined) return { off: "closed", why: text(studio["name"]) };
   const weekday = weekdayOf(day);
   const opening = data.openingHours.find((row) => row["weekday"] === weekday);
-  if (opening !== undefined && opening["open"] === false) return { off: "closed", why: null };
+  if (opening === undefined || opening["open"] === false) return { off: "closed", why: null };
   const own = data.closures.find((row) => same(row["team_id"], person) && inRange(row));
   if (own !== undefined) return { off: "dayOff", why: text(own["name"]) };
+  const studioOpens = clockMinutes(opening["opens"]);
+  const studioCloses = clockMinutes(opening["closes"]);
+  if (studioOpens === null || studioCloses === null) return { off: "closed", why: null };
+  // As the booking guard reads it: someone with no hours of their own works the studio's, and nobody works outside them (cQ1).
+  if (!data.teamHours.some((row) => same(row["team_id"], person))) return { off: null, opens: studioOpens, closes: studioCloses, breakStart: null, breakEnd: null };
   const hours = data.teamHours.find((row) => same(row["team_id"], person) && row["weekday"] === weekday);
-  const opens = clockMinutes(hours?.["opens"]);
-  const closes = clockMinutes(hours?.["closes"]);
-  if (opens === null || closes === null) return { off: "notWorking", why: null };
+  const ownOpens = clockMinutes(hours?.["opens"]);
+  const ownCloses = clockMinutes(hours?.["closes"]);
+  if (ownOpens === null || ownCloses === null) return { off: "notWorking", why: null };
+  const opens = Math.max(ownOpens, studioOpens);
+  const closes = Math.min(ownCloses, studioCloses);
+  if (opens >= closes) return { off: "notWorking", why: null };
   return { off: null, opens, closes, breakStart: clockMinutes(hours?.["break_start"]), breakEnd: clockMinutes(hours?.["break_end"]) };
 }
 

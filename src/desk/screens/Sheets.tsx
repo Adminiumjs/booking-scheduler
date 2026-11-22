@@ -5,18 +5,18 @@
  * hiding a review, a closure, and the phone's More.
  */
 import { IdCard, Info, Link2, Settings, Sparkles, Star, Undo2, X } from "lucide-react";
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { useData, useEnv, useRun } from "../env.tsx";
 import type { DayCount, Slot } from "../door.ts";
-import { byId, firstName, personDay } from "../facts.ts";
+import { byId, firstName, letGoAt, moveRefusal, onlinePaid, personDay } from "../facts.ts";
 import { useFmt } from "../format.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { DESK_NAV } from "../nav.ts";
-import { closeSheet, go, useDesk, type BookingDraft, type Overlay, type View } from "../store.ts";
+import { closeSheet, go, toast, useDesk, type BookingDraft, type Overlay, type View } from "../store.ts";
 import { addDays, dayIn, instantOf, minuteOfDay } from "../time.ts";
 import { FieldError, Fig, Sheet, Switch } from "../ui.tsx";
-import { num, same, text, type Id } from "../wire.ts";
+import { ApiError, num, same, text, type Id } from "../wire.ts";
 
 const key = () => crypto.randomUUID().replace(/-/g, "");
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,7 +64,9 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [strip, setStrip] = useState<DayCount[]>([]);
   const [slots, setSlots] = useState<Slot[] | null>(null);
-  const [retryKey] = useState(key);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  // One key for one booking: a retry of the same press replays it, and any change is a new booking with a new key (cT18).
+  const retry = useRef<{ what: string; key: string } | null>(null);
 
   const row = byId(data.services, service);
   const stripFrom = day > addDays(today, 6) ? addDays(day, -3) : today;
@@ -129,6 +131,18 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
       return;
     }
     const at = new Date(instantOf(day, walkIn ? walkClock : clock!, zone)).toISOString();
+    if (moving !== undefined) {
+      const refusal = moveRefusal(moving, Date.parse(at), door.now());
+      if (refusal !== null) {
+        const hold = letGoAt(moving);
+        setMoveError(refusal === "started" ? t("book.errStarted") : refusal === "tooSoon" ? t("book.errTooSoon") : t("book.errHold", { time: hold === null ? "" : fmt.dayTime(hold) }));
+        return;
+      }
+    }
+    setMoveError(null);
+    const what = JSON.stringify({ service, person, at, customer, adding, add: adding ? add : null, link: depositLink && asks && farEnough });
+    if (retry.current?.what !== what) retry.current = { what, key: key() };
+    const retryKey = retry.current.key;
     void run(async (d) => {
       if (moving !== undefined) {
         await d.saveBooking(moving, { starts_at: at, team_id: person });
@@ -314,6 +328,7 @@ function BookSheet({ draft }: { draft: BookingDraft }) {
               </button>
             )}
             {errors["time"] && <FieldError id="lm-nb-time-err">{t("book.errTime")}</FieldError>}
+            {moveError !== null && <FieldError id="lm-nb-move-err">{moveError}</FieldError>}
             {pickedPerson !== undefined && <span className="lm-hint">{t("book.anyonePick", { who: text(pickedPerson["name"]) ?? "" })}</span>}
           </div>
         </>
@@ -424,7 +439,9 @@ function CancelSheet({ bookingId }: { bookingId: Id }) {
   const booking = byId(data.bookings, bookingId);
   if (booking === undefined) return null;
   const name = text(booking["name"]) ?? t("common.noName");
-  const paid = (num(booking["paid"]) ?? 0) > 0;
+  // A studio's cancel refunds what was paid online by itself; money taken at the desk is the desk's to give back (cQ28).
+  const online = onlinePaid(data.payments, booking.id);
+  const atStudio = (num(booking["paid"]) ?? 0) - online > 0;
   const go1 = () => {
     if (why.trim() === "") {
       setErr(true);
@@ -433,7 +450,7 @@ function CancelSheet({ bookingId }: { bookingId: Id }) {
     void run(async (d) => {
       await d.moveBooking(booking, "cancelled", { cancelled_by: "studio", cancel_reason: why.trim() });
       closeSheet();
-      return paid ? t("toast.cancelledRefund", { name, amt: fmt.money(booking["paid"]) }) : t("toast.cancelled", { name });
+      return online > 0 ? t("toast.cancelledRefund", { name, amt: fmt.money(online) }) : t("toast.cancelled", { name });
     });
   };
   return (
@@ -457,10 +474,24 @@ function CancelSheet({ bookingId }: { bookingId: Id }) {
         <textarea id="lm-cancel-why" rows={3} maxLength={200} value={why} aria-invalid={err} aria-describedby="lm-cancel-hint" onChange={(e) => { setWhy(e.target.value); setErr(false); }} />
         <span id="lm-cancel-hint" className={err ? "lm-err" : "lm-hint"}>{err ? t("cancel.errReason", { name }) : t("cancel.hint", { name })}</span>
       </div>
-      <p className="lm-sheet-line">
-        {paid ? <Undo2 size={15} aria-hidden="true" /> : <Info size={15} aria-hidden="true" />}
-        {paid ? t("cancel.refunded", { amt: fmt.money(booking["paid"]) }) : t("cancel.noDeposit")}
-      </p>
+      {online > 0 && (
+        <p className="lm-sheet-line">
+          <Undo2 size={15} aria-hidden="true" />
+          {t("cancel.refunded", { amt: fmt.money(online) })}
+        </p>
+      )}
+      {atStudio && (
+        <p className="lm-sheet-line">
+          <Info size={15} aria-hidden="true" />
+          {t("cancel.atStudio")}
+        </p>
+      )}
+      {online <= 0 && !atStudio && (
+        <p className="lm-sheet-line">
+          <Info size={15} aria-hidden="true" />
+          {t("cancel.noDeposit")}
+        </p>
+      )}
     </Frame>
   );
 }
@@ -529,9 +560,12 @@ function RefundSheet({ bookingId }: { bookingId: Id }) {
   const [amount, setAmount] = useState("");
   const [why, setWhy] = useState<number | null>(null);
   const [errs, setErrs] = useState<{ amount?: boolean; why?: boolean }>({});
-  const [retryKey] = useState(key);
+  const retry = useRef<{ what: string; key: string } | null>(null);
+  // Read once for this booking: the desk's minute-by-minute reload must not put the amount back while someone is confirming it.
+  const loadedFor = useRef<Id | null>(null);
   useEffect(() => {
-    if (booking === undefined) return;
+    if (booking === undefined || same(loadedFor.current, booking.id)) return;
+    loadedFor.current = booking.id;
     let live = true;
     void door.panel(booking).then((got) => {
       if (!live) return;
@@ -541,8 +575,9 @@ function RefundSheet({ bookingId }: { bookingId: Id }) {
     }, () => live && setPanel(null));
     return () => {
       live = false;
+      loadedFor.current = null;
     };
-  }, [door, booking]);
+  }, [door, booking?.id]);
   if (booking === undefined) return null;
   const payment = panel?.payments.find((p) => p.attemptId !== null && Number(p.refundable) > 0);
   const name = text(booking["name"]) ?? t("common.noName");
@@ -554,12 +589,18 @@ function RefundSheet({ bookingId }: { bookingId: Id }) {
     setErrs(bad);
     if (!bad.amount && !bad.why) setStep(2);
   };
-  const send = () =>
+  const send = () => {
+    const what = JSON.stringify({ attempt: payment!.attemptId, amount, why });
+    if (retry.current?.what !== what) retry.current = { what, key: key() };
+    const retryKey = retry.current.key;
     void run(async (d) => {
-      await d.refund({ attemptId: payment!.attemptId!, amount, reason: REFUND_WHY[why!]!.reason, note: t(REFUND_WHY[why!]!.word), key: retryKey });
+      const answer = await d.refund({ attemptId: payment!.attemptId!, amount, reason: REFUND_WHY[why!]!.reason, note: t(REFUND_WHY[why!]!.word), key: retryKey });
+      // The service can refuse it after Adminium took the request: never said as done.
+      if (answer.state === "failed" || answer.state === "cancelled") throw new ApiError(422, "REFUND_FAILED", answer.failureMessage ?? t("refund.nothing"));
       closeSheet();
-      return t("toast.refunded", { amt: fmt.money(amount), name });
+      return answer.state === "succeeded" ? t("toast.refunded", { amt: fmt.money(amount), name }) : t("toast.refundPending", { amt: fmt.money(amount) });
     });
+  };
   return (
     <Frame
       alert={step === 2}
@@ -644,13 +685,19 @@ function OfferSheet({ overlay }: { overlay: Extract<Overlay, { kind: "offer" }> 
             type="button"
             className="lm-btn lm-btn--primary lm-btn--big"
             disabled={busy}
-            onClick={() =>
+            onClick={() => {
+              // The sheet may have stood open: nothing inside the guests' notice is offered (cQ33).
+              if (at - (num(data.settings?.["notice_min"]) ?? 120) * 60_000 < door.now()) {
+                toast(t("offer.tooLate"), "warn");
+                closeSheet();
+                return;
+              }
               void run(async (d) => {
                 await d.offerTime({ entry, person: overlay.person, startsAt: new Date(at).toISOString(), key: retryKey });
                 closeSheet();
                 return t("toast.offered", { name });
-              })
-            }
+              });
+            }}
           >
             {t("offer.send")}
           </button>
