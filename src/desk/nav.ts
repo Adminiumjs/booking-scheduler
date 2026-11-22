@@ -2,7 +2,8 @@
  * The desk's sections, as Adminium lists them in its sidebar (`surface.json`)
  * and as the desk's own sidebar draws them. A booking and a client are panels
  * over a section, so they have no entry. The desk lives at `/a/bookings/…`
- * inside the console (MOD-18).
+ * inside the console (MOD-18). Today has a path of its own: the console marks a
+ * section by its address, so an empty one would stay marked on every screen.
  *
  * Icons are lucide NAMES in kebab-case, never imported components: this module
  * is read by the Vite config.
