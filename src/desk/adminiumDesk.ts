@@ -348,11 +348,14 @@ export class AdminiumDesk implements DeskDoor {
       const clashes = (await this.t.get<{ clashes: Clash[] }>(`/api/v1/calendar-sync/clashes?${query}`)).clashes;
       // The sentence names the whole busy time: read for each clash still open, on its own day.
       const zone = this.facts().zone;
+      const read = new Map<string, Promise<BusyBlock[]>>();
       return await Promise.all(
         clashes.map(async (clash) => {
           if (clash.kept) return clash;
           const day = dayIn(clash.overlapStart, zone);
-          const blocks = await this.busy(clash.resource, day, addDays(day, 1)).catch(() => []);
+          const once = `${clash.resource}|${day}`;
+          if (!read.has(once)) read.set(once, this.busy(clash.resource, day, addDays(day, 1)).catch(() => []));
+          const blocks = await read.get(once)!;
           const block = blocks.find((one) => one.start <= clash.overlapStart && one.end >= clash.overlapEnd);
           return block === undefined ? clash : { ...clash, block };
         }),

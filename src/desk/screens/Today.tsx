@@ -7,7 +7,7 @@ import { CalendarSync, ChevronRight, Hourglass, ListOrdered, Rocket, ShieldAlert
 import type { ReactNode } from "react";
 
 import { useData, useEnv, useRun } from "../env.tsx";
-import { byId, endOf, firstName, kindOf, letGoAt, movesOf, needsOf, ON_THE_DAY, startOf, type Need } from "../facts.ts";
+import { byId, calendarName, endOf, firstName, kindOf, letGoAt, movesOf, needsOf, ON_THE_DAY, startOf, type Need } from "../facts.ts";
 import { useFmt, type Fmt } from "../format.ts";
 import { useDeskT, type DeskT } from "../i18n/index.ts";
 import { go, newBooking, openBooking, useDesk } from "../store.ts";
@@ -114,7 +114,7 @@ const ICONS: Record<Need["kind"], ReactNode> = {
 function clashWords(need: Extract<Need, { kind: "clash" }>, data: ReturnType<typeof useData>, t: DeskT, fmt: Fmt): string {
   const { clash, booking, person } = need;
   const calendar = person === undefined ? undefined : data.calendars[String(person.id)];
-  const provider = calendar?.accounts[0]?.providerName ?? t("calendar.theirCalendar");
+  const provider = calendarName(calendar) ?? t("calendar.theirCalendar");
   return t("needs.clash", {
     who: firstName(person?.["name"]),
     src: provider,

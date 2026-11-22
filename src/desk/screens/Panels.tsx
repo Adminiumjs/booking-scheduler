@@ -9,7 +9,7 @@ import { CalendarClock, CalendarPlus, CalendarX, Clock, Gift, Hourglass, Layers,
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { useData, useEnv, useRun } from "../env.tsx";
-import { byId, clientFacts, endOf, firstName, initials, kindOf, letGoAt, movesOf, payLine, reviewsOfClient, startOf } from "../facts.ts";
+import { byId, calendarName, clientFacts, endOf, firstName, initials, kindOf, letGoAt, movesOf, payLine, reviewsOfClient, startOf } from "../facts.ts";
 import { useFmt } from "../format.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { closePanel, newBooking, openBooking, openClient, openSheet, useDesk } from "../store.ts";
@@ -134,7 +134,7 @@ export function BookingPanel({ id }: { id: Id }) {
   const buffer = num(booking["buffer_min"]) ?? 0;
   const seesMoney = "price" in booking;
   const clash = (data.clashes ?? []).find((c) => !c.kept && same(c.row, booking.id));
-  const provider = person === undefined ? undefined : data.calendars[String(person.id)]?.accounts[0]?.providerName;
+  const provider = person === undefined ? null : calendarName(data.calendars[String(person.id)]);
   const asksNoReviews = customer !== undefined && customer["review_requests"] === false;
   const unproved = "proved_by" in booking && booking["proved_by"] === null && booking["channel"] !== "desk";
   const hold = letGoAt(booking);

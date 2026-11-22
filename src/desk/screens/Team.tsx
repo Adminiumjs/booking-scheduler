@@ -33,7 +33,7 @@ const WEEK: { key: string; word: DeskKey }[] = [
 /** Any ordinary day: a weekly hour is spelled from it, away from a clock change. */
 const REFERENCE = "2026-01-15";
 
-function FeedPart({ person, calendar }: { person: Row; calendar: PersonCalendar | undefined }) {
+function FeedPart({ person, calendar, connected }: { person: Row; calendar: PersonCalendar | undefined; connected: boolean }) {
   const { door } = useEnv();
   const t = useDeskT();
   const { busy, run } = useRun();
@@ -45,7 +45,8 @@ function FeedPart({ person, calendar }: { person: Row; calendar: PersonCalendar 
       live = false;
     };
   }, [door, person.id]);
-  if (feed === null || calendar === undefined) return null;
+  // Someone connected has their calendar; the feed stays only for its own person, who may still subscribe with it.
+  if (feed === null || calendar === undefined || (connected && !feed.own)) return null;
   return (
     <div className="lm-feed">
       <strong className="lm-feed-title">
@@ -67,7 +68,7 @@ function FeedPart({ person, calendar }: { person: Row; calendar: PersonCalendar 
           </button>
         </div>
       )}
-      <p className="lm-hint">{t("team.feedNote")}</p>
+      {!connected && <p className="lm-hint">{t("team.feedNote")}</p>}
       <button
         type="button"
         className="lm-btn lm-self-start"
@@ -95,7 +96,7 @@ function CalendarPart({ person }: { person: Row }) {
   const { busy, run } = useRun();
   const calendar = data.calendars[String(person.id)];
   const who = firstName(person["name"]);
-  if (calendar === undefined) return <FeedPart person={person} calendar={calendar} />;
+  if (calendar === undefined) return <FeedPart person={person} calendar={calendar} connected={false} />;
   const account: CalendarAccount | undefined = calendar.accounts[0];
   const mine = isMine(person, door.who());
   const { may, sync } = calendar;
@@ -165,13 +166,13 @@ function CalendarPart({ person }: { person: Row }) {
       ];
     }
   } else {
-    title = account.providerName;
+    title = text(account.providerName) ?? t("team.calendar");
     if (account.address !== null) lines.push({ text: t("team.connectedAs", { address: account.address }) });
-    if (account.addressDiffers) lines.push({ text: t("team.addressDiffers"), warn: true });
+    if (account.addressDiffers && sync?.demo !== true) lines.push({ text: t("team.addressDiffers"), warn: true });
     if (unavailable) {
       tone = "warn";
       icon = <TriangleAlert size={16} />;
-      lines.push({ text: t("team.unavailable", { provider: account.providerName }), warn: true });
+      lines.push({ text: t("team.unavailable", { provider: text(account.providerName) ?? t("team.calendar") }), warn: true });
       acts = [disconnect];
     } else if (account.state === "setup") {
       tone = "warn";
@@ -229,7 +230,7 @@ function CalendarPart({ person }: { person: Row }) {
         </div>
         {acts.some((a) => a !== null) && <div className="lm-row-gap">{acts}</div>}
       </div>
-      <FeedPart person={person} calendar={calendar} />
+      <FeedPart person={person} calendar={calendar} connected={account !== undefined} />
     </>
   );
 }

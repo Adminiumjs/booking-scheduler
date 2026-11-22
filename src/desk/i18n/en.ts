@@ -362,6 +362,7 @@ export const en = {
   "service.errPrice": "Enter a price.",
   "service.errDeposit": "Enter a deposit above 0 and no more than the price.",
 
+  "team.calendar": "Calendar",
   "team.off": "Off",
   "team.break": "break",
   "team.daysOff": "Days off",

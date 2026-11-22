@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type DragEvent, type 
 
 import { useData, useEnv } from "../env.tsx";
 import type { BusyBlock, DeskData } from "../door.ts";
-import { byId, clipToDay, endOf, firstName, gridHours, kindOf, ON_THE_DAY, personDay, shortName, startOf, whyRefused, type DropRefusal, type PersonDay } from "../facts.ts";
+import { byId, calendarName, clipToDay, endOf, firstName, gridHours, kindOf, ON_THE_DAY, personDay, shortName, startOf, whyRefused, type DropRefusal, type PersonDay } from "../facts.ts";
 import { useFmt, type Fmt } from "../format.ts";
 import { useDeskT, type DeskT } from "../i18n/index.ts";
 import { newBooking, openBooking, useDesk } from "../store.ts";
@@ -109,7 +109,7 @@ function Column({ person, day, title, hours, busy, ghost, spring, onDrop }: Colu
   const who = door.who();
   const mayBook = who.can("bookings", "create");
   const calendar = data.calendars[String(person.id)];
-  const source = calendar?.accounts[0]?.providerName ?? null;
+  const source = calendarName(calendar);
   const asOf = calendar?.sync?.state === "reconnect" && calendar.sync.busyAsOf !== null ? calendar.sync.busyAsOf : null;
   const busyWord = asOf !== null ? t("calendar.busyAsOf", { day: fmt.day(asOf) }) : source !== null ? t("calendar.busyFrom", { source }) : t("calendar.busy");
 
@@ -267,7 +267,7 @@ function Diary({ day, setDay, busy }: { day: string; setDay: (day: string) => vo
     const first = firstName(person["name"]);
     const state = personDay(data, person.id, day);
     if (state.off === "dayOff") items.push({ key: `off-${String(person.id)}`, at: -1, time: "—", title: first, sub: offWord(t, state), booking: null, tint: person["tint"], clash: false });
-    const source = data.calendars[String(person.id)]?.accounts[0]?.providerName ?? t("calendar.theirCalendar");
+    const source = calendarName(data.calendars[String(person.id)]) ?? t("calendar.theirCalendar");
     const dayOpens = dayStartIn(day, zone);
     for (const block of busy[String(person.id)] ?? []) {
       if (clipToDay(block.start, block.end, day, zone) === null) continue;

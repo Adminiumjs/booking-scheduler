@@ -100,6 +100,9 @@ export function isMine(person: Row, who: Person): boolean {
   return text(person["user_id"]) !== null && text(person["user_id"]) === who.id;
 }
 
+/** What a person's calendar is called in a sentence: its service's name, or nothing when the service gives none. */
+export const calendarName = (calendar: DeskData["calendars"][string] | undefined): string | null => text(calendar?.accounts[0]?.providerName);
+
 export type MoveRefusal = "started" | "hold" | "tooSoon";
 
 /**
