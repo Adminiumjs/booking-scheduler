@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "name": "@adminiumjs/app-bookings",
+      "version": "0.2.0",
+      "integrity": "sha512-rqs4U6yeTw0RnEZoIIqg0iOVVf6xXyobjQh1ffzmFAIS9KlaU23YFXCH7ksKtByqi1btdOF4aCPIx2pxOq4f4w==",
+      "publishedAt": "2026-11-23T05:32:05.000Z"
+    }
+  ]
+}
