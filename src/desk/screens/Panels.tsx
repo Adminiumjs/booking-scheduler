@@ -5,7 +5,7 @@
  * A row shows what the person's role reads. A specialist's booking has no price,
  * e-mail or payment columns at all, so those lines are absent, not greyed.
  */
-import { CalendarClock, CalendarPlus, CalendarX, Clock, Gift, Hourglass, Layers, Lock, MailCheck, MailX, Receipt, Repeat, Shuffle, TriangleAlert, Undo2, UserX, X } from "lucide-react";
+import { CalendarClock, CalendarPlus, CalendarX, Clock, Gift, Hourglass, Layers, Lock, MailCheck, MailX, MessageSquareText, MessageSquareWarning, MessageSquareX, Receipt, Repeat, Shuffle, TriangleAlert, Undo2, UserX, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { useData, useEnv, useRun } from "../env.tsx";
@@ -13,6 +13,7 @@ import { byId, calendarName, clientFacts, endOf, firstName, initials, kindOf, le
 import { useFmt } from "../format.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { closePanel, newBooking, openBooking, openClient, openSheet, useDesk } from "../store.ts";
+import { isTextKind, textOutcome } from "../texts.ts";
 import { addDays, dayIn, minuteOfDay } from "../time.ts";
 import { Chip, Fig, Switch } from "../ui.tsx";
 import { num, same, text, type Id, type Row } from "../wire.ts";
@@ -69,7 +70,46 @@ const MAIL_WORDS: Record<string, DeskKey> = {
   offer: "mail.offer",
   review_request: "mail.reviewRequest",
   review_reminder: "mail.reviewReminder",
+  reminder_text: "mail.reminderText",
+  offer_text: "mail.offerText",
 };
+
+/** A text's line (plan 80): what Adminium did with it, in the desk's words. A text not sent says why, small, and stops nothing. */
+function TextRow({ message, label, when }: { message: Row; label: string; when: unknown }) {
+  const t = useDeskT();
+  const fmt = useFmt();
+  const outcome = textOutcome(message);
+  const icon =
+    outcome.state === "sent" ? (
+      <MessageSquareText size={15} aria-hidden="true" />
+    ) : outcome.state === "not-sent" ? (
+      <MessageSquareX size={15} aria-hidden="true" />
+    ) : outcome.state === "unknown" ? (
+      <MessageSquareWarning size={15} aria-hidden="true" />
+    ) : (
+      <Clock size={15} aria-hidden="true" />
+    );
+  const line =
+    outcome.state === "going"
+      ? t("text.going", { what: label })
+      : outcome.state === "waiting"
+        ? t("text.waiting", { what: label })
+        : outcome.state === "unknown"
+          ? t("text.unknown", { what: label })
+          : outcome.state === "not-sent"
+            ? t("text.notSent", { what: label })
+            : label;
+  return (
+    <div className="lm-mail-row" data-text={outcome.state}>
+      {icon}
+      <span>
+        {line}
+        {outcome.state === "not-sent" && <span className="lm-muted-sm lm-text-why">{outcome.word === null ? t("text.otherReason") : t(outcome.word as DeskKey)}</span>}
+      </span>
+      <Fig>{fmt.dayTime(when)}</Fig>
+    </div>
+  );
+}
 
 function MailRows({ booking }: { booking: Row }) {
   const data = useData();
@@ -86,6 +126,7 @@ function MailRows({ booking }: { booking: Row }) {
         const icon = status === "failed" ? <MailX size={15} aria-hidden="true" /> : status === "queued" ? <Clock size={15} aria-hidden="true" /> : <MailCheck size={15} aria-hidden="true" />;
         const when = message["sent_at"] ?? message["due_at"] ?? message["created_at"];
         const label = word === undefined ? kind.replace(/_/g, " ") : t(word);
+        if (isTextKind(kind)) return <TextRow key={String(message.id)} message={message} label={label} when={when} />;
         return (
           <div key={String(message.id)} className="lm-mail-row">
             {icon}
@@ -259,6 +300,11 @@ export function BookingPanel({ id }: { id: Id }) {
             {asksNoReviews && (
               <Chip>
                 <MailX size={12} aria-hidden="true" /> {t("booking.noReviews")}
+              </Chip>
+            )}
+            {booking["texts_ok"] === true && (
+              <Chip>
+                <MessageSquareText size={12} aria-hidden="true" /> {t("booking.textsAsked")}
               </Chip>
             )}
             {unproved && (

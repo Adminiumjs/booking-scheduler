@@ -132,6 +132,7 @@ export class DemoGuest implements CustomerDoor {
         card: held(children?.card),
         key: clientKey,
         ...(values.no_review === undefined ? {} : { noReview: values.no_review }),
+        ...(values.texts === true ? { texts: true } : {}),
       });
       this.linkId = row.id;
       return { row: this.show(row), token: this.linkToken(row.id), payUrl: null, replayed: false };

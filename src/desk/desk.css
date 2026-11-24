@@ -1553,6 +1553,19 @@ span.lm-chip {
   font-size: 11.5px;
   color: var(--fg-muted);
 }
+/* A text's reason, under its line (plan 80): small, and never in the way. */
+.lm-mail-row[data-text="not-sent"],
+.lm-mail-row[data-text="unknown"] {
+  align-items: flex-start;
+}
+.lm-mail-row[data-text="unknown"] > svg {
+  color: var(--warn);
+}
+.lm-text-why {
+  display: block;
+  font-weight: 500;
+  margin-top: 1px;
+}
 .lm-visit {
   display: flex;
   flex-wrap: wrap;

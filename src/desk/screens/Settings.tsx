@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { EmbedFacts } from "../door.ts";
 import { useData, useEnv, useRun, useSystemActions } from "../env.tsx";
 import { useFmt } from "../format.ts";
+import { lookAtPhone } from "../../customer/phone.ts";
 import { useDeskT, type DeskKey } from "../i18n/index.ts";
 import { openSheet, toast, useDesk, type DeskState } from "../store.ts";
 import { instantOf } from "../time.ts";
@@ -64,11 +65,17 @@ function SaveBar({ dirty, busy, onSave, onReset }: { dirty: boolean; busy: boole
 }
 
 /** A studio's own words run in their own direction; an address of the web always left to right. */
-function Text({ id, label, value, onChange, error, type = "text", dir = "auto" }: { id: string; label: string; value: string; onChange: (v: string) => void; error?: string | null; type?: string; dir?: "auto" | "ltr" }) {
+function Text({ id, label, value, onChange, error, hint, type = "text", dir = "auto" }: { id: string; label: string; value: string; onChange: (v: string) => void; error?: string | null; hint?: string; type?: string; dir?: "auto" | "ltr" }) {
+  const described = [hint === undefined ? null : `${id}-hint`, error ? `${id}-err` : null].filter((one) => one !== null).join(" ");
   return (
     <div className="lm-field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} type={type} dir={dir} value={value} aria-invalid={error !== null && error !== undefined} aria-describedby={error ? `${id}-err` : undefined} onChange={(e) => onChange(e.target.value)} />
+      <input id={id} type={type} dir={dir} value={value} aria-invalid={error !== null && error !== undefined} aria-describedby={described === "" ? undefined : described} onChange={(e) => onChange(e.target.value)} />
+      {hint !== undefined && (
+        <span id={`${id}-hint`} className="lm-hint">
+          {hint}
+        </span>
+      )}
       {error && <FieldError id={`${id}-err`}>{error}</FieldError>}
     </div>
   );
@@ -80,7 +87,7 @@ function StudioTab({ settings }: { settings: Row }) {
   const t = useDeskT();
   const fmt = useFmt();
   const { busy, run } = useRun();
-  const columns = useMemo(() => ["studio_name", "address_line1", "city", "region", "zip", "email", "website"], []);
+  const columns = useMemo(() => ["studio_name", "address_line1", "city", "region", "zip", "email", "phone", "website"], []);
   const { form, set, dirty, reset } = useSettingsForm(settings, columns);
   const [errs, setErrs] = useState<Record<string, boolean>>({});
   const held = useSystemActions();
@@ -91,6 +98,7 @@ function StudioTab({ settings }: { settings: Row }) {
     if ((form["studio_name"] ?? "").trim() === "") bad["studio_name"] = true;
     if (form["email"] !== "" && !EMAIL.test(form["email"] ?? "")) bad["email"] = true;
     if (form["website"] !== "" && !URLISH.test(form["website"] ?? "")) bad["website"] = true;
+    if (lookAtPhone(form["phone"] ?? "") === "unreadable") bad["phone"] = true;
     setErrs(bad);
     if (Object.keys(bad).length > 0) return;
     void run(async (d) => {
@@ -111,6 +119,7 @@ function StudioTab({ settings }: { settings: Row }) {
           <div className="lm-grow"><Text id="lm-set-zip" label={t("settings.zip")} value={form["zip"] ?? ""} onChange={(v) => set("zip", v)} /></div>
         </div>
         <Text id="lm-set-email" type="email" dir="ltr" label={t("settings.email")} value={form["email"] ?? ""} onChange={(v) => set("email", v)} error={errs["email"] ? t("settings.errEmail") : null} />
+        <Text id="lm-set-phone" type="tel" dir="ltr" label={t("settings.phone")} hint={t("settings.phoneHint")} value={form["phone"] ?? ""} onChange={(v) => set("phone", v)} error={errs["phone"] ? t("settings.errPhone") : null} />
         <Text id="lm-set-web" dir="ltr" label={t("settings.web")} value={form["website"] ?? ""} onChange={(v) => set("website", v)} error={errs["website"] ? t("settings.errWeb") : null} />
         <div className="lm-field">
           <span className="lm-label">{t("settings.zone")}</span>

@@ -17,6 +17,7 @@
  * DEMO BUILD ONLY: nothing in a real build imports it.
  */
 import type { BusyBlock, CalendarAccount, CalendarSyncState, Clash, DayCount, PersonCalendar, Slot } from "../desk/door.ts";
+import { TEXT_NOT_CONNECTED } from "../desk/texts.ts";
 import { addDays, weekdayOf } from "../desk/time.ts";
 import { same, type Id, type Row } from "../desk/wire.ts";
 import { DEMO_START, DEMO_ZONE, instantAt, moment, MORNING, sampleTables, WORLD, type Tables } from "./sample.ts";
@@ -85,6 +86,8 @@ export interface NewVisit {
   channel: "page" | "embed" | "desk";
   door: DoorWord;
   noReview?: boolean;
+  /** The box for texts, ticked (plan 80). */
+  texts?: boolean;
   depositLink?: boolean;
   customerId?: Id | null;
   /** Made signed in, or at the desk. */
@@ -424,6 +427,7 @@ export class LumenWorld {
       note: input.note ?? null,
       staff_note: null,
       no_review_request: input.noReview === true,
+      texts_ok: input.texts === true && (input.phone ?? "") !== "",
       channel: input.channel,
       made_at: this.nowIso(),
       time_set_at: this.nowIso(),
@@ -507,6 +511,14 @@ export class LumenWorld {
   mail(kind: string, booking: Row, at: string = this.nowIso()): void {
     if (!booking["email"]) return;
     this.insert("messages", { kind, status: "sent", to_address: booking["email"], language: booking["language"] ?? "en-US", booking_id: booking.id, customer_id: booking["customer_id"] ?? null, created_at: at, sent_at: at, due_at: null });
+  }
+
+  /**
+   * A text the outbox would send. The demo has no text provider, as a studio that has not connected one: Adminium writes the
+   * row and skips it with its own sentence, and the desk shows that. Nothing is sent, and no number is kept on the row.
+   */
+  text(kind: string, booking: Row, at: string = this.nowIso()): void {
+    this.insert("messages", { kind, status: "skipped", to_address: null, language: booking["language"] ?? "en-US", booking_id: booking.id, customer_id: booking["customer_id"] ?? null, created_at: at, sent_at: null, due_at: null, error: TEXT_NOT_CONNECTED });
   }
 
   private mailed(kind: string, bookingId: Id): boolean {
@@ -693,6 +705,7 @@ export class LumenWorld {
       note: null,
       staff_note: null,
       no_review_request: false,
+      texts_ok: false,
       channel: "desk",
       made_at: this.nowIso(),
       time_set_at: this.nowIso(),
@@ -730,6 +743,7 @@ export class LumenWorld {
     });
     entry["state"] = "offered";
     this.mail("offer", row);
+    this.text("offer_text", row);
     this.changed();
     return row;
   }
@@ -840,7 +854,11 @@ export class LumenWorld {
       // A visit made or moved inside the last day has had its own mail: it gets no reminder (cQ11).
       if (row["state"] === "booked" && due(row["remind_at"])) {
         const set = Date.parse(String(row["time_set_at"]));
-        if (set <= Date.parse(String(row["remind_at"])) && Date.parse(String(row["starts_at"])) - set >= 24 * HOUR && !this.mailed("reminder", row.id)) this.mail("reminder", row, String(row["remind_at"]));
+        if (set <= Date.parse(String(row["remind_at"])) && Date.parse(String(row["starts_at"])) - set >= 24 * HOUR && !this.mailed("reminder", row.id)) {
+          this.mail("reminder", row, String(row["remind_at"]));
+          // The text beside it, only where the guest ticked the box on this booking.
+          if (row["texts_ok"] === true) this.text("reminder_text", row, String(row["remind_at"]));
+        }
       }
       if (askReviews && row["state"] === "done" && due(row["review_from"]) && row["no_review_request"] !== true && !this.mailed("review_request", row.id)) {
         const customer = this.get("customers", row["customer_id"]);
