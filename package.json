@@ -21,7 +21,7 @@
     "sample": "vite-node scripts/write-sample.ts"
   },
   "dependencies": {
-    "@adminiumjs/public-client": "^0.3.71",
+    "@adminiumjs/public-client": "^0.3.76",
     "lucide-react": "^0.462.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

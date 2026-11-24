@@ -361,14 +361,12 @@ export class LumenDoor {
 
   /**
    * Whether the studio can send texts at all (a provider and a sender set, texts not switched off): the box for texts is drawn
-   * only then (plan 80). It says nothing of the account. The client's own `texts.ready()` where it has one (0.3.76), else the
-   * same route. Any doubt hides the box: a guest is never asked for a yes to texts that cannot go.
+   * only then (plan 80). It says nothing of the account. Any doubt hides the box: a guest is never asked for a yes to texts
+   * that cannot go.
    */
   async textsReady(): Promise<boolean> {
     try {
-      const own = (this.client as unknown as { texts?: { ready?: () => Promise<boolean> } }).texts;
-      if (typeof own?.ready === "function") return (await own.ready()) === true;
-      return (await this.raw<{ data: { ready?: boolean } }>(this.client, this.served.publishableKey, "/api/v1/public/texts")).data.ready === true;
+      return (await this.client.texts.ready()) === true;
     } catch {
       return false;
     }
