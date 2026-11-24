@@ -438,6 +438,49 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         expect(off.text).toContain(EN.studioNothing);
         expect(off.text).not.toContain("refunded in full.");
       });
+
+      // Plan 80: no text provider is connected here, as on a studio that never set texts up. The box still records the guest's
+      // own yes, and each text is written beside its mail and skipped with Adminium's own sentence: nothing goes, nothing breaks.
+      it("the box for texts is the guest's own, and with no provider each text is written and skipped, beside its mail", async () => {
+        // After every clock the tests above set (the last is at most 25 October), so this one also runs on its own.
+        await stand.server.setClock(at("2026-10-26", "09:00"));
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        const { date, times } = await hours("Gel Manicure", "2026-10-28", "Ivy", 2);
+        const withIvy = { team_id: team["Ivy"]!["id"] };
+        const yes = await tab().book("studio", values("Gel Manicure", times[0]!, "tess", { ...withIvy, phone: "+1 415 555 0161", texts: true }), retryKey("t1"));
+        const no = await tab().book("studio", values("Gel Manicure", times[1]!, "nate", { ...withIvy, phone: "+1 415 555 0162" }), retryKey("t2"));
+        await mailTo(address("tess"), /^Booked/);
+        await mailTo(address("nate"), /^Booked/);
+        const ticked = (row: Row) => row["texts_ok"] === true || row["texts_ok"] === 1 || row["texts_ok"] === "1";
+        expect(ticked(await stand.row("bookings", yes.row["id"]))).toBe(true);
+        expect(ticked(await stand.row("bookings", no.row["id"]))).toBe(false);
+
+        // 10 AM the day before: both get the reminder mail, and only the ticked booking a reminder text.
+        const before = new Date(Date.parse(`${date}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+        await stand.server.setClock(at(before, "10:05"));
+        await mailTo(address("tess"), /See you tomorrow/);
+        await mailTo(address("nate"), /See you tomorrow/);
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        const textOf = (kind: string, booking: unknown) =>
+          until(async () => (await stand.rows("messages")).find((m) => m["kind"] === kind && String(m["booking_id"]) === String(booking) && m["status"] !== "queued"), `the ${kind} row`, 120_000);
+        const reminder = await textOf("reminder_text", yes.row["id"]);
+        const booked = await stand.row("bookings", yes.row["id"]);
+        const person = booked["customer_id"] == null ? null : await stand.row("customers", booked["customer_id"]);
+        expect([reminder["status"], reminder["error"]], JSON.stringify({ phone: booked["phone"], customer: person?.["phone"] ?? null })).toEqual(["skipped", "No text provider is connected"]);
+        expect((await stand.rows("messages")).filter((m) => m["kind"] === "reminder_text" && String(m["booking_id"]) === String(no.row["id"]))).toEqual([]);
+
+        // A waiting-list offer: its text is written beside the offer mail, and skipped the same way.
+        await deskAgain();
+        const startsAt = await free("Gel Manicure", "2026-10-29", "Ivy", "13:00");
+        const day = new Date(Date.parse(startsAt) - 7 * 3_600_000).toISOString().slice(0, 10);
+        await tab().joinList({ service_id: services["Gel Manicure"]!["id"], team_id: null, day, name: "Tess Waiting", email: address("tess"), language: "en-US" }, retryKey("t3"));
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        const entry = (await stand.rows("waitlist")).find((w) => w["name"] === "Tess Waiting")!;
+        const offered = await desk.offerTime({ entry, person: team["Ivy"]!["id"], startsAt, key: key() } as never);
+        await mailTo(address("tess"), /A time opened/);
+        const offerText = await textOf("offer_text", offered["id"]);
+        expect([offerText["status"], offerText["error"]]).toEqual(["skipped", "No text provider is connected"]);
+      });
     });
   });
 });
