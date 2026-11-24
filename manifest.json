@@ -18,7 +18,7 @@
     "hospitality"
   ],
   "compatibility": {
-    "minAdminiumVersion": "0.3.71",
+    "minAdminiumVersion": "0.3.76",
     "updatesFrom": ">=0.2.0",
     "engines": [
       "sqlite",
@@ -462,6 +462,28 @@
               "personal": false,
               "validation": {
                 "format": "url"
+              }
+            }
+          },
+          {
+            "ref": "phone",
+            "type": "text",
+            "maxLength": 32,
+            "label": {
+              "en-US": "Studio phone",
+              "de-DE": "Studio-Telefon",
+              "fr-FR": "Téléphone du studio",
+              "da-DK": "Studiets telefon",
+              "cs-CZ": "Telefon studia",
+              "ar-EG": "هاتف الاستوديو",
+              "zh-CN": "工作室电话",
+              "zh-TW": "工作室電話"
+            },
+            "nullable": true,
+            "rules": {
+              "personal": false,
+              "validation": {
+                "format": "phone"
               }
             }
           },
@@ -3811,6 +3833,21 @@
             }
           },
           {
+            "ref": "texts_ok",
+            "type": "bool",
+            "default": false,
+            "label": {
+              "en-US": "Texts about this booking",
+              "de-DE": "SMS zu dieser Buchung",
+              "fr-FR": "SMS sur cette réservation",
+              "da-DK": "Sms'er om denne booking",
+              "cs-CZ": "SMS o této rezervaci",
+              "ar-EG": "رسائل نصية عن هذا الحجز",
+              "zh-CN": "此预约的短信通知",
+              "zh-TW": "此預約的簡訊通知"
+            }
+          },
+          {
             "ref": "channel",
             "type": "enum",
             "enum": [
@@ -4161,6 +4198,109 @@
                             ]
                           },
                           24
+                        ]
+                      }
+                    ]
+                  },
+                  1,
+                  0
+                ]
+              }
+            }
+          },
+          {
+            "ref": "text_reminds",
+            "type": "int",
+            "nullable": true,
+            "label": {
+              "en-US": "Gets a reminder text",
+              "de-DE": "Bekommt eine Erinnerungs-SMS",
+              "fr-FR": "Reçoit un SMS de rappel",
+              "da-DK": "Får en påmindelse på sms",
+              "cs-CZ": "Dostane připomenutí SMS",
+              "ar-EG": "تصله رسالة تذكير",
+              "zh-CN": "会收到提醒短信",
+              "zh-TW": "會收到提醒簡訊"
+            },
+            "rules": {
+              "formula": {
+                "if": [
+                  {
+                    "and": [
+                      {
+                        "eq": [
+                          "state",
+                          "booked"
+                        ]
+                      },
+                      {
+                        "gte": [
+                          {
+                            "coalesce": [
+                              {
+                                "hoursBetween": [
+                                  "time_set_at",
+                                  "remind_at"
+                                ]
+                              },
+                              -1
+                            ]
+                          },
+                          0
+                        ]
+                      },
+                      {
+                        "gte": [
+                          {
+                            "coalesce": [
+                              {
+                                "hoursBetween": [
+                                  "time_set_at",
+                                  "starts_at"
+                                ]
+                              },
+                              0
+                            ]
+                          },
+                          24
+                        ]
+                      },
+                      {
+                        "gte": [
+                          {
+                            "coalesce": [
+                              {
+                                "hoursBetween": [
+                                  "booked_at",
+                                  "remind_at"
+                                ]
+                              },
+                              -1
+                            ]
+                          },
+                          0
+                        ]
+                      },
+                      {
+                        "gte": [
+                          {
+                            "coalesce": [
+                              {
+                                "hoursBetween": [
+                                  "booked_at",
+                                  "starts_at"
+                                ]
+                              },
+                              0
+                            ]
+                          },
+                          24
+                        ]
+                      },
+                      {
+                        "eq": [
+                          "texts_ok",
+                          true
                         ]
                       }
                     ]
@@ -8679,24 +8819,24 @@
       {
         "ref": "messages",
         "label": {
-          "en-US": "E-mail",
-          "de-DE": "E-Mail",
-          "fr-FR": "E-mail",
-          "da-DK": "E-mail",
-          "cs-CZ": "E-mail",
-          "ar-EG": "البريد الإلكتروني",
-          "zh-CN": "电子邮件",
-          "zh-TW": "電子郵件"
+          "en-US": "Message",
+          "de-DE": "Nachricht",
+          "fr-FR": "Message",
+          "da-DK": "Besked",
+          "cs-CZ": "Zpráva",
+          "ar-EG": "الرسالة",
+          "zh-CN": "消息",
+          "zh-TW": "訊息"
         },
         "labelPlural": {
-          "en-US": "E-mails",
-          "de-DE": "E-Mails",
-          "fr-FR": "E-mails",
-          "da-DK": "E-mails",
-          "cs-CZ": "E-maily",
-          "ar-EG": "الرسائل",
-          "zh-CN": "邮件",
-          "zh-TW": "郵件"
+          "en-US": "E-mails and texts",
+          "de-DE": "E-Mails und SMS",
+          "fr-FR": "E-mails et SMS",
+          "da-DK": "E-mails og sms'er",
+          "cs-CZ": "E-maily a SMS",
+          "ar-EG": "الرسائل الإلكترونية والنصية",
+          "zh-CN": "邮件和短信",
+          "zh-TW": "郵件和簡訊"
         },
         "keyField": "kind",
         "columns": [
@@ -8720,7 +8860,9 @@
               "cancelled_studio",
               "offer",
               "review_request",
-              "review_reminder"
+              "review_reminder",
+              "reminder_text",
+              "offer_text"
             ],
             "label": {
               "en-US": "Kind",
@@ -8854,6 +8996,26 @@
                     "ar-EG": "تذكير بالتقييم",
                     "zh-CN": "评价提醒",
                     "zh-TW": "評價提醒"
+                  },
+                  "reminder_text": {
+                    "en-US": "Reminder text",
+                    "de-DE": "Erinnerungs-SMS",
+                    "fr-FR": "SMS de rappel",
+                    "da-DK": "Påmindelse på sms",
+                    "cs-CZ": "Připomenutí SMS",
+                    "ar-EG": "رسالة تذكير",
+                    "zh-CN": "提醒短信",
+                    "zh-TW": "提醒簡訊"
+                  },
+                  "offer_text": {
+                    "en-US": "Waiting-list offer text",
+                    "de-DE": "Wartelisten-Angebot per SMS",
+                    "fr-FR": "SMS d'offre de la liste d'attente",
+                    "da-DK": "Tilbud fra ventelisten på sms",
+                    "cs-CZ": "Nabídka z pořadníku SMS",
+                    "ar-EG": "رسالة عرض من قائمة الانتظار",
+                    "zh-CN": "候补空档短信",
+                    "zh-TW": "候補空檔簡訊"
                   }
                 }
               }
@@ -11699,16 +11861,16 @@
       "template": "page-crud",
       "title": {
         "key": "mft.bookings.messages",
-        "fallback": "E-mails"
+        "fallback": "E-mails and texts"
       },
       "titles": {
-        "de-DE": "E-Mails",
-        "fr-FR": "E-mails",
-        "da-DK": "E-mails",
-        "cs-CZ": "E-maily",
-        "ar-EG": "الرسائل",
-        "zh-CN": "邮件",
-        "zh-TW": "郵件"
+        "de-DE": "E-Mails und SMS",
+        "fr-FR": "E-mails et SMS",
+        "da-DK": "E-mails og sms'er",
+        "cs-CZ": "E-maily a SMS",
+        "ar-EG": "الرسائل الإلكترونية والنصية",
+        "zh-CN": "邮件和短信",
+        "zh-TW": "郵件和簡訊"
       },
       "nav": {
         "group": "records",
@@ -12433,7 +12595,9 @@
         "addOn:holiday-calendars:settings",
         "accounts:@:connect",
         "accounts:@:send-link",
-        "accounts:@:disconnect"
+        "accounts:@:disconnect",
+        "texts:@:read",
+        "texts:@:reply"
       ],
       "limits": {
         "bookings": {
@@ -13973,7 +14137,8 @@
         "note",
         "channel",
         "client_key",
-        "no_review_request"
+        "no_review_request",
+        "texts_ok"
       ],
       "writableValues": {
         "channel": [
@@ -14022,6 +14187,24 @@
             "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
             "zh-CN": "到访后请勿向我发送评价请求",
             "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
+      "textConsent": {
+        "column": "texts_ok",
+        "phone": "phone",
+        "class": "service",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Text me about my booking. A reminder before your visit, and any waiting-list opening you asked for. Optional. You can stop at any time; each text tells you how.",
+            "de-DE": "SMS zu meiner Buchung. Eine Erinnerung vor Ihrem Termin und frei gewordene Termine von Ihrer Warteliste. Freiwillig. Sie können jederzeit abbestellen; jede SMS sagt Ihnen, wie.",
+            "fr-FR": "M'envoyer des SMS sur ma réservation. Un rappel avant votre visite, et tout créneau libéré sur la liste d'attente que vous avez demandée. Facultatif. Vous pouvez arrêter à tout moment ; chaque SMS vous dit comment.",
+            "da-DK": "Send mig sms'er om min booking. En påmindelse før dit besøg, og ledige tider fra den venteliste, du har skrevet dig på. Valgfrit. Du kan stoppe når som helst; hver sms fortæller dig hvordan.",
+            "cs-CZ": "Posílat mi SMS o mé rezervaci. Připomínku před návštěvou a uvolněné termíny z pořadníku, o které jste požádali. Nepovinné. Můžete kdykoli přestat; každá SMS vám řekne jak.",
+            "ar-EG": "أرسلوا لي رسائل عن حجزي. تذكير قبل موعدك، وأي موعد يتوفر من قائمة الانتظار. اختياري. يمكنك الإيقاف في أي وقت، وكل رسالة توضح لك الطريقة.",
+            "zh-CN": "通过短信告知我预约信息。到访前提醒，以及您候补的空档通知。可选。您可随时退订，每条短信都会说明退订方式。",
+            "zh-TW": "以簡訊通知我預約資訊。到訪前提醒，以及您候補的空檔通知。可選。您可隨時退訂，每則簡訊都會說明退訂方式。"
           }
         }
       },
@@ -14118,7 +14301,8 @@
         "note",
         "channel",
         "client_key",
-        "no_review_request"
+        "no_review_request",
+        "texts_ok"
       ],
       "writableValues": {
         "channel": [
@@ -14167,6 +14351,24 @@
             "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
             "zh-CN": "到访后请勿向我发送评价请求",
             "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
+      "textConsent": {
+        "column": "texts_ok",
+        "phone": "phone",
+        "class": "service",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Text me about my booking. A reminder before your visit, and any waiting-list opening you asked for. Optional. You can stop at any time; each text tells you how.",
+            "de-DE": "SMS zu meiner Buchung. Eine Erinnerung vor Ihrem Termin und frei gewordene Termine von Ihrer Warteliste. Freiwillig. Sie können jederzeit abbestellen; jede SMS sagt Ihnen, wie.",
+            "fr-FR": "M'envoyer des SMS sur ma réservation. Un rappel avant votre visite, et tout créneau libéré sur la liste d'attente que vous avez demandée. Facultatif. Vous pouvez arrêter à tout moment ; chaque SMS vous dit comment.",
+            "da-DK": "Send mig sms'er om min booking. En påmindelse før dit besøg, og ledige tider fra den venteliste, du har skrevet dig på. Valgfrit. Du kan stoppe når som helst; hver sms fortæller dig hvordan.",
+            "cs-CZ": "Posílat mi SMS o mé rezervaci. Připomínku před návštěvou a uvolněné termíny z pořadníku, o které jste požádali. Nepovinné. Můžete kdykoli přestat; každá SMS vám řekne jak.",
+            "ar-EG": "أرسلوا لي رسائل عن حجزي. تذكير قبل موعدك، وأي موعد يتوفر من قائمة الانتظار. اختياري. يمكنك الإيقاف في أي وقت، وكل رسالة توضح لك الطريقة.",
+            "zh-CN": "通过短信告知我预约信息。到访前提醒，以及您候补的空档通知。可选。您可随时退订，每条短信都会说明退订方式。",
+            "zh-TW": "以簡訊通知我預約資訊。到訪前提醒，以及您候補的空檔通知。可選。您可隨時退訂，每則簡訊都會說明退訂方式。"
           }
         }
       },
@@ -14289,7 +14491,8 @@
         "note",
         "channel",
         "client_key",
-        "no_review_request"
+        "no_review_request",
+        "texts_ok"
       ],
       "writableValues": {
         "channel": [
@@ -14338,6 +14541,24 @@
             "ar-EG": "لا ترسلوا لي طلب تقييم بعد زيارتي",
             "zh-CN": "到访后请勿向我发送评价请求",
             "zh-TW": "到訪後請勿傳送評價邀請給我"
+          }
+        }
+      },
+      "textConsent": {
+        "column": "texts_ok",
+        "phone": "phone",
+        "class": "service",
+        "wording": {
+          "version": 1,
+          "text": {
+            "en-US": "Text me about my booking. A reminder before your visit, and any waiting-list opening you asked for. Optional. You can stop at any time; each text tells you how.",
+            "de-DE": "SMS zu meiner Buchung. Eine Erinnerung vor Ihrem Termin und frei gewordene Termine von Ihrer Warteliste. Freiwillig. Sie können jederzeit abbestellen; jede SMS sagt Ihnen, wie.",
+            "fr-FR": "M'envoyer des SMS sur ma réservation. Un rappel avant votre visite, et tout créneau libéré sur la liste d'attente que vous avez demandée. Facultatif. Vous pouvez arrêter à tout moment ; chaque SMS vous dit comment.",
+            "da-DK": "Send mig sms'er om min booking. En påmindelse før dit besøg, og ledige tider fra den venteliste, du har skrevet dig på. Valgfrit. Du kan stoppe når som helst; hver sms fortæller dig hvordan.",
+            "cs-CZ": "Posílat mi SMS o mé rezervaci. Připomínku před návštěvou a uvolněné termíny z pořadníku, o které jste požádali. Nepovinné. Můžete kdykoli přestat; každá SMS vám řekne jak.",
+            "ar-EG": "أرسلوا لي رسائل عن حجزي. تذكير قبل موعدك، وأي موعد يتوفر من قائمة الانتظار. اختياري. يمكنك الإيقاف في أي وقت، وكل رسالة توضح لك الطريقة.",
+            "zh-CN": "通过短信告知我预约信息。到访前提醒，以及您候补的空档通知。可选。您可随时退订，每条短信都会说明退订方式。",
+            "zh-TW": "以簡訊通知我預約資訊。到訪前提醒，以及您候補的空檔通知。可選。您可隨時退訂，每則簡訊都會說明退訂方式。"
           }
         }
       },
@@ -15129,6 +15350,7 @@
       "table": "customers",
       "kind": "people",
       "email": "email",
+      "phone": "phone",
       "name": "name",
       "firstName": "firstWordOfName",
       "language": "language",
@@ -15395,17 +15617,20 @@
       "language": {
         "column": "language"
       },
+      "phone": "phone",
       "fallback": {
         "via": "booking_id",
         "email": "email",
         "name": "name",
-        "language": "language"
+        "language": "language",
+        "phone": "phone"
       }
     },
     "settings": {
       "table": "settings",
       "name": "studio_name",
-      "replyTo": "email"
+      "replyTo": "email",
+      "phone": "phone"
     },
     "pages": {
       "manage": "/b",
@@ -15423,7 +15648,13 @@
       "cancelled_studio": "bookings-cancelled-studio",
       "offer": "bookings-offer",
       "review_request": "bookings-review-request",
-      "review_reminder": "bookings-review-reminder"
+      "review_reminder": "bookings-review-reminder",
+      "reminder_text": "bookings-reminder-text",
+      "offer_text": "bookings-offer-text"
+    },
+    "channels": {
+      "reminder_text": "sms",
+      "offer_text": "sms"
     },
     "classes": {
       "booked": "service",
@@ -15437,8 +15668,13 @@
       "cancelled_studio": "service",
       "offer": "service",
       "review_request": "service",
-      "review_reminder": "service"
+      "review_reminder": "service",
+      "reminder_text": "service",
+      "offer_text": "service"
     },
+    "waiting": [
+      "offer_text"
+    ],
     "purposes": {
       "review_request": "surveys",
       "review_reminder": "surveys"
@@ -15541,6 +15777,25 @@
         }
       },
       {
+        "kind": "reminder_text",
+        "link": "booking_id",
+        "before": {
+          "table": "bookings",
+          "at": "starts_at",
+          "lead": {
+            "via": "service_id",
+            "table": "services",
+            "column": "remind_hours",
+            "max": 48,
+            "at": "10:00"
+          },
+          "where": {
+            "column": "text_reminds",
+            "eq": 1
+          }
+        }
+      },
+      {
         "kind": "moved",
         "link": "booking_id",
         "onChange": {
@@ -15626,6 +15881,30 @@
             "eq": "offered"
           }
         }
+      },
+      {
+        "kind": "offer_text",
+        "link": "booking_id",
+        "onCreate": {
+          "table": "bookings",
+          "where": {
+            "column": "state",
+            "eq": "offered"
+          }
+        },
+        "holdSeconds": 5,
+        "dropWhen": [
+          {
+            "column": "state",
+            "in": [
+              "paying",
+              "booked",
+              "lapsed",
+              "cancelled"
+            ],
+            "reason": "no-longer-needed"
+          }
+        ]
       },
       {
         "kind": "review_request",
@@ -27777,6 +28056,87 @@
       }
     }
   ],
+  "textTemplates": [
+    {
+      "key": "bookings-reminder-text",
+      "name": {
+        "en-US": "Reminder text",
+        "de-DE": "Erinnerungs-SMS",
+        "fr-FR": "SMS de rappel",
+        "da-DK": "Påmindelse på sms",
+        "cs-CZ": "Připomenutí SMS",
+        "ar-EG": "رسالة تذكير",
+        "zh-CN": "提醒短信",
+        "zh-TW": "提醒簡訊"
+      },
+      "locales": {
+        "en-US": {
+          "body": "{{appName}}: a reminder of your {{service.name}} with {{team.name}} on {{booking.starts_at.date}} at {{booking.starts_at.time}}."
+        },
+        "de-DE": {
+          "body": "{{appName}}: Erinnerung an Ihren Termin {{service.name}} bei {{team.name}} am {{booking.starts_at.date}} um {{booking.starts_at.time}}."
+        },
+        "fr-FR": {
+          "body": "{{appName}} : rappel de votre rendez-vous {{service.name}} avec {{team.name}} le {{booking.starts_at.date}} à {{booking.starts_at.time}}."
+        },
+        "da-DK": {
+          "body": "{{appName}}: Påmindelse om din tid til {{service.name}} hos {{team.name}} den {{booking.starts_at.date}} kl. {{booking.starts_at.time}}."
+        },
+        "cs-CZ": {
+          "body": "{{appName}}: připomínáme váš termín {{service.name}} dne {{booking.starts_at.date}} v {{booking.starts_at.time}}. Obslouží vás {{team.name}}."
+        },
+        "ar-EG": {
+          "body": "{{appName}}: تذكير بموعدك لـ {{service.name}} مع {{team.name}} يوم {{booking.starts_at.date}} الساعة {{booking.starts_at.time}}."
+        },
+        "zh-CN": {
+          "body": "{{appName}}：提醒您，{{booking.starts_at.date}} {{booking.starts_at.time}}有您的{{service.name}}预约，服务人员：{{team.name}}。"
+        },
+        "zh-TW": {
+          "body": "{{appName}}：提醒您，{{booking.starts_at.date}} {{booking.starts_at.time}}有您的{{service.name}}預約，服務人員：{{team.name}}。"
+        }
+      }
+    },
+    {
+      "key": "bookings-offer-text",
+      "name": {
+        "en-US": "Waiting-list offer text",
+        "de-DE": "Wartelisten-Angebot per SMS",
+        "fr-FR": "SMS d'offre de la liste d'attente",
+        "da-DK": "Tilbud fra ventelisten på sms",
+        "cs-CZ": "Nabídka z pořadníku SMS",
+        "ar-EG": "رسالة عرض من قائمة الانتظار",
+        "zh-CN": "候补空档短信",
+        "zh-TW": "候補空檔簡訊"
+      },
+      "locales": {
+        "en-US": {
+          "body": "{{appName}}: a time opened for {{service.name}} on {{booking.starts_at.date}} at {{booking.starts_at.time}}. You can take it until {{booking.offer_until.date}}, {{booking.offer_until.time}}, if it's still free. To book it, open our e-mail or call the studio."
+        },
+        "de-DE": {
+          "body": "{{appName}}: Ein Termin ist frei geworden: {{service.name}} am {{booking.starts_at.date}} um {{booking.starts_at.time}}. Sie können ihn bis {{booking.offer_until.date}}, {{booking.offer_until.time}} buchen, solange er frei ist. Öffnen Sie dazu unsere E-Mail oder rufen Sie das Studio an."
+        },
+        "fr-FR": {
+          "body": "{{appName}} : un créneau s'est libéré pour {{service.name}} le {{booking.starts_at.date}} à {{booking.starts_at.time}}. Vous pouvez le prendre jusqu'au {{booking.offer_until.date}}, {{booking.offer_until.time}}, s'il est encore libre. Pour le réserver, ouvrez notre e-mail ou appelez le studio."
+        },
+        "da-DK": {
+          "body": "{{appName}}: En tid er blevet ledig til {{service.name}} den {{booking.starts_at.date}} kl. {{booking.starts_at.time}}. Du kan tage den indtil {{booking.offer_until.date}} kl. {{booking.offer_until.time}}, hvis den stadig er ledig. Åbn vores e-mail for at booke den, eller ring til studiet."
+        },
+        "cs-CZ": {
+          "body": "{{appName}}: uvolnil se termín {{service.name}} {{booking.starts_at.date}} v {{booking.starts_at.time}}. Platí do {{booking.offer_until.date}} {{booking.offer_until.time}}, pokud bude volný. Rezervujte v našem e-mailu nebo zavolejte do studia."
+        },
+        "ar-EG": {
+          "body": "{{appName}}: توفر موعد لـ {{service.name}} يوم {{booking.starts_at.date}} الساعة {{booking.starts_at.time}}. يمكنك حجزه حتى {{booking.offer_until.date}} الساعة {{booking.offer_until.time}} إن ظل متاحًا. لحجزه افتح رسالتنا الإلكترونية أو اتصل بالاستوديو."
+        },
+        "zh-CN": {
+          "body": "{{appName}}：您候补的{{service.name}}有空档了：{{booking.starts_at.date}} {{booking.starts_at.time}}。如仍有空，可在{{booking.offer_until.date}} {{booking.offer_until.time}}前预约。请打开我们的电子邮件预约，或致电工作室。"
+        },
+        "zh-TW": {
+          "body": "{{appName}}：您候補的{{service.name}}有空檔了：{{booking.starts_at.date}} {{booking.starts_at.time}}。如仍有空，可在{{booking.offer_until.date}} {{booking.offer_until.time}}前預約。請開啟我們的電子郵件預約，或致電工作室。"
+        }
+      }
+    }
+  ],
+  "textReplies": "on",
   "automations": [
     {
       "key": "new-booking-told",

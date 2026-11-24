@@ -15,6 +15,15 @@
  *   review_request    10 AM the morning after a visit (cT7);
  *   review_reminder   once more, some days later, only while it is unanswered.
  *
+ * And two texts (plan 80), each its own kind, sent only through the studio's own
+ * text provider, and only to a guest who agreed and has not said STOP:
+ *
+ *   reminder_text     beside the reminder, for a booking whose box was ticked;
+ *                     a reminder the sending hours would push past the visit is
+ *                     skipped, never sent late (Q9);
+ *   offer_text        beside the offer. It carries no link (a text never does),
+ *                     so it sends the guest to the offer's e-mail or the phone.
+ *
  * The rest are not the app's to word: the sign-in code is the engine's (FIL-11),
  * gift cards are Offers' (L3-F13), connect links are the core's (L3-F14).
  *
@@ -39,6 +48,12 @@ export const KINDS = [
   "review_reminder",
 ] as const;
 export type Kind = (typeof KINDS)[number];
+
+/** The kinds sent as texts. One kind has one channel, so a text is a kind of its own (plan 80, §4.2). */
+export const TEXT_KINDS = ["reminder_text", "offer_text"] as const;
+export type TextKind = (typeof TEXT_KINDS)[number];
+/** How the desk and the console name them. */
+export const TEXT_NAMES: Record<TextKind, string> = { reminder_text: "Reminder text", offer_text: "Waiting-list offer text" };
 
 /** A template's key: the app's own, in the one spelling keys take. */
 export const templateKey = (kind: string) => `bookings-${kind.replace(/_/g, "-")}`;
@@ -89,13 +104,20 @@ export const OUTBOX = {
     name: "name",
     // The booking's own language, whatever the person's row says.
     language: { column: "language" },
+    // A text goes to the number on the person's row. Their yes is for that exact number (plan 80, §4.4).
+    phone: "phone",
     // A guest has no customer row yet: the booking carries their details.
-    fallback: { via: "booking_id", email: "email", name: "name", language: "language" },
+    fallback: { via: "booking_id", email: "email", name: "name", language: "language", phone: "phone" },
   },
-  settings: { table: "settings", name: "studio_name", replyTo: "email" },
+  // The studio's phone, else its e-mail: what a text that cannot take a STOP reply gives for stopping (N1).
+  settings: { table: "settings", name: "studio_name", replyTo: "email", phone: "phone" },
   pages: { manage: "/b", booking: "/book" },
-  kinds: Object.fromEntries(KINDS.map((kind) => [kind, templateKey(kind)])),
-  classes: Object.fromEntries(KINDS.map((kind) => [kind, "service"])),
+  kinds: Object.fromEntries([...KINDS, ...TEXT_KINDS].map((kind) => [kind, templateKey(kind)])),
+  channels: Object.fromEntries(TEXT_KINDS.map((kind) => [kind, "sms"])),
+  classes: Object.fromEntries([...KINDS, ...TEXT_KINDS].map((kind) => [kind, "service"])),
+  // The guest asked to be told when a time opens, and the offer may close within hours (it ends before the visit's notice):
+  // it goes when the desk makes it, not the next morning. A reminder keeps the sending hours.
+  waiting: ["offer_text"],
   // The two review mails are the only ones a person can refuse (cQ10): the box, the stop link and Your visits' switch.
   purposes: { review_request: "surveys", review_reminder: "surveys" },
   reviewLinks: { kinds: ["review_request", "review_reminder"], link: "booking", page: "/review" },
@@ -124,6 +146,17 @@ export const OUTBOX = {
         where: { column: "reminds", eq: 1 },
       },
     },
+    // The text beside it: the same moment, only where the guest ticked the box on this booking.
+    {
+      kind: "reminder_text",
+      link: "booking_id",
+      before: {
+        table: "bookings",
+        at: "starts_at",
+        lead: { via: "service_id", table: "services", column: "remind_hours", max: 48, at: "10:00" },
+        where: { column: "text_reminds", eq: 1 },
+      },
+    },
     {
       kind: "moved",
       link: "booking_id",
@@ -144,6 +177,15 @@ export const OUTBOX = {
     { kind: "cancelled_late", link: "booking_id", ...onBooking("late_cancel", true, { column: "cancelled_by", eq: "customer" }), was: ["shown_paid"] },
     { kind: "cancelled_studio", link: "booking_id", ...onBooking("state", "cancelled", { column: "cancelled_by", eq: "studio" }), was: ["shown_paid"] },
     { kind: "offer", link: "booking_id", onCreate: { table: "bookings", where: { column: "state", eq: "offered" } } },
+    // Held a moment and asked again at the last one: an offer taken, turned down or run out by then is not texted (a text
+    // that waits for the day's limit included).
+    {
+      kind: "offer_text",
+      link: "booking_id",
+      onCreate: { table: "bookings", where: { column: "state", eq: "offered" } },
+      holdSeconds: 5,
+      dropWhen: [{ column: "state", in: ["paying", "booked", "lapsed", "cancelled"], reason: "no-longer-needed" }],
+    },
     reviewMail("review_request", "starts_at", 1),
     // Counted from the morning of the request, so "4 days" in Settings is 4 days after it.
     reviewMail("review_reminder", "review_from", { setting: { table: "settings", column: "review_reminder_days" } }),

@@ -20,6 +20,8 @@ export const PEOPLE = [
     table: "customers",
     kind: "people",
     email: "email",
+    // Their mobile, for texts, the do-not-text list and an erasure by phone (plan 80). The outbox texts this number.
+    phone: "phone",
     name: "name",
     firstName: "firstWordOfName",
     language: "language",

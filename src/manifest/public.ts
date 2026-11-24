@@ -27,6 +27,7 @@
  */
 import { GIFT_MESSAGE_DIGITS, GIFT_MESSAGE_MAX } from "../limits.ts";
 import { setting } from "./tables.ts";
+import { TEXT_CONSENT } from "./texts.ts";
 
 export const LINK_KEY = "link";
 /** One sale of a gift card or a pack, for the way back from the pay page: a key opens one kind of row by its link. */
@@ -143,7 +144,7 @@ const PUBLIC_FACE = [
 ];
 
 /** What every door takes from the guest. `channel` is their word, a statistic only (MOD-16). */
-const TYPED = ["service_id", "team_id", "starts_at", "name", "email", "phone", "language", "note", "channel", "client_key", "no_review_request"];
+const TYPED = ["service_id", "team_id", "starts_at", "name", "email", "phone", "language", "note", "channel", "client_key", "no_review_request", "texts_ok"];
 
 /** The box on the booking form: ticked, the person's standing "no" to review requests, with the sentence they saw (cQ10). */
 const NO_REVIEWS = {
@@ -180,6 +181,8 @@ const WHO = {
   clientKey: "client_key",
   dryRun: true,
   consent: NO_REVIEWS,
+  // Its own unticked box beside it: a yes to texts about this booking, for the number typed (plan 80, A5).
+  textConsent: TEXT_CONSENT,
   // Signed in: at most three visits ahead (cQ4).
   maxOpen: { column: "state", values: ["booked", "paying"], n: 3, upcoming: "starts_at" },
 };

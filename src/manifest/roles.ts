@@ -50,6 +50,8 @@ export const NOT_TYPED_ON_A_BOOKING = [
   "made_proved",
   "card_paid",
   "no_review_request",
+  // The guest's own yes to texts: staff never tick it for them (plan 80, Q7).
+  "texts_ok",
   "picked_by_anyone",
   "door",
   "customer_proved",
@@ -72,6 +74,8 @@ export const NOT_THE_SPECIALISTS = [
   "made_proved",
   "card_paid",
   "no_review_request",
+  "texts_ok",
+  "text_reminds",
   "price",
   "pay_mode",
   "deposit",
@@ -161,6 +165,9 @@ export const ROLES = [
       "accounts:@:connect",
       "accounts:@:send-link",
       "accounts:@:disconnect",
+      // A guest's reply to a reminder ("running ten minutes late"), read and answered on Adminium's Texts page (plan 80, Q2).
+      "texts:@:read",
+      "texts:@:reply",
     ],
     limits: {
       bookings: {

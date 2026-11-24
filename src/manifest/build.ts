@@ -6,6 +6,7 @@
 import { ADD_ONS } from "./add-ons.ts";
 import { AUTOMATIONS } from "./automations.ts";
 import { emailTemplates } from "./emails.ts";
+import { TEXT_REPLIES, textTemplates } from "./texts.ts";
 import { OUTBOX } from "./outbox.ts";
 import { NAV_GROUPS, pages } from "./pages.ts";
 import { PAYMENTS } from "./payments.ts";
@@ -17,8 +18,8 @@ import { TABLES } from "./tables.ts";
 /** The first release of the rework. The manifest alone carries an app's version (`package.json`'s is never read). */
 export const VERSION = "0.2.0";
 
-/** The engine release that first reads the booking rule's buffer, busy tables, shared "anyone" and guests-only window. */
-export const MIN_ADMINIUM = "0.3.71";
+/** The engine release that first sends texts: text templates and kinds, the box for texts, replies (plan 80). */
+export const MIN_ADMINIUM = "0.3.76";
 
 /** 0.1.x kept its tables unprefixed and in another shape: it cannot be updated in place (MOD-14). */
 export const UPDATES_FROM = ">=0.2.0";
@@ -102,6 +103,8 @@ export function buildManifest(): Record<string, unknown> {
     payments: PAYMENTS,
     outbox: OUTBOX,
     emailTemplates: emailTemplates(),
+    textTemplates: textTemplates(),
+    textReplies: TEXT_REPLIES,
     automations: AUTOMATIONS,
     sampleData: { file: "seeds/bookings.sample.json" },
   };

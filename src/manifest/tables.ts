@@ -26,7 +26,7 @@
  */
 import { GIFT_MESSAGE_MAX, NAME_MAX } from "../limits.ts";
 import { EMAIL_EN } from "./email-en.ts";
-import { KINDS } from "./outbox.ts";
+import { KINDS, TEXT_NAMES } from "./outbox.ts";
 import { CALENDAR_ADD_ONS } from "./add-ons.ts";
 import { l, type Labels } from "./labels.ts";
 
@@ -137,8 +137,16 @@ export const setting = (column: string) => ({ table: "settings", column });
 const c0 = (column: string) => ({ coalesce: [column, 0] });
 /** A formula's way of writing nothing: a division by zero is empty. */
 const NOTHING = { div: [1, 0] };
+/** Booked, and neither made nor moved inside the last day: its own mail was the reminder (cQ11, FIL-8). */
+const REMINDS = [
+  { eq: ["state", "booked"] },
+  { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "remind_at"] }, -1] }, 0] },
+  { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "starts_at"] }, 0] }, 24] },
+  { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "remind_at"] }, -1] }, 0] },
+  { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "starts_at"] }, 0] }, 24] },
+];
 /** The outbox's kinds, by the words the desk and the console show them in. */
-const MESSAGE_KINDS: Record<string, string> = Object.fromEntries(KINDS.map((kind) => [kind, EMAIL_EN.names[kind]]));
+const MESSAGE_KINDS: Record<string, string> = { ...Object.fromEntries(KINDS.map((kind) => [kind, EMAIL_EN.names[kind]])), ...TEXT_NAMES };
 /** The deposit or the whole price, by how the service is paid, less what a code or a pack covered. */
 const ASKED = {
   max: [0, { sub: [{ if: [{ eq: ["pay_mode", "full"] }, c0("price"), { if: [{ eq: ["pay_mode", "deposit"] }, c0("deposit"), 0] }] }, c0("discount")] }],
@@ -322,6 +330,8 @@ export const TABLES: Table[] = [
       // Where a reply to any of the studio's e-mails goes (FIL-10).
       text("email", 254, "Studio e-mail", { ...opt, semantic: "email", rules: { personal: false, validation: { format: "email" } } }),
       text("website", 200, "Website", { ...opt, rules: { personal: false, validation: { format: "url" } } }),
+      // The studio's own number: a text from a sender name gives it for stopping (plan 80, N1). The studio's, never a person's.
+      text("phone", 32, "Studio phone", { ...opt, rules: { personal: false, validation: { format: "phone" } } }),
       // A booking's code is this, then its number. A studio's own letters, never Lumen's (MOD-15).
       text("code_prefix", 12, "Booking code starts with", opt),
             int("grid_min", "Times start every (minutes)", { default: 15, rules: { validation: { min: 5, max: 120 } } }),
@@ -652,6 +662,9 @@ export const TABLES: Table[] = [
       text("staff_note", 500, "Note for the studio", { ...opt, rules: { personal: true } }),
       // The booking form's box: ticked, it records the person's "no" to review requests (cQ10). Its own column, by the engine's rule.
       bool("no_review_request", "No review request", false),
+      // The booking form's box for texts (plan 80, Q7): unticked, never required, and ticked only by the guest. Ticked, they
+      // asked for texts about this booking; Adminium's consent log keeps the yes with its wording, and checks it at every send.
+      bool("texts_ok", "Texts about this booking", false),
       // A statistic only: nothing may branch on it (MOD-16).
       choice("channel", "Booked through", CHANNELS, { default: "desk" }),
       at("made_at", "Made", { ...opt, rules: stamp("now", "create") }),
@@ -668,29 +681,10 @@ export const TABLES: Table[] = [
       at("time_set_at", "Time set", { ...opt, rules: stamp("now", { columns: ["starts_at"] }) }),
       // The moment the reminder would go: 10 AM on the day before, on the studio's clock.
       at("remind_at", "Reminder goes out", { ...opt, rules: stamp({ moment: { column: "starts_at", time: "10:00", minus: { days: 1 } } }, { columns: ["starts_at"] }) }),
-      {
-        ref: "reminds",
-        type: "int",
-        nullable: true,
-        label: l("Gets a reminder"),
-        rules: {
-          formula: {
-            if: [
-              {
-                and: [
-                  { eq: ["state", "booked"] },
-                  { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "remind_at"] }, -1] }, 0] },
-                  { gte: [{ coalesce: [{ hoursBetween: ["time_set_at", "starts_at"] }, 0] }, 24] },
-                  { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "remind_at"] }, -1] }, 0] },
-                  { gte: [{ coalesce: [{ hoursBetween: ["booked_at", "starts_at"] }, 0] }, 24] },
-                ],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-      },
+      { ref: "reminds", type: "int", nullable: true, label: l("Gets a reminder"), rules: { formula: { if: [{ and: REMINDS }, 1, 0] } } },
+      // The same, as a text: only for a guest who ticked the box on this booking (plan 80). The send path still asks the consent
+      // log and the do-not-text list, and skips a reminder the sending hours would push past the visit.
+      { ref: "text_reminds", type: "int", nullable: true, label: l("Gets a reminder text"), rules: { formula: { if: [{ and: [...REMINDS, { eq: ["texts_ok", true] }] }, 1, 0] } } },
       // The morning the review request goes: the review reminder's days count from here, as K10 says them.
       at("review_from", "Review reminder counts from", { ...opt, rules: stamp({ moment: { column: "starts_at", plus: { days: 1 } } }, { columns: ["starts_at"] }) }),
       // Each time it becomes booked: a time paid for later, or an offer taken later, was not "booked" until then.
@@ -1081,8 +1075,8 @@ export const TABLES: Table[] = [
   {
     // The outbox: one row per e-mail. T15 writes the kinds and templates; the review request and its reminder are two of them (cT7).
     ref: "messages",
-    label: l("E-mail"),
-    labelPlural: l("E-mails"),
+    label: l("Message"),
+    labelPlural: l("E-mails and texts"),
     keyField: "kind",
     columns: [
       id,

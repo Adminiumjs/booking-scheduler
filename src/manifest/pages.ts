@@ -151,7 +151,7 @@ const SPECS: PageSpec[] = [
   },
   {
     ref: "bookings-messages",
-    title: "E-mails",
+    title: "E-mails and texts",
     group: "records",
     icon: "mail",
     order: 8,

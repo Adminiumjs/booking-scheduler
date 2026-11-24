@@ -30,8 +30,9 @@ describe("manifest.json", () => {
     expect(untranslated()).toEqual(listed);
   });
 
-  it("is Lumen 0.2.0, on the engine that reads its booking rule, and refuses an update from the old example (MOD-14)", () => {
-    expect([VERSION, MIN_ADMINIUM, UPDATES_FROM]).toEqual(["0.2.0", "0.3.71", ">=0.2.0"]);
+  // The version moves at the release (plan 80, T20); the floor is the engine that first sends texts.
+  it("is Lumen 0.2.0, on the engine that sends texts, and refuses an update from the old example (MOD-14)", () => {
+    expect([VERSION, MIN_ADMINIUM, UPDATES_FROM]).toEqual(["0.2.0", "0.3.76", ">=0.2.0"]);
   });
 });
 
