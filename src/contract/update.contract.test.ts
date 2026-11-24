@@ -28,7 +28,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { ADMINIUM_REPO, addOnBundle, addSample, appBundle, boot, Caller, ENGINES, missing, missingAddOn, ok, PORTS_PER_ENGINE, until, type Engine, type Server } from "./harness.ts";
 import { MANIFEST_TEXT } from "./release.ts";
-import { ADD_ONS, ADMIN, CLOCK, dbName, Guest, retryKey, type Row } from "./stand.ts";
+import { ADD_ONS, ADMIN, CLOCK, dbName, Guest, retryKey, standUp, type Row, type Stand } from "./stand.ts";
 
 const why = missing() ?? ADD_ONS.map((key) => missingAddOn(key)).find((reason) => reason !== null) ?? null;
 if (why !== null && process.env["ADMINIUM_REQUIRE_CONTRACT"] === "1") throw new Error(`the update contract must run here, and cannot: ${why}`);
@@ -352,5 +352,60 @@ describe.skipIf(why !== null)(`a studio on the old example takes the rework${why
       const refused = await staff.post(`/api/v1/apps/upload?expectedSha512=${encodeURIComponent(app.integrity)}`, app.buffer);
       expect([refused.status, refused.details["reason"]], JSON.stringify(refused.body).slice(0, 400)).toEqual([422, "UPDATE_NOT_SUPPORTED"]);
     }, 240_000);
+  });
+
+  /*
+   * The released 0.2.0, sample and a desk booking in, takes this release in place (plan 80, T20): only additions, no rule
+   * skipped, every row kept, and no booking made before the update counts as a yes to texts.
+   */
+  ENGINES.forEach(([engine, available], index) => {
+    describe.skipIf(!available)(`an installed 0.2.0 on ${engine}`, () => {
+      let stand: Stand;
+      afterAll(async () => {
+        await stand?.server.stop();
+      });
+
+      it(`updates in place to ${JSON.parse(MANIFEST_TEXT).version as string}, keeping every booking and asking no one for texts`, async () => {
+        const released = execFileSync("git", ["-C", REPO, "show", "a3657a8:manifest.json"], { encoding: "utf8", maxBuffer: 16_000_000 });
+        expect(JSON.parse(released).version).toBe("0.2.0");
+        stand = await standUp(engine, PORT_BASE + 10 + index * PORTS_PER_ENGINE, "update021", { manifest: released });
+        const service = (await stand.rows("services")).find((s) => s["name"] === "Gel Manicure")!;
+        const ivy = (await stand.rows("team")).find((t) => String(t["name"]).startsWith("Ivy"))!;
+        // The first hour the guard lets the desk book with Ivy, past the sample's busy days.
+        let before: Row | null = null;
+        for (const time of ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]) {
+          try {
+            before = await stand.create("bookings", { service_id: service["id"], team_id: ivy["id"], starts_at: pdt("2026-10-20", time), name: "Old Booking", email: `old.${engine}@lumen-guests.dev`, phone: "+1 415 555 0170", language: "en-US", channel: "desk" });
+            break;
+          } catch (error) {
+            if (!String(error).includes("BOOKING_TAKEN")) throw error;
+          }
+        }
+        if (before === null) throw new Error("no free hour with Ivy on 20 October");
+        const counts = { bookings: (await stand.rows("bookings")).length, customers: (await stand.rows("customers")).length, messages: (await stand.rows("messages")).length };
+
+        const app = appBundle({ manifest: MANIFEST_TEXT });
+        const staged = await stand.staff.post(`/api/v1/apps/upload?expectedSha512=${encodeURIComponent(app.integrity)}`, app.buffer);
+        expect([200, 201], JSON.stringify(staged.body).slice(0, 600)).toContain(staged.status);
+        const plan = ok(await stand.staff.post<{ plan: { checksum: string; installable: boolean } }>("/api/v1/apps/plan", { key: app.key, version: app.version, connectionId: stand.connectionId })).plan;
+        expect(plan.installable, JSON.stringify(plan).slice(0, 2000)).toBe(true);
+        const updated = ok(await stand.staff.post<{ from: string; to: string; app: { version: string; rules?: { skipped: unknown[] } } }>("/api/v1/apps/bookings/update", { planChecksum: plan.checksum, publicAccess: true }));
+        expect([updated.from, updated.to, updated.app.version]).toEqual(["0.2.0", app.version, app.version]);
+        expect(JSON.stringify(updated.app.rules?.skipped ?? [])).toBe("[]");
+
+        // Every row kept; the old booking reads no yes to texts; the new columns are there and empty.
+        await stand.staff.signIn(ADMIN.email, ADMIN.password);
+        expect((await stand.rows("bookings")).length).toBe(counts.bookings);
+        expect((await stand.rows("customers")).length).toBe(counts.customers);
+        expect((await stand.rows("messages")).length).toBeGreaterThanOrEqual(counts.messages);
+        const after = await stand.row("bookings", before["id"]);
+        expect([after["name"], after["phone"]]).toEqual(["Old Booking", "+1 415 555 0170"]);
+        expect([true, 1, "1"]).not.toContain(after["texts_ok"]);
+        expect((await stand.rows("bookings")).filter((b) => [true, 1, "1"].includes(b["texts_ok"] as never))).toEqual([]);
+        const settings = (await stand.rows("settings"))[0]!;
+        expect("phone" in settings && settings["phone"] === null).toBe(true);
+        expect((await stand.rows("messages")).every((m) => "text_reason" in m)).toBe(true);
+      }, 600_000);
+    });
   });
 });
