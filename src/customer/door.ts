@@ -232,6 +232,8 @@ export interface BookingValues {
   language: string;
   channel: "page" | "embed";
   no_review?: boolean;
+  /** The box for texts, ticked (plan 80). Sent only with a number it can stand for. */
+  texts?: boolean;
 }
 
 export interface Held {
@@ -359,11 +361,14 @@ export class LumenDoor {
 
   async book(door: DoorName, values: BookingValues, clientKey: string, children?: { codes?: string[]; card?: string | null }): Promise<Booked> {
     const refs = await this.refs();
-    const { no_review: noReview, ...sent } = values;
+    const { no_review: noReview, texts, ...sent } = values;
     const config = await this.client.config();
     // The box is the person's standing "no" (cQ10), through the door's own column.
-    const takesBox = config.refs[refs.doors[door]]?.writable.includes("no_review_request") === true;
-    const write = { ...sent, ...(takesBox && noReview === true ? { no_review_request: true } : {}), client_key: clientKey };
+    const writable = config.refs[refs.doors[door]]?.writable ?? [];
+    const takesBox = writable.includes("no_review_request");
+    // The box for texts is its own column: a yes to texts about this booking, for the number typed (plan 80). Never sent unticked.
+    const takesTexts = writable.includes("texts_ok") && texts === true && sent.phone !== undefined;
+    const write = { ...sent, ...(takesBox && noReview === true ? { no_review_request: true } : {}), ...(takesTexts ? { texts_ok: true } : {}), client_key: clientKey };
     const kids = {
       ...(children?.codes !== undefined && children.codes.length > 0 ? { booking_codes: children.codes.map((typed) => ({ values: { typed } })) } : {}),
       ...(children?.card ? { payments: [{ values: { card_code: children.card } }] } : {}),
@@ -553,7 +558,7 @@ export class LumenDoor {
   /** Whether Offers would take this pack on this booking: asked of Offers itself, with nothing saved. */
   async packCovers(door: DoorName, values: BookingValues, packId: unknown): Promise<boolean> {
     const refs = await this.refs();
-    const { no_review: _box, ...sent } = values;
+    const { no_review: _box, texts: _texts, ...sent } = values;
     try {
       const quote = await this.client.quote<Row>(refs.doors[door], { values: sent, children: { booking_codes: [{ values: { typed: `held:${String(packId)}` } }] } });
       return quote.applied.some((one) => one.kind === "pack" || one.kind === "voucher") || Number(quote.data["discount"] ?? 0) > 0;

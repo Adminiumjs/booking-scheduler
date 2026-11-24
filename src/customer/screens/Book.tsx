@@ -15,6 +15,7 @@ import { addDays, dayNumber, dayOf, firstName, fmtDay, fmtMoney, fmtRange, fmtTi
 import { Blank, Err, Icon, Rows } from "../parts.tsx";
 import { doorFor, dueNow, letGoLine, looksLikeEmail, nearestTimes, nextFreeDay, partOf, refusalOf, usesLeft, type DayPart, type Refusal, type StripDay } from "../rules.ts";
 import { NAME_MAX } from "../../limits.ts";
+import { lookAtPhone, textsPossible } from "../phone.ts";
 import { keepBooking } from "../session.ts";
 import type { Word } from "../words/index.ts";
 
@@ -97,7 +98,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const [times, setTimes] = useState<Slot[] | null>(null);
   const [timesFailed, setTimesFailed] = useState(false);
   const [lost, setLost] = useState<{ minutes: number; word: "taken" | "noLongerFits" } | null>(null);
-  const [form, setForm] = useState({ name: String(me?.["name"] ?? ""), email: String(me?.["email"] ?? ""), phone: String(me?.["phone"] ?? ""), note: "", noReview: false });
+  const [form, setForm] = useState({ name: String(me?.["name"] ?? ""), email: String(me?.["email"] ?? ""), phone: String(me?.["phone"] ?? ""), note: "", noReview: false, texts: false });
   const [errs, setErrs] = useState<{ name?: boolean; email?: boolean }>({});
   const [refused, setRefused] = useState<Refusal | null>(null);
   const [saving, setSaving] = useState(false);
@@ -166,6 +167,10 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const doer = (id: string | null) => studio.team.find((p) => p.id === id) ?? null;
   const person = doer(teamId);
   const whoName = person?.name ?? t("anyone");
+  // The box for texts: hidden with no number, off for +86, and a typed number it cannot read is only pointed out (A5, rules 5, 6).
+  const phoneLook = lookAtPhone(form.phone);
+  const textsTicked = form.texts && textsPossible(phoneLook);
+  const checkNumber = textsTicked && phoneLook === "unreadable";
   const pack = packs.find((p) => String(p["id"]) === usePack) ?? null;
   const cards = useMemo(() => (held?.cards ?? []).filter((c) => Number(c["balance"] ?? 0) > 0), [held]);
   const card = cards.find((c) => String(c["id"]) === useCard) ?? null;
@@ -286,6 +291,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
       language: locale,
       channel: frame === null ? ("page" as const) : ("embed" as const),
       no_review: form.noReview,
+      texts: form.texts && textsPossible(lookAtPhone(form.phone)),
     };
     const sig = JSON.stringify([values, usePack, useCard]);
     if (clientKey.current?.sig !== sig) clientKey.current = { sig, key: door.newKey() };
@@ -833,11 +839,43 @@ export default function Book({ move }: { move?: MoveTarget }) {
                   </div>
                   <div className="lm-field">
                     <label htmlFor="lm-phone">{t("fPhone")}</label>
-                    <input id="lm-phone" className="lm-input" type="tel" dir="ltr" autoComplete="tel" maxLength={32} aria-describedby="lm-phone-hint" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                    <div id="lm-phone-hint" className="lm-hint">
-                      {t("fPhoneHint")}
+                    <input id="lm-phone" className="lm-input" type="tel" dir="ltr" autoComplete="tel" maxLength={32} aria-describedby={checkNumber ? "lm-phone-hint lm-phone-check" : "lm-phone-hint"} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value, texts: form.texts && textsPossible(lookAtPhone(e.target.value)) })} />
+                    <div id="lm-phone-hint" className="lm-hint" aria-live="polite">
+                      {textsTicked ? t("fPhoneHintTexts") : t("fPhoneHint")}
                     </div>
+                    {checkNumber ? (
+                      <div id="lm-phone-check" role="status" className="lm-hint lm-hint-warn">
+                        <Icon name="circle-alert" size={14} />
+                        {t("textCheckNumber")}
+                      </div>
+                    ) : null}
                   </div>
+                  {/* The box for texts (A5): its own, unticked, never required, and shown once a number is typed. */}
+                  {phoneLook !== "none" ? (
+                    <div className="lm-check lm-texts" data-off={phoneLook === "china" ? "" : undefined}>
+                      <input
+                        id="lm-texts"
+                        type="checkbox"
+                        checked={textsTicked}
+                        disabled={phoneLook === "china"}
+                        aria-describedby="lm-texts-hint"
+                        onChange={(e) => setForm({ ...form, texts: e.target.checked })}
+                      />
+                      <div>
+                        <label htmlFor="lm-texts">{t("textBox")}</label>
+                        <div id="lm-texts-hint" className="lm-texts-hint" aria-live="polite">
+                          {phoneLook === "china" ? (
+                            t("textBoxChina")
+                          ) : (
+                            <>
+                              <span className="lm-texts-line">{t("textBoxSub")}</span>
+                              <span className="lm-texts-line">{t("textBoxOptional")}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="lm-field">
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
                       <label htmlFor="lm-note">{t("fNote")}</label>
