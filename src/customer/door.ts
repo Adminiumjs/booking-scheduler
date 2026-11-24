@@ -359,6 +359,21 @@ export class LumenDoor {
 
   // ── making a booking ──────────────────────────────────────────────────────
 
+  /**
+   * Whether the studio can send texts at all (a provider and a sender set, texts not switched off): the box for texts is drawn
+   * only then (plan 80). It says nothing of the account. The client's own `texts.ready()` where it has one (0.3.76), else the
+   * same route. Any doubt hides the box: a guest is never asked for a yes to texts that cannot go.
+   */
+  async textsReady(): Promise<boolean> {
+    try {
+      const own = (this.client as unknown as { texts?: { ready?: () => Promise<boolean> } }).texts;
+      if (typeof own?.ready === "function") return (await own.ready()) === true;
+      return (await this.raw<{ data: { ready?: boolean } }>(this.client, this.served.publishableKey, "/api/v1/public/texts")).data.ready === true;
+    } catch {
+      return false;
+    }
+  }
+
   async book(door: DoorName, values: BookingValues, clientKey: string, children?: { codes?: string[]; card?: string | null }): Promise<Booked> {
     const refs = await this.refs();
     const { no_review: noReview, texts, ...sent } = values;
@@ -800,7 +815,7 @@ export class LumenDoor {
 /** What the customer pages use of a door: the real one above, or anything else that answers the same. */
 export type CustomerDoor = Pick<
   LumenDoor,
-  | "served" | "addOn" | "newKey" | "book" | "holdsLink" | "holdsSale" | "days" | "times" | "packCovers" | "nothingDue"
+  | "served" | "addOn" | "newKey" | "textsReady" | "book" | "holdsLink" | "holdsSale" | "days" | "times" | "packCovers" | "nothingDue"
   | "requestSignIn" | "verifySignIn" | "openSignInLink" | "mayForget" | "signedIn" | "signOut" | "me" | "setAskReviews"
   | "myBookings" | "myWaitlist" | "leaveList" | "held" | "forgetMe" | "cancelBooking" | "moveBooking" | "startPaying"
   | "payState" | "pressedGoogle" | "takeOffer" | "reviews" | "googlePlace" | "readReviewLink" | "sendReviewLink"

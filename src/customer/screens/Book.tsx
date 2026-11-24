@@ -104,6 +104,8 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const [saving, setSaving] = useState(false);
   const [held, setHeld] = useState<Held | null>(null);
   const [heldFailed, setHeldFailed] = useState(false);
+  // The box for texts is drawn only when the studio can send them (plan 80): unknown until asked, and hidden on any doubt.
+  const [textsReady, setTextsReady] = useState(false);
   const [packs, setPacks] = useState<Row[]>([]);
   const [replayed, setReplayed] = useState(false);
   const [usePack, setUsePack] = useState(route.query.get("pack"));
@@ -119,6 +121,16 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const exclude = move?.id;
   const viaLink = moving && !move.signedIn;
   const { days: strip, setDays: setStrip, failed: stripFailed, retry: retryStrip } = useStrip(step >= 3 && service !== null ? service.id : null, teamId, exclude, from, viaLink);
+
+  useEffect(() => {
+    let live = true;
+    void door.textsReady().then((ready) => {
+      if (live) setTextsReady(ready);
+    });
+    return () => {
+      live = false;
+    };
+  }, [door]);
 
   useEffect(() => {
     setForm((f) => ({ ...f, name: f.name || String(me?.["name"] ?? ""), email: f.email || String(me?.["email"] ?? ""), phone: f.phone || String(me?.["phone"] ?? "") }));
@@ -168,7 +180,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
   const person = doer(teamId);
   const whoName = person?.name ?? t("anyone");
   // The box for texts: hidden with no number, off for +86, and a typed number it cannot read is only pointed out (A5, rules 5, 6).
-  const phoneLook = lookAtPhone(form.phone);
+  const phoneLook = textsReady ? lookAtPhone(form.phone) : "none";
   const textsTicked = form.texts && textsPossible(phoneLook);
   const checkNumber = textsTicked && phoneLook === "unreadable";
   const pack = packs.find((p) => String(p["id"]) === usePack) ?? null;
@@ -291,7 +303,7 @@ export default function Book({ move }: { move?: MoveTarget }) {
       language: locale,
       channel: frame === null ? ("page" as const) : ("embed" as const),
       no_review: form.noReview,
-      texts: form.texts && textsPossible(lookAtPhone(form.phone)),
+      texts: textsReady && form.texts && textsPossible(lookAtPhone(form.phone)),
     };
     const sig = JSON.stringify([values, usePack, useCard]);
     if (clientKey.current?.sig !== sig) clientKey.current = { sig, key: door.newKey() };
