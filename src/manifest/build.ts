@@ -16,7 +16,7 @@ import { ROLES } from "./roles.ts";
 import { TABLES } from "./tables.ts";
 
 /** The first release of the rework. The manifest alone carries an app's version (`package.json`'s is never read). */
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.1";
 
 /** The engine release that first sends texts: text templates and kinds, the box for texts, replies (plan 80). */
 export const MIN_ADMINIUM = "0.3.76";

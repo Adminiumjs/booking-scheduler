@@ -104,6 +104,30 @@ tables under its own `bookings_` names and leaves them and their rows as they
 were. It does not copy them across. An install of the 0.1.0 package cannot be
 updated to this version.
 
+## Updating to 0.2.1
+
+0.2.1 needs Adminium 0.3.76, the release that sends text messages through a business's own
+Twilio or Telnyx account. The add-ons it asks for are unchanged. Every row is kept as it was;
+what changes:
+
+- **Two texts beside two e-mails:** a reminder before the visit, beside the reminder e-mail, and
+  a waiting-list offer, beside the offer e-mail. Each goes only through the studio's own text
+  provider, and only to a guest who agreed and has not said STOP. With no provider set up,
+  nothing is sent, and the desk says so on each booking.
+- **A box of its own in step 4**, under the phone field: "Text me about my booking". It is never
+  ticked for the guest and never needed to book. It shows only once a number is typed, and only
+  while the studio can send texts. Adminium keeps the yes with the words the guest saw, for the
+  number they typed, and a text goes to that number. No booking made before the update counts as
+  a yes.
+- **The desk** shows each booking's texts beside its e-mails, with what became of each one: sent,
+  waiting for the sending hours, or not sent and why. The list and its page are now "E-mails and
+  texts".
+- **Studio phone**, a new setting. A text sent from a sender name, which cannot take a reply,
+  gives this number for stopping, or the studio's e-mail when it is empty.
+- **Replies:** the owner can read and answer what guests text back, on Adminium's Texts page.
+  The front desk and specialists cannot.
+- **The Help and Privacy pages** say when the studio texts.
+
 ## Local development
 
 ```bash
