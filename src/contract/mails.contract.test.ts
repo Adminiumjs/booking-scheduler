@@ -445,39 +445,43 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         // After every clock the tests above set (the last is at most 25 October), so this one also runs on its own.
         await stand.server.setClock(at("2026-10-26", "09:00"));
         await stand.staff.signIn(ADMIN.email, ADMIN.password);
-        const { date, times } = await hours("Gel Manicure", "2026-10-28", "Ivy", 2);
+        const { date, times } = await hours("Gel Manicure", "2026-10-28", "Ivy", 3);
         const withIvy = { team_id: team["Ivy"]!["id"] };
-        const yes = await tab().book("studio", values("Gel Manicure", times[0]!, "tess", { ...withIvy, phone: "+1 415 555 0161", texts: true }), retryKey("t1"));
+        const yes = await tab().book("studio", values("Gel Manicure", times[0]!, "tia", { ...withIvy, phone: "+1 415 555 0161", texts: true }), retryKey("t1"));
         const no = await tab().book("studio", values("Gel Manicure", times[1]!, "nate", { ...withIvy, phone: "+1 415 555 0162" }), retryKey("t2"));
-        await mailTo(address("tess"), /^Booked/);
+        // Wilma is on file with no number. A number typed now is the booking's, never her customer row's (ACC-6).
+        await stand.create("customers", { name: "Wilma Return", email: address("wilma") });
+        const back = await tab().book("studio", values("Gel Manicure", times[2]!, "wilma", { ...withIvy, phone: "+1 415 555 0163", texts: true }), retryKey("t4"));
+        await mailTo(address("tia"), /^Booked/);
         await mailTo(address("nate"), /^Booked/);
         const ticked = (row: Row) => row["texts_ok"] === true || row["texts_ok"] === 1 || row["texts_ok"] === "1";
         expect(ticked(await stand.row("bookings", yes.row["id"]))).toBe(true);
         expect(ticked(await stand.row("bookings", no.row["id"]))).toBe(false);
 
-        // 10 AM the day before: both get the reminder mail, and only the ticked booking a reminder text.
+        // 10 AM the day before: every one gets the reminder mail, and only a ticked booking a reminder text.
         const before = new Date(Date.parse(`${date}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
         await stand.server.setClock(at(before, "10:05"));
-        await mailTo(address("tess"), /See you tomorrow/);
+        await mailTo(address("tia"), /See you tomorrow/);
         await mailTo(address("nate"), /See you tomorrow/);
         await stand.staff.signIn(ADMIN.email, ADMIN.password);
         const textOf = (kind: string, booking: unknown) =>
           until(async () => (await stand.rows("messages")).find((m) => m["kind"] === kind && String(m["booking_id"]) === String(booking) && m["status"] !== "queued"), `the ${kind} row`, 120_000);
         const reminder = await textOf("reminder_text", yes.row["id"]);
-        const booked = await stand.row("bookings", yes.row["id"]);
-        const person = booked["customer_id"] == null ? null : await stand.row("customers", booked["customer_id"]);
-        expect([reminder["status"], reminder["error"]], JSON.stringify({ phone: booked["phone"], customer: person?.["phone"] ?? null })).toEqual(["skipped", "No text provider is connected"]);
+        expect([reminder["status"], reminder["error"]]).toEqual(["skipped", "No text provider is connected"]);
         expect((await stand.rows("messages")).filter((m) => m["kind"] === "reminder_text" && String(m["booking_id"]) === String(no.row["id"]))).toEqual([]);
+        // The returning guest's text has no number to go to: it says so, and nothing is sent to the number she typed.
+        const returning = await textOf("reminder_text", back.row["id"]);
+        expect([returning["status"], returning["error"]]).toEqual(["skipped", "No mobile number on file"]);
 
         // A waiting-list offer: its text is written beside the offer mail, and skipped the same way.
         await deskAgain();
         const startsAt = await free("Gel Manicure", "2026-10-29", "Ivy", "13:00");
         const day = new Date(Date.parse(startsAt) - 7 * 3_600_000).toISOString().slice(0, 10);
-        await tab().joinList({ service_id: services["Gel Manicure"]!["id"], team_id: null, day, name: "Tess Waiting", email: address("tess"), language: "en-US" }, retryKey("t3"));
+        await tab().joinList({ service_id: services["Gel Manicure"]!["id"], team_id: null, day, name: "Tia Waiting", email: address("tia"), language: "en-US" }, retryKey("t3"));
         await stand.staff.signIn(ADMIN.email, ADMIN.password);
-        const entry = (await stand.rows("waitlist")).find((w) => w["name"] === "Tess Waiting")!;
+        const entry = (await stand.rows("waitlist")).find((w) => w["name"] === "Tia Waiting")!;
         const offered = await desk.offerTime({ entry, person: team["Ivy"]!["id"], startsAt, key: key() } as never);
-        await mailTo(address("tess"), /A time opened/);
+        await mailTo(address("tia"), /A time opened/);
         const offerText = await textOf("offer_text", offered["id"]);
         expect([offerText["status"], offerText["error"]]).toEqual(["skipped", "No text provider is connected"]);
       });
