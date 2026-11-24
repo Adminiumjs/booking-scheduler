@@ -14,8 +14,11 @@ specialists and twelve services across hair, spa, nails and movement.
 
 ## What it needs
 
-- Adminium **0.3.71** or later, on SQLite, Postgres or MySQL.
+- Adminium **0.3.76** or later, on SQLite, Postgres or MySQL.
 - A working mail setup in Adminium, for the confirmations and reminders.
+- For text messages, which are optional: the studio's own Twilio or Telnyx
+  account, connected in Adminium under **Studio → Texts**. Without one,
+  everything else works and no text is sent.
 - Nothing else. Six add-ons are offered at install, and booking, the desk and
   the mails all work with none of them:
 
@@ -65,8 +68,22 @@ by Adminium on the server, including what it can read of a guest's details.
 **Thirteen e-mails** go out from the app's outbox. Twelve go to guests, in their
 language: booked, deposit receipt, deposit link, time let go, reminder, moved,
 three kinds of cancellation, a waiting-list offer, a review request and its
-reminder. One tells the specialist about a new booking. There are no text
-messages.
+reminder. One tells the specialist about a new booking.
+
+**Two text messages** go out too, only through the studio's own text provider
+and only to a guest who agreed:
+
+- **A reminder** before the visit, beside the reminder e-mail. A guest agrees
+  with a box of its own when they book, under the phone field. It is never
+  ticked for them and never needed to book. A reminder that the studio's
+  sending hours would push past the visit is skipped, never sent late.
+- **A waiting-list offer**, beside the offer e-mail. It names the service, the
+  day and the time and until when it can be taken, and sends the guest to the
+  e-mail or to the phone, because a text carries no link.
+
+Adminium adds the way to stop to every text and keeps the do-not-text list.
+Review requests stay e-mail only. The owner can read and answer guests'
+replies on Adminium's Texts page.
 
 **Eight languages:** English, German, French, Danish, Czech, Egyptian Arabic
 (right to left), and Simplified and Traditional Chinese.
@@ -75,7 +92,7 @@ messages.
 
 Install Bookings from Adminium's app catalog and choose the database it should
 use. Adminium creates its 21 `bookings_*` tables, 16 pages, the three roles, the
-guests' browser keys and the e-mails. Tick sample data at the install step to
+guests' browser keys, the e-mails and the texts. Tick sample data at the install step to
 start with Lumen Studio, or leave it off to start empty.
 
 Once installed, the desk opens at `/a/bookings/` inside Adminium and the booking

@@ -40,7 +40,7 @@ export const DOCS_EN: DocSet = {
       ["Do I need an account?", "No. You can book with your name and e-mail. If you sign in, you see all your visits in one place. We e-mail you a code to sign in. There are no passwords."],
       ['What does "Anyone" mean?', "We book whoever is free at the time you pick, and share the day evenly across the team. You see who it is once it is booked."],
       ["When do I pay?", f.hasDeposits ? `Most services are paid at the studio. These take a payment online when you book: ${f.deposits}.` : "Every service is paid at the studio."],
-      ["How will you contact me?", "Only by e-mail. Your phone number is optional. We use it only if we need to reach you on the day."],
+      ["How will you contact me?", "By e-mail. Your phone number is optional: we use it if we need to reach you on the day, and send texts to it only if you tick the box for them when you book. Each text tells you how to stop."],
     ],
   }),
   policy: (f) => ({
@@ -63,7 +63,7 @@ export const DOCS_EN: DocSet = {
       ["Your specialist's calendar", "If your specialist connects a Google or Outlook calendar, your visit appears there with your first name and initial. The morning after the visit, it shows the service only."],
       ["Payments", "Paying online happens on the payment service's own page. We never see your card."],
       ["Reviews", 'Reviews show your first name and initial, like "Ava R.". Never your e-mail.'],
-      ["E-mail only", "We contact you only by e-mail. Every review request has a link to stop them, and you can switch them off in Your visits."],
+      ["E-mail, and texts if you ask", "We contact you by e-mail. We text you only if you tick the box for texts when you book: a reminder before your visit, and any waiting-list opening you asked for. Texts go through the studio's text provider and the phone networks, and each one tells you how to stop. Every review request has a link to stop them, and you can switch them off in Your visits."],
       ["Google reviews", 'Google reviews load from Google only when you press "See our Google reviews".'],
       ["Deleting your details", 'Sign in and choose "Delete my details" in Your visits. It cancels the visits still ahead, and we say so first.'],
     ],

@@ -9,7 +9,7 @@ export const DOCS_DA: DocSet = {
       ["Har jeg brug for en konto?", "Nej. Du kan booke med dit navn og din e-mail. Hvis du logger ind, ser du alle dine besøg ét sted. Vi sender dig en kode på e-mail, så du kan logge ind. Der er ingen adgangskoder."],
       ["Hvad betyder „Hvem som helst“?", "Vi booker den, der er ledig på det tidspunkt, du vælger, og fordeler dagen jævnt på teamet. Du kan se, hvem det er, når bookingen er lavet."],
       ["Hvornår betaler jeg?", f.hasDeposits ? `De fleste behandlinger betales i salonen. Disse kræver en betaling online, når du booker: ${f.deposits}.` : "Alle behandlinger betales i salonen."],
-      ["Hvordan kontakter I mig?", "Kun på e-mail. Dit telefonnummer er valgfrit. Vi bruger det kun, hvis vi skal kontakte dig på dagen."],
+      ["Hvordan kontakter I mig?", "På e-mail. Dit telefonnummer er valgfrit: vi bruger det, hvis vi skal kontakte dig på dagen, og sender kun sms'er til det, hvis du sætter kryds i feltet til det, når du booker. Hver sms fortæller dig, hvordan du stopper dem."],
     ],
   }),
   policy: (f) => ({
@@ -32,7 +32,7 @@ export const DOCS_DA: DocSet = {
       ["Din behandlers kalender", "Hvis din behandler forbinder en Google- eller Outlook-kalender, vises dit besøg dér med dit fornavn og dit forbogstav. Morgenen efter besøget vises kun behandlingen."],
       ["Betalinger", "Betaling online foregår på betalingstjenestens egen side. Vi ser aldrig dit kort."],
       ["Anmeldelser", "Anmeldelser viser dit fornavn og dit forbogstav, som „Ava R.“. Aldrig din e-mail."],
-      ["Kun e-mail", "Vi kontakter dig kun på e-mail. Hver anmodning om anmeldelse har et link til at stoppe dem, og du kan slå dem fra under Dine besøg."],
+      ["E-mail, og sms'er hvis du beder om det", "Vi kontakter dig på e-mail. Vi sender kun sms'er, hvis du sætter kryds i feltet til sms'er, når du booker: en påmindelse før dit besøg, og ledige tider fra den venteliste, du har skrevet dig på. Sms'er går gennem studiets sms-udbyder og telenettene, og hver af dem fortæller dig, hvordan du stopper dem. Hver anmodning om anmeldelse har et link til at stoppe dem, og du kan slå dem fra under Dine besøg."],
       ["Google-anmeldelser", "Google-anmeldelser hentes kun fra Google, når du trykker på „Se vores Google-anmeldelser“."],
       ["Sletning af dine oplysninger", "Log ind og vælg „Slet mine oplysninger“ under Dine besøg. Det afbestiller de besøg, der stadig ligger forude, og det siger vi først."],
     ],

@@ -9,7 +9,7 @@ export const DOCS_DE: DocSet = {
       ["Brauche ich ein Konto?", "Nein. Sie können mit Ihrem Namen und Ihrer E-Mail-Adresse buchen. Wenn Sie sich anmelden, sehen Sie alle Ihre Besuche an einem Ort. Zum Anmelden senden wir Ihnen einen Code per E-Mail. Es gibt keine Passwörter."],
       ["Was bedeutet „Beliebig“?", "Wir buchen, wer zur gewählten Zeit frei ist, und verteilen den Tag gleichmäßig auf das Team. Wer es ist, sehen Sie, sobald die Buchung steht."],
       ["Wann zahle ich?", f.hasDeposits ? `Die meisten Leistungen zahlen Sie im Studio. Bei diesen wird beim Buchen online eine Zahlung fällig: ${f.deposits}.` : "Jede Leistung zahlen Sie im Studio."],
-      ["Wie nehmen Sie Kontakt mit mir auf?", "Nur per E-Mail. Ihre Telefonnummer ist optional. Wir nutzen sie nur, falls wir Sie am Tag selbst erreichen müssen."],
+      ["Wie nehmen Sie Kontakt mit mir auf?", "Per E-Mail. Ihre Telefonnummer ist optional: Wir nutzen sie, falls wir Sie am Tag selbst erreichen müssen, und senden SMS nur, wenn Sie beim Buchen das Kästchen dafür ankreuzen. Jede SMS sagt Ihnen, wie Sie sie abbestellen."],
     ],
   }),
   policy: (f) => ({
@@ -32,7 +32,7 @@ export const DOCS_DE: DocSet = {
       ["Der Kalender Ihrer Fachkraft", "Wenn Ihre Fachkraft einen Google- oder Outlook-Kalender verbindet, erscheint Ihr Besuch dort mit Ihrem Vornamen und Ihrem Anfangsbuchstaben. Am Morgen nach dem Besuch wird nur noch die Leistung angezeigt."],
       ["Zahlungen", "Die Online-Zahlung erfolgt auf der Seite des Zahlungsdienstes. Wir sehen Ihre Karte nie."],
       ["Bewertungen", "Bewertungen zeigen Ihren Vornamen und Ihren Anfangsbuchstaben, etwa „Ava R.“. Nie Ihre E-Mail-Adresse."],
-      ["Nur per E-Mail", "Wir kontaktieren Sie nur per E-Mail. Jede Bewertungsanfrage enthält einen Link, um sie zu beenden, und Sie können sie unter „Ihre Besuche“ ausschalten."],
+      ["E-Mail und SMS, wenn Sie möchten", "Wir kontaktieren Sie per E-Mail. SMS senden wir nur, wenn Sie beim Buchen das Kästchen dafür ankreuzen: eine Erinnerung vor Ihrem Termin und frei gewordene Termine von Ihrer Warteliste. SMS laufen über den SMS-Anbieter des Studios und die Mobilfunknetze, und jede sagt Ihnen, wie Sie sie abbestellen. Jede Bewertungsanfrage enthält einen Link, um sie zu beenden, und Sie können sie unter „Ihre Besuche“ ausschalten."],
       ["Google-Bewertungen", "Google-Bewertungen werden nur dann von Google geladen, wenn Sie auf „Unsere Google-Bewertungen ansehen“ drücken."],
       ["Ihre Daten löschen", "Melden Sie sich an und wählen Sie unter „Ihre Besuche“ die Option „Meine Daten löschen“. Dadurch werden die noch bevorstehenden Besuche storniert, und wir weisen vorher darauf hin."],
     ],

@@ -9,7 +9,7 @@ export const DOCS_CS: DocSet = {
       ["Potřebuji účet?", "Ne. Rezervovat můžete se jménem a e-mailem. Když se přihlásíte, uvidíte všechny své návštěvy na jednom místě. K přihlášení vám pošleme kód e-mailem. Žádná hesla nejsou."],
       ["Co znamená „Kdokoli“?", "Rezervujeme toho, kdo je ve vámi zvoleném čase volný, a den rovnoměrně rozdělujeme mezi tým. Kdo to je, uvidíte po dokončení rezervace."],
       ["Kdy platím?", f.hasDeposits ? `Většina služeb se platí ve studiu. U těchto se při rezervaci platí online: ${f.deposits}.` : "Každá služba se platí ve studiu."],
-      ["Jak mě budete kontaktovat?", "Pouze e-mailem. Telefonní číslo je nepovinné. Použijeme ho jen tehdy, když vás musíme v den návštěvy zastihnout."],
+      ["Jak mě budete kontaktovat?", "E-mailem. Telefonní číslo je nepovinné: použijeme ho, když vás musíme v den návštěvy zastihnout, a SMS na něj posíláme, jen když při rezervaci zaškrtnete políčko pro SMS. Každá SMS vám řekne, jak je zastavit."],
     ],
   }),
   policy: (f) => ({
@@ -32,7 +32,7 @@ export const DOCS_CS: DocSet = {
       ["Kalendář vašeho specialisty", "Pokud váš specialista propojí kalendář Google nebo Outlook, vaše návštěva se tam zobrazí s vaším křestním jménem a iniciálou. Ráno po návštěvě se zobrazuje už jen služba."],
       ["Platby", "Online platba probíhá na stránce platební služby. Vaši kartu nikdy nevidíme."],
       ["Recenze", "Recenze zobrazují vaše křestní jméno a iniciálu, například „Ava R.“. Nikdy váš e-mail."],
-      ["Pouze e-mail", "Kontaktujeme vás pouze e-mailem. Každá žádost o recenzi obsahuje odkaz, jímž je lze zastavit, a můžete je vypnout ve Vašich návštěvách."],
+      ["E-mail a SMS, pokud o ně požádáte", "Kontaktujeme vás e-mailem. SMS vám posíláme, jen když při rezervaci zaškrtnete políčko pro SMS: připomínku před návštěvou a uvolněné termíny z pořadníku, o které jste požádali. SMS jdou přes poskytovatele SMS studia a telefonní sítě a každá vám řekne, jak je zastavit. Každá žádost o recenzi obsahuje odkaz, jímž je lze zastavit, a můžete je vypnout ve Vašich návštěvách."],
       ["Recenze z Googlu", "Recenze z Googlu se z Googlu načtou, jen když stisknete „Zobrazit naše recenze na Googlu“."],
       ["Smazání vašich údajů", "Přihlaste se a ve Vašich návštěvách zvolte „Smazat moje údaje“. Tím se zruší návštěvy, které jsou ještě před vámi, a řekneme vám to předem."],
     ],

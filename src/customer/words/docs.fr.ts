@@ -9,7 +9,7 @@ export const DOCS_FR: DocSet = {
       ["Ai-je besoin d'un compte ?", "Non. Vous pouvez réserver avec votre nom et votre e-mail. Si vous vous connectez, vous voyez toutes vos visites au même endroit. Nous vous envoyons un code par e-mail pour vous connecter. Il n'y a pas de mot de passe."],
       ["Que signifie « N'importe qui » ?", "Nous réservons la personne disponible à l'heure choisie, et répartissons la journée équitablement entre les membres de l'équipe. Vous voyez de qui il s'agit une fois la réservation faite."],
       ["Quand dois-je payer ?", f.hasDeposits ? `La plupart des prestations se règlent au studio. Celles-ci demandent un paiement en ligne au moment de la réservation : ${f.deposits}.` : "Toutes les prestations se règlent au studio."],
-      ["Comment allez-vous me contacter ?", "Uniquement par e-mail. Votre numéro de téléphone est facultatif. Nous ne l'utilisons que si nous devons vous joindre le jour même."],
+      ["Comment allez-vous me contacter ?", "Par e-mail. Votre numéro de téléphone est facultatif : nous l'utilisons si nous devons vous joindre le jour même, et nous n'y envoyons des SMS que si vous cochez la case prévue en réservant. Chaque SMS vous dit comment les arrêter."],
     ],
   }),
   policy: (f) => ({
@@ -32,7 +32,7 @@ export const DOCS_FR: DocSet = {
       ["Le calendrier de votre spécialiste", "Si votre spécialiste connecte un calendrier Google ou Outlook, votre visite y apparaît avec votre prénom et votre initiale. Le lendemain matin de la visite, seule la prestation est indiquée."],
       ["Paiements", "Le paiement en ligne se fait sur la page du service de paiement. Nous ne voyons jamais votre carte."],
       ["Avis", "Les avis affichent votre prénom et votre initiale, par exemple « Ava R. ». Jamais votre e-mail."],
-      ["Par e-mail uniquement", "Nous ne vous contactons que par e-mail. Chaque demande d'avis comporte un lien pour les arrêter, et vous pouvez les désactiver dans Vos visites."],
+      ["E-mail, et SMS si vous le demandez", "Nous vous contactons par e-mail. Nous ne vous envoyons des SMS que si vous cochez la case prévue en réservant : un rappel avant votre visite, et tout créneau libéré sur la liste d'attente que vous avez demandée. Les SMS passent par le fournisseur de SMS du studio et les réseaux téléphoniques, et chacun vous dit comment les arrêter. Chaque demande d'avis comporte un lien pour les arrêter, et vous pouvez les désactiver dans Vos visites."],
       ["Avis Google", "Les avis Google ne se chargent depuis Google que lorsque vous appuyez sur « Voir nos avis Google »."],
       ["Supprimer vos données", "Connectez-vous et choisissez « Supprimer mes données » dans Vos visites. Cela annule les visites à venir, et nous vous le disons d'abord."],
     ],
