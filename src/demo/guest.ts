@@ -112,6 +112,9 @@ export class DemoGuest implements CustomerDoor {
 
   // ── making a booking ──────────────────────────────────────────────────────
 
+  /** The demo stands in for a studio that set texts up, as it does for mail: nothing is ever sent. */
+  textsReady: CustomerDoor["textsReady"] = () => Promise.resolve(this.world.textsReady);
+
   async book(door: DoorName, values: BookingValues, clientKey: string, children?: { codes?: string[]; card?: string | null }): Promise<Booked> {
     return run(() => {
       const held = (code: string | null | undefined) => (typeof code === "string" && code.startsWith("held:") ? code.slice(5) : null);

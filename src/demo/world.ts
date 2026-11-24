@@ -17,7 +17,6 @@
  * DEMO BUILD ONLY: nothing in a real build imports it.
  */
 import type { BusyBlock, CalendarAccount, CalendarSyncState, Clash, DayCount, PersonCalendar, Slot } from "../desk/door.ts";
-import { TEXT_NOT_CONNECTED } from "../desk/texts.ts";
 import { addDays, weekdayOf } from "../desk/time.ts";
 import { same, type Id, type Row } from "../desk/wire.ts";
 import { DEMO_START, DEMO_ZONE, instantAt, moment, MORNING, sampleTables, WORLD, type Tables } from "./sample.ts";
@@ -99,7 +98,13 @@ export interface NewVisit {
   key?: string;
 }
 
+/** Adminium's sentences beside the codes, for the demo's rows. */
+const TEXT_NO_NUMBER = "No mobile number on file";
+const TEXT_NO_CONSENT = "Not sent: this person has not agreed to texts";
+
 export class LumenWorld {
+  /** Whether texts are set up: the demo's stand-in studio has them, as it has mail. */
+  textsReady = true;
   now: number;
   readonly zone = DEMO_ZONE;
   readonly currency = "USD";
@@ -514,11 +519,18 @@ export class LumenWorld {
   }
 
   /**
-   * A text the outbox would send. The demo has no text provider, as a studio that has not connected one: Adminium writes the
-   * row and skips it with its own sentence, and the desk shows that. Nothing is sent, and no number is kept on the row.
+   * A text the outbox would send, as the demo's mail is: written down as Adminium would, and never sent. The demo stands in
+   * for a studio that set texts up (`textsReady`), so a text with a number and a yes for it reads "sent".
    */
   text(kind: string, booking: Row, at: string = this.nowIso()): void {
-    this.insert("messages", { kind, status: "skipped", to_address: null, language: booking["language"] ?? "en-US", booking_id: booking.id, customer_id: booking["customer_id"] ?? null, created_at: at, sent_at: null, due_at: null, error: TEXT_NOT_CONNECTED });
+    const customer = this.get("customers", booking["customer_id"]);
+    // The number typed on the booking, else the person's (the outbox's `textPhone`), and a yes given for that number.
+    const number = String(booking["phone"] ?? "").trim() || String(customer?.["phone"] ?? "").trim();
+    const agreed = number !== "" && this.all("bookings").some((b) => b["texts_ok"] === true && same(b["customer_id"], booking["customer_id"]) && String(b["phone"] ?? "").trim() === number);
+    const base = { kind, language: booking["language"] ?? "en-US", booking_id: booking.id, customer_id: booking["customer_id"] ?? null, created_at: at, due_at: null };
+    if (number === "") this.insert("messages", { ...base, status: "skipped", to_address: null, sent_at: null, error: TEXT_NO_NUMBER, text_reason: "no-number" });
+    else if (!agreed) this.insert("messages", { ...base, status: "skipped", to_address: null, sent_at: null, error: TEXT_NO_CONSENT, text_reason: "no-consent" });
+    else this.insert("messages", { ...base, status: "sent", to_address: number, sent_at: at, error: null, text_reason: "sent" });
   }
 
   private mailed(kind: string, bookingId: Id): boolean {
