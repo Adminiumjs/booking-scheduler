@@ -65,7 +65,12 @@ describe("the studio's texts", () => {
     expect(outbox["kinds"]).toMatchObject({ reminder_text: "bookings-reminder-text", offer_text: "bookings-offer-text" });
     expect(outbox["classes"]).toMatchObject({ reminder_text: "service", offer_text: "service" });
     expect(Object.keys(outbox["purposes"])).not.toContain("reminder_text");
-    expect(outbox["recipient"]).toMatchObject({ phone: "phone", fallback: { phone: "phone" } });
+    // The number typed on the booking first, where the box's yes was given; the person's only when the booking has none.
+    expect(outbox["recipient"]).toMatchObject({ phone: "phone", textPhone: { via: "booking_id", column: "phone" } });
+    // The code the desk reads, beside Adminium's sentence.
+    expect(outbox["columns"]["textReason"]).toBe("text_reason");
+    const messages = (doc["requiredSchema"].tables as Doc[]).find((t) => t["ref"] === "messages")!;
+    expect((messages["columns"] as Doc[]).find((c) => c["ref"] === "text_reason")!["maxLength"]).toBeGreaterThanOrEqual(40);
     expect(outbox["settings"]).toMatchObject({ phone: "phone", replyTo: "email" });
   });
 

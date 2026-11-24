@@ -9276,6 +9276,22 @@
             "nullable": true
           },
           {
+            "ref": "text_reason",
+            "type": "text",
+            "maxLength": 48,
+            "label": {
+              "en-US": "Text outcome",
+              "de-DE": "SMS-Ergebnis",
+              "fr-FR": "Résultat du SMS",
+              "da-DK": "Sms-resultat",
+              "cs-CZ": "Výsledek SMS",
+              "ar-EG": "نتيجة الرسالة النصية",
+              "zh-CN": "短信结果",
+              "zh-TW": "簡訊結果"
+            },
+            "nullable": true
+          },
+          {
             "ref": "was",
             "type": "text",
             "maxLength": 1000,
@@ -15603,7 +15619,8 @@
       "error": "error",
       "skipReason": "skip_reason",
       "was": "was",
-      "repeatKey": "repeat_key"
+      "repeatKey": "repeat_key",
+      "textReason": "text_reason"
     },
     "links": {
       "booking": "booking_id",
@@ -15618,6 +15635,10 @@
         "column": "language"
       },
       "phone": "phone",
+      "textPhone": {
+        "via": "booking_id",
+        "column": "phone"
+      },
       "fallback": {
         "via": "booking_id",
         "email": "email",

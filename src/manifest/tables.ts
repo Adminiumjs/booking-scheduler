@@ -1097,6 +1097,8 @@ export const TABLES: Table[] = [
       at("sent_at", "Sent", opt),
       text("error", 500, "What went wrong", opt),
       text("repeat_key", 64, "Resend key", opt),
+      // For a text: Adminium's one code for how it stands (`sent`, `no-consent`, `not-set-up`, …), beside the sentence in `error`.
+      text("text_reason", 48, "Text outcome", opt),
       // The old time, for "your visit moved" (FIL-10).
       text("was", 1000, "As it was", opt),
       choice("skip_reason", "Why it was skipped", {

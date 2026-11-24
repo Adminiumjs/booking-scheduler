@@ -95,6 +95,8 @@ export const OUTBOX = {
     skipReason: "skip_reason",
     was: "was",
     repeatKey: "repeat_key",
+    // One code beside each text's sentence (`sent`, `no-consent`, `not-set-up`, …): what the desk reads.
+    textReason: "text_reason",
   },
   links: { booking: "booking_id", customer: "customer_id" },
   recipient: {
@@ -104,8 +106,11 @@ export const OUTBOX = {
     name: "name",
     // The booking's own language, whatever the person's row says.
     language: { column: "language" },
-    // A text goes to the number on the person's row. Their yes is for that exact number (plan 80, §4.4).
+    // The person's number, for a text whose booking holds none (a desk's offer from the waiting list).
     phone: "phone",
+    // A text goes first to the number typed on its booking: the box's yes was given for that number (plan 80, §4.4), and a
+    // returning guest's typed number never changes their customer row (ACC-6).
+    textPhone: { via: "booking_id", column: "phone" },
     // A guest has no customer row yet: the booking carries their details.
     fallback: { via: "booking_id", email: "email", name: "name", language: "language", phone: "phone" },
   },
