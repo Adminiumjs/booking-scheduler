@@ -41,7 +41,7 @@
  */
 import { z } from 'zod';
 
-import { publicConsentSchema } from './people.ts';
+import { publicConsentSchema, publicTextConsentSchema } from './people.ts';
 
 import { kindOf, rulesOf, type Capacity } from './capacity.ts';
 import { formulaColumns, type FormulaExpr } from './formula.ts';
@@ -694,6 +694,12 @@ export const publicAccessSchema = z
      */
     consent: publicConsentSchema.optional(),
     /**
+     * A separate box for texts, beside `consent` and never the same one: an
+     * e-mail yes is not a text yes. It starts unticked, and no create or
+     * change is ever refused for leaving it so (see `text-messages.ts`).
+     */
+    textConsent: publicTextConsentSchema.optional(),
+    /**
      * On an add-on's entry, which rides the key of every app it is attached
      * to: a text column of the table that holds the key of the app a row is
      * for (`app`). Through an app's key the entry reads only the rows whose
@@ -1070,7 +1076,7 @@ export function ownLinksOfPerson(entries: readonly PublicAccess[], identityTable
 /** The outbox as a resend reads it: its recipient, its links and the producers that declare a kind's recipient. */
 export interface ResendOutbox {
   table: string;
-  recipient: { table: string; via: string; email: string; fallback?: { via: string; email: string } | undefined };
+  recipient: { table: string; via: string; email?: string | undefined; fallback?: { via: string; email?: string | undefined } | undefined };
   producers?:
     | readonly { kind: string; link: string; hold?: boolean | undefined; repeatBy?: string | undefined; recipient?: { setting: unknown } | { column: string; name?: string | undefined; language?: string | undefined } | undefined }[]
     | undefined;
@@ -1113,12 +1119,12 @@ export function resendAddressOf(outbox: ResendOutbox, kind: string, table: strin
   let person: ResendAddress['person'];
   const keys = (columnsOf(table) ?? []).filter((c) => c.references === outbox.recipient.table);
   const link = find(table, outbox.recipient.via) !== undefined ? outbox.recipient.via : keys.length === 1 ? keys[0]!.name : undefined;
-  if (link !== undefined) {
+  if (link !== undefined && outbox.recipient.email !== undefined) {
     columns.push(link);
     person = { table: outbox.recipient.table, column: outbox.recipient.email };
   }
   const fallback = outbox.recipient.fallback;
-  if (fallback !== undefined && find(outbox.table, fallback.via)?.references === table && find(table, fallback.email) !== undefined) columns.push(fallback.email);
+  if (fallback?.email !== undefined && find(outbox.table, fallback.via)?.references === table && find(table, fallback.email) !== undefined) columns.push(fallback.email);
   if (columns.length === 0) return null;
   return { columns, ...(person === undefined ? {} : { person }) };
 }

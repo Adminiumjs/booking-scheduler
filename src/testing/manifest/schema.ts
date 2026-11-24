@@ -72,12 +72,15 @@ import { appsBlockSchema, requiredAppIssues } from './app-requires.ts';
 import { instanceIssues, instanceSchema } from './instance.ts';
 import { assistantIssues, type AssistantTableShape } from './assistant.ts';
 import { stepsIssues, type StepTableShape } from './steps.ts';
+import { outboxTextIssues, publicTextConsentIssues, textTemplateIssues, textTemplateSchema, TEXT_REPLIES, TEXT_TEMPLATES_MAX } from './text-messages.ts';
 import { WORD_FLOORS, installFloorWords } from './words.ts';
 import { savedPartsIssues, savedPartsShape } from './saved-parts.ts';
 import { tableNameIssue, tableSchemaIssue } from './table-names.ts';
 import { mailClassFloorIssues } from './mail-class.ts';
 import { keepSchema, peopleIssues, peopleSchema, publicConsentIssues } from './people.ts';
+import { shippingIssues, shippingSchema } from './shipping.ts';
 import { expireIssues, expireSchema } from './expire.ts';
+import { holdersIssues, holdersSchema } from './holders.ts';
 import { automationIssues, manifestAutomationsSchema, type AutomationTableShape, type ManifestAutomation } from './automations.ts';
 import { changeGuardIssues, changeGuardsSchema } from './change-guards.ts';
 import { adjustDecidedColumns, adjustIssues, adjustSchema, adjusterIssues, adjusterSchema, type Adjuster, type AdjustTableShape } from './adjust.ts';
@@ -1357,6 +1360,8 @@ export const requiredTableSchema = z
     keep: keepSchema.optional(),
     /** An add-on's own rows let go some days after a moment of theirs, unless a column holds a value (see `expire.ts`). */
     expire: expireSchema.optional(),
+    /** Who holds a row of value, and when it stops being worth anything: what "delete my details" keeps and for how long (see `holders.ts`). */
+    holders: holdersSchema.optional(),
   })
   .strict()
   .refine(
@@ -1387,6 +1392,7 @@ export const requiredTableSchema = z
     for (const issue of uniqueSetIssues(t)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of indexSetIssues(t)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of expireIssues(t)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of holdersIssues(t)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
   });
 
 /**
@@ -2472,6 +2478,7 @@ export function appReferenceIssues(
     roles?: readonly RoleShape[] | undefined;
     outbox?: z.infer<typeof outboxSchema> | undefined;
     emailTemplates?: readonly z.infer<typeof emailTemplateSchema>[] | undefined;
+    textTemplates?: readonly z.infer<typeof textTemplateSchema>[] | undefined;
     addOns?: AddOnNeeds | undefined;
     documents?: readonly AppDocument[] | undefined;
     pages?: readonly { ref?: string | undefined; feature?: string | undefined }[] | undefined;
@@ -3380,6 +3387,7 @@ export function appReferenceIssues(
         tables: m.requiredSchema.tables as unknown as readonly AutomationTableShape[],
         roles: (m.roles ?? []).map((role) => role.key),
         templates: m.emailTemplates ?? [],
+        textTemplates: m.textTemplates ?? [],
         decided: (table) => decided.get(table) ?? new Set<string>(),
         ...(ownSteps === undefined ? {} : { steps: ownSteps }),
         addOns: new Set([...(m.kind === 'add-on' ? [m.key] : []), ...[...(m.addOns?.requires ?? []), ...(m.addOns?.suggests ?? [])].map((need) => need.key)]),
@@ -3977,10 +3985,11 @@ export const HOST_REFERENCES_FLOOR = '0.3.43';
  * entry held to the app whose key serves it. An app's rows are its owner's to
  * keep, and its entries serve its own key only.
  */
-function addOnOnlyWordIssues(m: { requiredSchema: { tables: readonly { expire?: unknown }[] }; publicAccess?: readonly { appColumn?: string | undefined; heldBy?: unknown }[] | undefined }): { path: (string | number)[]; message: string }[] {
+function addOnOnlyWordIssues(m: { requiredSchema: { tables: readonly { expire?: unknown; holders?: unknown }[] }; publicAccess?: readonly { appColumn?: string | undefined; heldBy?: unknown }[] | undefined }): { path: (string | number)[]; message: string }[] {
   const out: { path: (string | number)[]; message: string }[] = [];
   m.requiredSchema.tables.forEach((table, t) => {
     if (table.expire !== undefined) out.push({ path: ['requiredSchema', 'tables', t, 'expire'], message: "only an add-on's own table expires: an app's rows are its owner's to keep" });
+    if (table.holders !== undefined) out.push({ path: ['requiredSchema', 'tables', t, 'holders'], message: "only an add-on's own table names holders: an app's people are declared in `people`" });
   });
   (m.publicAccess ?? []).forEach((entry, e) => {
     if (entry.appColumn !== undefined) out.push({ path: ['publicAccess', e, 'appColumn'], message: "an app's entry serves its own key and its own rows: appColumn is said by an add-on's entry" });
@@ -4043,6 +4052,15 @@ export const appManifestSchema = z
     pages: z.array(pageSchema).min(1),
     settings: z.array(settingSchema).optional(),
     ...installBlocksShape,
+    /** The app's text messages, each language's words (see `text-messages.ts`). An app's alone: an add-on's outbox sends email. */
+    textTemplates: z.array(textTemplateSchema).max(TEXT_TEMPLATES_MAX).optional(),
+    /**
+     * Whether staff read the texts customers send back (see `text-messages.ts`).
+     * `off`: a reply is not kept, and the sender gets one fixed "this number is
+     * not read" answer. The owner can switch it either way after install; this is
+     * where it starts. Absent: on.
+     */
+    textReplies: z.enum(TEXT_REPLIES).optional(),
     /** Report documents, invoice layouts, scheduled reports and payments: a file made on an Adminium only (see `saved-parts.ts`). */
     ...savedPartsShape,
     widgets: z.array(manifestWidgetSchema).optional(),
@@ -4071,6 +4089,8 @@ export const appManifestSchema = z
     maps: z.literal(true).optional(),
     /** The tables that hold the app's people and companies, and where else a person is copied (see `people.ts`). */
     people: peopleSchema.optional(),
+    /** Where the app keeps what a carrier needs of an order (see `shipping.ts`). Without it, no real carrier is called for this app. */
+    shipping: shippingSchema.optional(),
     /** Where a self-made app was saved (see `saved-apps.ts`). */
     provenance: provenanceSchema.optional(),
     /** A self-made app's icon, a lucide name (see `saved-apps.ts`). */
@@ -4092,6 +4112,10 @@ export const appManifestSchema = z
     for (const issue of mailClassFloorIssues(m)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of peopleIssues(m, tableIndex(m.requiredSchema.tables))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of publicConsentIssues(m, tableIndex(m.requiredSchema.tables))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of shippingIssues(m, tableIndex(m.requiredSchema.tables))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of textTemplateIssues(m)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of outboxTextIssues(m, tableIndex(m.requiredSchema.tables))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of publicTextConsentIssues(m, tableIndex(m.requiredSchema.tables))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of addOnOnlyWordIssues(m)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of appReferenceIssues(m)) {
       ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
@@ -4162,6 +4186,8 @@ export const addOnManifestSchema = z
     for (const issue of mailClassFloorIssues(m)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     // An add-on keeps no people of its own: a tick on its public entry has nobody to be kept for.
     for (const issue of publicConsentIssues(m, tableIndex(m.requiredSchema?.tables ?? []))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of outboxTextIssues(m, tableIndex(m.requiredSchema?.tables ?? []))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
+    for (const issue of publicTextConsentIssues(m, tableIndex(m.requiredSchema?.tables ?? []))) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     for (const issue of addOnModuleIssues(m)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
     // An add-on is never self-made: a page envelope, views and the table marks are read the same way as an app's.
     for (const issue of savedAppIssues(m)) ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path });
