@@ -439,17 +439,20 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         expect(off.text).not.toContain("refunded in full.");
       });
 
-      // Plan 80: no text provider is connected here, as on a studio that never set texts up. The box still records the guest's
-      // own yes, and each text is written beside its mail and skipped with Adminium's own sentence: nothing goes, nothing breaks.
+      // Plan 80: no text provider is connected here, as on a studio that never set texts up. The page asks and hides its box;
+      // a yes sent anyway is still the guest's own, and each text is written beside its mail and skipped, with Adminium's
+      // sentence for people and its code for the desk: nothing goes, nothing breaks.
       it("the box for texts is the guest's own, and with no provider each text is written and skipped, beside its mail", async () => {
         // After every clock the tests above set (the last is at most 25 October), so this one also runs on its own.
         await stand.server.setClock(at("2026-10-26", "09:00"));
         await stand.staff.signIn(ADMIN.email, ADMIN.password);
         const { date, times } = await hours("Gel Manicure", "2026-10-28", "Ivy", 3);
         const withIvy = { team_id: team["Ivy"]!["id"] };
+        expect(await tab().textsReady()).toBe(false);
         const yes = await tab().book("studio", values("Gel Manicure", times[0]!, "tia", { ...withIvy, phone: "+1 415 555 0161", texts: true }), retryKey("t1"));
         const no = await tab().book("studio", values("Gel Manicure", times[1]!, "nate", { ...withIvy, phone: "+1 415 555 0162" }), retryKey("t2"));
-        // Wilma is on file with no number. A number typed now is the booking's, never her customer row's (ACC-6).
+        // Wilma is on file with no number. A number typed now stays the booking's, never her customer row's (ACC-6), and her
+        // text goes to it: that is the number her yes was given for (`recipient.textPhone`).
         await stand.create("customers", { name: "Wilma Return", email: address("wilma") });
         const back = await tab().book("studio", values("Gel Manicure", times[2]!, "wilma", { ...withIvy, phone: "+1 415 555 0163", texts: true }), retryKey("t4"));
         await mailTo(address("tia"), /^Booked/);
@@ -467,13 +470,14 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         const textOf = (kind: string, booking: unknown) =>
           until(async () => (await stand.rows("messages")).find((m) => m["kind"] === kind && String(m["booking_id"]) === String(booking) && m["status"] !== "queued"), `the ${kind} row`, 120_000);
         const reminder = await textOf("reminder_text", yes.row["id"]);
-        expect([reminder["status"], reminder["error"]]).toEqual(["skipped", "No text provider is connected"]);
+        expect([reminder["status"], reminder["text_reason"], reminder["error"]]).toEqual(["skipped", "not-set-up", "No text provider is connected"]);
         expect((await stand.rows("messages")).filter((m) => m["kind"] === "reminder_text" && String(m["booking_id"]) === String(no.row["id"]))).toEqual([]);
-        // The returning guest's text has no number to go to: it says so, and nothing is sent to the number she typed.
+        // The returning guest's text has a number: the one she typed. It stops only because no provider is set up.
         const returning = await textOf("reminder_text", back.row["id"]);
-        expect([returning["status"], returning["error"]]).toEqual(["skipped", "No mobile number on file"]);
+        expect([returning["status"], returning["text_reason"]]).toEqual(["skipped", "not-set-up"]);
+        expect((await stand.row("customers", (await stand.row("bookings", back.row["id"]))["customer_id"]))["phone"] ?? null).toBeNull();
 
-        // A waiting-list offer: its text is written beside the offer mail, and skipped the same way.
+        // A waiting-list offer: its booking holds no number, so its text reads the person's; written beside the mail, skipped the same way.
         await deskAgain();
         const startsAt = await free("Gel Manicure", "2026-10-29", "Ivy", "13:00");
         const day = new Date(Date.parse(startsAt) - 7 * 3_600_000).toISOString().slice(0, 10);
@@ -483,7 +487,7 @@ describe.skipIf(why !== null)(`the e-mails${why === null ? "" : ` — skipped: $
         const offered = await desk.offerTime({ entry, person: team["Ivy"]!["id"], startsAt, key: key() } as never);
         await mailTo(address("tia"), /A time opened/);
         const offerText = await textOf("offer_text", offered["id"]);
-        expect([offerText["status"], offerText["error"]]).toEqual(["skipped", "No text provider is connected"]);
+        expect([offerText["status"], offerText["text_reason"]]).toEqual(["skipped", "not-set-up"]);
       });
     });
   });
